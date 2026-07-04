@@ -17,4 +17,24 @@ class TranscriptionServiceTest {
         assertThat(service.formatTimestamp(65)).isEqualTo("01:05");
         assertThat(service.formatTimestamp(3700)).isEqualTo("01:01:40");
     }
+
+    @Test
+    void extractsOpenAiErrorMessageFromJsonResponse() {
+        String responseBody = """
+                {"error":{"message":"Maximum content size limit (26214400) exceeded","type":"invalid_request_error"}}
+                """;
+
+        String details = TranscriptionService.extractOpenAiErrorDetails(responseBody);
+
+        assertThat(details).isEqualTo("Maximum content size limit (26214400) exceeded");
+    }
+
+    @Test
+    void fallsBackToRawErrorBodyWhenJsonCannotBeParsed() {
+        String responseBody = "OpenAI gateway timeout while processing transcription";
+
+        String details = TranscriptionService.extractOpenAiErrorDetails(responseBody);
+
+        assertThat(details).isEqualTo("OpenAI gateway timeout while processing transcription");
+    }
 }

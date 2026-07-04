@@ -1199,6 +1199,7 @@ function migrateLegacyPromotionState() {
 
 window.addEventListener("DOMContentLoaded", async () => {
   document.title = `${projectName} · Stream Helper`;
+  toggleProjectRenameEditor(false);
   if (!projectConfig.workspaceDrafts) {
     projectConfig.workspaceDrafts = {};
   }

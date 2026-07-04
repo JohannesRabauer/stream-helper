@@ -464,11 +464,11 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):hover 
 }
 
 #projectResultToggle {
-    bottom: 1rem;
+    bottom: 4.6rem;
 }
 
 #projectLlmDefinitionsToggle {
-    bottom: 4.6rem;
+    bottom: 8.2rem;
 }
 
 #globalLlmDefinitionsToggle {

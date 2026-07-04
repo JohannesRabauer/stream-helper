@@ -903,47 +903,65 @@ function renderProjectNotesPreview() {
 
 function toggleProjectNotesDrawer(forceOpen) {
   const drawer = document.getElementById("projectNotesDrawer");
-  const toggle = document.getElementById("projectNotesToggle");
+  if (!drawer) {
+    return;
+  }
+  const open = typeof forceOpen === "boolean" ? forceOpen : !drawer.classList.contains("open");
+  if (open) {
+    closeLatestResultDrawer();
+    closeLlmDefinitionsDrawer();
+  }
+  setDrawerState("projectNotesDrawer", "projectNotesToggle", open, "Show notes", "Hide notes");
+}
+
+function toggleLatestResultDrawer(forceOpen) {
+  const drawer = document.getElementById("projectResultDrawer");
+  if (!drawer) {
+    return;
+  }
+  const open = typeof forceOpen === "boolean" ? forceOpen : !drawer.classList.contains("open");
+  if (open) {
+    closeProjectNotesDrawer();
+    closeLlmDefinitionsDrawer();
+  }
+  setDrawerState("projectResultDrawer", "projectResultToggle", open, "Show latest result", "Hide latest result");
+}
+
+function toggleLlmDefinitionsDrawer(forceOpen) {
+  const drawer = document.getElementById("projectLlmDefinitionsDrawer");
+  if (!drawer) {
+    return;
+  }
+  const open = typeof forceOpen === "boolean" ? forceOpen : !drawer.classList.contains("open");
+  if (open) {
+    closeProjectNotesDrawer();
+    closeLatestResultDrawer();
+  }
+  setDrawerState("projectLlmDefinitionsDrawer", "projectLlmDefinitionsToggle", open, "Show LLM definitions", "Hide LLM definitions");
+}
+
+function closeProjectNotesDrawer() {
+  setDrawerState("projectNotesDrawer", "projectNotesToggle", false, "Show notes", "Hide notes");
+}
+
+function closeLatestResultDrawer() {
+  setDrawerState("projectResultDrawer", "projectResultToggle", false, "Show latest result", "Hide latest result");
+}
+
+function closeLlmDefinitionsDrawer() {
+  setDrawerState("projectLlmDefinitionsDrawer", "projectLlmDefinitionsToggle", false, "Show LLM definitions", "Hide LLM definitions");
+}
+
+function setDrawerState(drawerId, toggleId, open, showText, hideText) {
+  const drawer = document.getElementById(drawerId);
+  const toggle = document.getElementById(toggleId);
   if (!drawer || !toggle) {
     return;
   }
-
-  function toggleLatestResultDrawer(forceOpen) {
-    const drawer = document.getElementById("projectResultDrawer");
-    const toggle = document.getElementById("projectResultToggle");
-    if (!drawer || !toggle) {
-      return;
-    }
-    const open = typeof forceOpen === "boolean" ? forceOpen : !drawer.classList.contains("open");
-    if (open) {
-      toggleLlmDefinitionsDrawer(false);
-    }
-    drawer.classList.toggle("open", open);
-    drawer.setAttribute("aria-hidden", String(!open));
-    toggle.setAttribute("aria-expanded", String(open));
-    toggle.textContent = open ? "Hide latest result" : "Show latest result";
-  }
-
-  function toggleLlmDefinitionsDrawer(forceOpen) {
-    const drawer = document.getElementById("projectLlmDefinitionsDrawer");
-    const toggle = document.getElementById("projectLlmDefinitionsToggle");
-    if (!drawer || !toggle) {
-      return;
-    }
-    const open = typeof forceOpen === "boolean" ? forceOpen : !drawer.classList.contains("open");
-    if (open) {
-      toggleLatestResultDrawer(false);
-    }
-    drawer.classList.toggle("open", open);
-    drawer.setAttribute("aria-hidden", String(!open));
-    toggle.setAttribute("aria-expanded", String(open));
-    toggle.textContent = open ? "Hide LLM definitions" : "Show LLM definitions";
-  }
-  const open = typeof forceOpen === "boolean" ? forceOpen : !drawer.classList.contains("open");
   drawer.classList.toggle("open", open);
   drawer.setAttribute("aria-hidden", String(!open));
   toggle.setAttribute("aria-expanded", String(open));
-  toggle.textContent = open ? "Hide notes" : "Show notes";
+  toggle.textContent = open ? hideText : showText;
 }
 
 async function setProjectNotesMode(mode) {

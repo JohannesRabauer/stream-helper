@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Helper - Projects</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+<body>
+<main class="container">
+    <h1>Stream Helper</h1>
+    <p>Create and manage local-first projects for your live-coding sessions.</p>
+
+    <section class="card">
+        <h2>Create Project</h2>
+        <form method="post" action="/projects">
+            <label for="name">Project name</label>
+            <input id="name" name="name" type="text" required placeholder="My next stream series">
+            <button type="submit">Create</button>
+        </form>
+        <p class="error" th:if="${error}" th:text="${error}"></p>
+    </section>
+
+    <section class="card">
+        <h2>Projects</h2>
+        <div th:if="${#lists.isEmpty(projects)}">No projects yet.</div>
+        <table th:if="${!#lists.isEmpty(projects)}">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>ID</th>
+                <th>Updated</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="project : ${projects}">
+                <td><a th:href="@{|/projects/${project.id}|}" th:text="${project.name}"></a></td>
+                <td th:text="${project.id}"></td>
+                <td th:text="${project.updatedAt}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+</body>
+</html>

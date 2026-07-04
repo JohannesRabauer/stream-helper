@@ -1,0 +1,77 @@
+name: stream-helper
+
+services:
+  app-ollama:
+    profiles: ["ollama"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      STREAM_HELPER_STORAGE_DATA_DIR: /data
+      STREAM_HELPER_AI_PROVIDER: OLLAMA
+      STREAM_HELPER_AI_OLLAMA_BASE_URL: http://ollama:11434
+      STREAM_HELPER_AI_OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.1:8b}
+      STREAM_HELPER_TRANSCRIPTION_PROVIDER: WHISPER_LOCAL
+      STREAM_HELPER_TRANSCRIPTION_WHISPER_BASE_URL: http://whisper:9000
+    volumes:
+      - stream_helper_data:/data
+    depends_on:
+      ollama:
+        condition: service_started
+      whisper:
+        condition: service_started
+
+  app-openai:
+    profiles: ["openai"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      STREAM_HELPER_STORAGE_DATA_DIR: /data
+      STREAM_HELPER_AI_PROVIDER: OPENAI
+      STREAM_HELPER_AI_OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com}
+      STREAM_HELPER_AI_OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      STREAM_HELPER_AI_OPENAI_CHAT_MODEL: ${OPENAI_CHAT_MODEL:-gpt-4.1-mini}
+      STREAM_HELPER_AI_OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-gpt-image-1}
+      STREAM_HELPER_TRANSCRIPTION_PROVIDER: OPENAI
+      STREAM_HELPER_TRANSCRIPTION_OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com}
+      STREAM_HELPER_TRANSCRIPTION_OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      STREAM_HELPER_TRANSCRIPTION_OPENAI_MODEL: ${OPENAI_TRANSCRIPTION_MODEL:-whisper-1}
+    volumes:
+      - stream_helper_data:/data
+
+  ollama:
+    profiles: ["ollama"]
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+
+  ollama-init:
+    profiles: ["ollama"]
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_started
+    entrypoint: ["/bin/sh", "-c"]
+    command: "sleep 5 && ollama pull ${OLLAMA_MODEL:-llama3.1:8b}"
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    restart: "no"
+
+  whisper:
+    profiles: ["ollama"]
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    environment:
+      ASR_ENGINE: faster_whisper
+      ASR_MODEL: ${WHISPER_MODEL:-small}
+      ASR_DEVICE: cpu
+    ports:
+      - "9000:9000"
+
+volumes:
+  stream_helper_data:
+  ollama_data:

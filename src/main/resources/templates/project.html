@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Stream Helper - ' + ${project.name}">Project</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+<body>
+<main class="container">
+    <header class="header-row">
+        <div>
+            <a href="/projects">&larr; Back to projects</a>
+            <h1 th:text="${project.name}"></h1>
+            <p>ID: <code th:text="${project.id}"></code></p>
+        </div>
+    </header>
+
+    <section class="card">
+        <h2>Markdown Notes</h2>
+        <form method="post" th:action="@{|/projects/${project.id}/notes|}">
+            <label for="noteId">Note ID</label>
+            <input id="noteId" name="noteId" type="text" th:value="${selectedNoteId}" placeholder="note-id">
+            <label for="markdown">Markdown</label>
+            <textarea id="markdown" name="markdown" rows="12" th:text="${markdown}"></textarea>
+            <button type="submit">Save note</button>
+        </form>
+        <h3>Rendered preview</h3>
+        <div class="markdown-preview" th:utext="${renderedMarkdown}"></div>
+    </section>
+
+    <section class="card">
+        <h2>AI Assistant</h2>
+        <p>Run prompts for this project. Results are saved as versioned drafts automatically.</p>
+        <label for="assistantInput">Input brief / transcript / prompt</label>
+        <textarea id="assistantInput" rows="8" placeholder="Describe your stream, transcript, or thumbnail idea"></textarea>
+        <div class="button-grid">
+            <button type="button" onclick="runJsonEndpoint('topic-ideas')">Topic ideas</button>
+            <button type="button" onclick="runJsonEndpoint('guest-ideas')">Guest ideas</button>
+            <button type="button" onclick="runJsonEndpoint('youtube-description')">YouTube descriptions</button>
+            <button type="button" onclick="runJsonEndpoint('linkedin-post')">LinkedIn posts</button>
+            <button type="button" onclick="runJsonEndpoint('social-posts')">Social posts</button>
+            <button type="button" onclick="runJsonEndpoint('hashtags')">Hashtags</button>
+            <button type="button" onclick="runJsonEndpoint('youtube-tags')">YouTube tags</button>
+            <button type="button" onclick="runTextEndpoint('chapters')">Chapters from transcript text</button>
+            <button type="button" onclick="runTextEndpoint('summary')">Detailed summary from transcript text</button>
+            <button type="button" onclick="runJsonEndpoint('thumbnail-prompts')">Thumbnail prompts</button>
+            <button type="button" onclick="createThumbnail(false)">Create thumbnail prompt package</button>
+            <button type="button" onclick="createThumbnail(true)">Create built-in thumbnail (if available)</button>
+        </div>
+        <h3>Result</h3>
+        <pre id="resultBox">Run an action to see output...</pre>
+    </section>
+
+    <section class="card">
+        <h2>Transcription</h2>
+        <p>Upload a local video/audio file or provide a YouTube URL.</p>
+        <form id="transcriptionFileForm" enctype="multipart/form-data">
+            <input type="file" id="transcriptionFile" name="file" required>
+            <input type="text" id="transcriptionLanguage" placeholder="language (optional, e.g. en)">
+            <label><input type="checkbox" id="transcriptionDiarize" checked> speaker diarization</label>
+            <button type="button" onclick="transcribeFile()">Transcribe file</button>
+        </form>
+        <form id="transcriptionYoutubeForm">
+            <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." required>
+            <button type="button" onclick="transcribeYoutube()">Transcribe YouTube URL</button>
+        </form>
+    </section>
+
+    <section class="card">
+        <h2>Instructions Preview</h2>
+        <label for="categorySelect">Category</label>
+        <select id="categorySelect">
+            <option>TOPIC_IDEA</option>
+            <option>GUEST_IDEA</option>
+            <option>YOUTUBE_DESCRIPTION</option>
+            <option>LINKEDIN_POST</option>
+            <option>SOCIAL_POST</option>
+            <option>HASHTAGS</option>
+            <option>YOUTUBE_TAGS</option>
+            <option>TRANSCRIPT</option>
+            <option>CHAPTERS</option>
+            <option>SUMMARY</option>
+            <option>THUMBNAIL_PROMPT</option>
+            <option>THUMBNAIL_ASSET</option>
+        </select>
+        <button type="button" onclick="loadEffectivePrompt()">Load effective prompt</button>
+        <pre id="effectivePromptBox"></pre>
+    </section>
+</main>
+
+<script th:inline="javascript">
+    const projectId = /*[[${project.id}]]*/ '';
+</script>
+<script th:src="@{/project.js}"></script>
+</body>
+</html>

@@ -26,7 +26,10 @@
     <section class="card">
         <div class="section-heading">
             <h2>Workflow cockpit</h2>
-            <span>Everything autosaves</span>
+            <div class="inline-actions">
+                <span>Everything autosaves</span>
+                <button type="button" class="secondary-button" onclick="openLlmDefinitionsDialog()">LLM definitions</button>
+            </div>
         </div>
         <p class="muted">Work through the stream in stages. Drafts and notes are saved immediately, generated outputs create a new version every time, and inline history stays with the stage where you need it.</p>
         <div class="workflow-tabs" role="tablist" aria-label="Workflow stages">
@@ -34,39 +37,6 @@
             <button type="button" class="tab-button" data-tab="promotion" onclick="selectWorkflowTab('promotion', this)">Promotion</button>
             <button type="button" class="tab-button" data-tab="transcription" onclick="selectWorkflowTab('transcription', this)">Transcription</button>
             <button type="button" class="tab-button" data-tab="post-stream" onclick="selectWorkflowTab('post-stream', this)">Post-stream wrap-up</button>
-        </div>
-    </section>
-
-    <section class="card">
-        <div class="section-heading">
-            <h2>LLM definitions</h2>
-            <span>Visible and editable</span>
-        </div>
-        <p class="muted">Put reusable rules here, like “Never use '-'”. Global rules apply everywhere, project rules apply in this project, and stage rules apply to every action inside the selected workflow stage.</p>
-        <div class="workflow-main">
-            <label for="globalInstructionInput">Global definitions</label>
-            <textarea id="globalInstructionInput" rows="5" placeholder="Rules for all projects and all areas."></textarea>
-            <div class="autosave-hint">Autosaved across every project.</div>
-
-            <label for="projectInstructionInput">Project definitions</label>
-            <textarea id="projectInstructionInput" rows="5" placeholder="Rules only for this project."></textarea>
-            <div class="autosave-hint">Autosaved only for this project.</div>
-
-            <div class="section-heading compact-heading">
-                <h3>Stage-specific definitions</h3>
-                <span id="currentAreaInstructionLabel">Pre-stream planning</span>
-            </div>
-            <div class="two-column-grid">
-                <div>
-                    <label for="globalAreaInstructionInput">Global stage definitions</label>
-                    <textarea id="globalAreaInstructionInput" rows="5" placeholder="Rules for this workflow stage across all projects."></textarea>
-                </div>
-                <div>
-                    <label for="projectAreaInstructionInput">Project stage definitions</label>
-                    <textarea id="projectAreaInstructionInput" rows="5" placeholder="Rules for this workflow stage in this project."></textarea>
-                </div>
-            </div>
-            <div class="autosave-hint">These stage rules are applied to all actions in the selected tab.</div>
         </div>
     </section>
 
@@ -290,6 +260,41 @@
         <pre id="effectivePromptBox">Choose a category to inspect the composed LLM context.</pre>
     </details>
 </main>
+
+<dialog id="llmDefinitionsDialog" class="modal-dialog">
+    <form method="dialog" class="modal-shell">
+        <div class="section-heading">
+            <h2>LLM definitions</h2>
+            <button type="submit" class="secondary-button">Close</button>
+        </div>
+        <p class="muted">Put reusable rules here, like “Never use '-'”. Global rules apply everywhere, project rules apply in this project, and stage rules apply to every action inside the selected workflow stage.</p>
+        <div class="workflow-main">
+            <label for="globalInstructionInput">Global definitions</label>
+            <textarea id="globalInstructionInput" rows="5" placeholder="Rules for all projects and all areas."></textarea>
+            <div class="autosave-hint">Autosaved across every project.</div>
+
+            <label for="projectInstructionInput">Project definitions</label>
+            <textarea id="projectInstructionInput" rows="5" placeholder="Rules only for this project."></textarea>
+            <div class="autosave-hint">Autosaved only for this project.</div>
+
+            <div class="section-heading compact-heading">
+                <h3>Stage-specific definitions</h3>
+                <span id="currentAreaInstructionLabel">Pre-stream planning</span>
+            </div>
+            <div class="two-column-grid">
+                <div>
+                    <label for="globalAreaInstructionInput">Global stage definitions</label>
+                    <textarea id="globalAreaInstructionInput" rows="5" placeholder="Rules for this workflow stage across all projects."></textarea>
+                </div>
+                <div>
+                    <label for="projectAreaInstructionInput">Project stage definitions</label>
+                    <textarea id="projectAreaInstructionInput" rows="5" placeholder="Rules for this workflow stage in this project."></textarea>
+                </div>
+            </div>
+            <div class="autosave-hint">These stage rules are applied to all actions in the selected tab.</div>
+        </div>
+    </form>
+</dialog>
 
 <script th:inline="javascript">
     const projectId = /*[[${project.id}]]*/ '';

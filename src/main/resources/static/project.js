@@ -107,6 +107,19 @@ function exportProject() {
   window.location.href = `/api/projects/${projectId}/export`;
 }
 
+function openLlmDefinitionsDialog() {
+  const dialog = document.getElementById("llmDefinitionsDialog");
+  if (!dialog) {
+    return;
+  }
+  syncAreaInstructionEditors(projectConfig.currentWorkflowStage || "pre-stream");
+  if (typeof dialog.showModal === "function") {
+    dialog.showModal();
+    return;
+  }
+  dialog.setAttribute("open", "open");
+}
+
 function selectWorkflowTab(areaKey, button) {
   document.querySelectorAll("[data-tab-panel]").forEach((panel) => {
     panel.hidden = panel.dataset.tabPanel !== areaKey;
@@ -814,5 +827,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   const activeTab = projectConfig.currentWorkflowStage || "pre-stream";
   const activeButton = document.querySelector(`.tab-button[data-tab="${activeTab}"]`) || document.querySelector('.tab-button[data-tab="pre-stream"]');
   selectWorkflowTab(activeButton?.dataset.tab || "pre-stream", activeButton);
+  const dialog = document.getElementById("llmDefinitionsDialog");
+  if (dialog) {
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) {
+        dialog.close();
+      }
+    });
+  }
   await Promise.all(Object.keys(workflowAreas).map((areaKey) => reloadAreaHistory(areaKey)));
 });

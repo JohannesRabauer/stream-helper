@@ -936,6 +936,29 @@ details[open] .result-raw summary::before,
     margin-bottom: 0.85rem;
 }
 
+.modal-dialog {
+    width: min(980px, calc(100vw - 2rem));
+    max-width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: rgba(7, 12, 28, 0.96);
+    color: var(--text);
+    padding: 0;
+    box-shadow: var(--shadow);
+}
+
+.modal-dialog::backdrop {
+    background: rgba(2, 6, 23, 0.68);
+    backdrop-filter: blur(8px);
+}
+
+.modal-shell {
+    display: grid;
+    gap: 0.9rem;
+    padding: 1.35rem;
+    margin: 0;
+}
+
 /* ── Compact form ── */
 .compact-form { margin-bottom: 0.8rem; }
 

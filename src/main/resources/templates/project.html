@@ -8,89 +8,183 @@
 </head>
 <body>
 <main class="container">
-    <header class="header-row">
+    <header class="project-header card">
         <div>
             <a href="/projects">&larr; Back to projects</a>
             <h1 th:text="${project.name}"></h1>
-            <p>ID: <code th:text="${project.id}"></code></p>
+            <p class="muted">Project ID: <code th:text="${project.id}"></code></p>
+        </div>
+        <div class="project-header-actions">
+            <button type="button" class="secondary-button" onclick="exportProject()">Export project (ZIP)</button>
+            <button type="button" class="secondary-button" onclick="location.reload()">Refresh</button>
         </div>
     </header>
 
-    <section class="card">
-        <h2>Markdown Notes</h2>
-        <form method="post" th:action="@{|/projects/${project.id}/notes|}">
-            <label for="noteId">Note ID</label>
-            <input id="noteId" name="noteId" type="text" th:value="${selectedNoteId}" placeholder="note-id">
-            <label for="markdown">Markdown</label>
-            <textarea id="markdown" name="markdown" rows="12" th:text="${markdown}"></textarea>
-            <button type="submit">Save note</button>
-        </form>
-        <h3>Rendered preview</h3>
-        <div class="markdown-preview" th:utext="${renderedMarkdown}"></div>
-    </section>
+    <section id="statusBar" class="status-bar" hidden></section>
+
+    <div class="layout-grid">
+        <section class="card">
+            <div class="section-heading">
+                <h2>Notes workspace</h2>
+                <span th:text="${#lists.size(notes)} + ' notes'"></span>
+            </div>
+
+            <div class="note-list">
+                <a th:each="note : ${notes}"
+                   th:href="@{|/projects/${project.id}?noteId=${note}|}"
+                   th:text="${note}"
+                   th:classappend="${note == selectedNoteId} ? ' active' : ''"></a>
+            </div>
+
+            <form method="post" th:action="@{|/projects/${project.id}/notes|}">
+                <label for="noteId">Note ID</label>
+                <input id="noteId" name="noteId" type="text" th:value="${selectedNoteId}" placeholder="architecture-notes">
+                <div class="toggle-group">
+                    <button type="button" class="secondary-button" onclick="toggleNoteView('edit')">Edit</button>
+                    <button type="button" class="secondary-button" onclick="toggleNoteView('preview')">Preview</button>
+                </div>
+                <div id="noteEditArea">
+                    <label for="markdown">Markdown</label>
+                    <textarea id="markdown" name="markdown" rows="16" th:text="${markdown}"></textarea>
+                </div>
+                <div id="notePreviewArea" class="markdown-preview" hidden th:utext="${renderedMarkdown}"></div>
+                <button type="submit">Save note</button>
+            </form>
+        </section>
+
+        <section class="card">
+            <div class="section-heading">
+                <h2>Assistant studio</h2>
+                <span>Results are saved as versioned drafts</span>
+            </div>
+
+            <label for="assistantInput">Brief / transcript / prompt context</label>
+            <textarea id="assistantInput" rows="8" placeholder="Example: Build a Spring Boot + AI coding stream with a guest expert..."></textarea>
+
+            <div class="quick-prompt-row">
+                <button type="button" class="chip-button" onclick="injectTemplate('pre')">Pre-stream template</button>
+                <button type="button" class="chip-button" onclick="injectTemplate('promo')">Promotion template</button>
+                <button type="button" class="chip-button" onclick="injectTemplate('post')">Post-stream template</button>
+            </div>
+
+            <h3>Pre-stream planning</h3>
+            <div class="button-grid">
+                <button type="button" onclick="runBriefAction('topic-ideas', this)">Generate topic ideas</button>
+                <button type="button" onclick="runBriefAction('guest-ideas', this)">Find guest ideas</button>
+            </div>
+
+            <h3>Promotion</h3>
+            <div class="button-grid">
+                <button type="button" onclick="runBriefAction('youtube-description', this)">YouTube descriptions</button>
+                <button type="button" onclick="runBriefAction('linkedin-post', this)">LinkedIn posts</button>
+                <button type="button" onclick="runBriefAction('social-posts', this)">Social posts (X-ready)</button>
+                <button type="button" onclick="runBriefAction('hashtags', this)">Hashtags</button>
+                <button type="button" onclick="runBriefAction('youtube-tags', this)">YouTube tags (500 chars)</button>
+            </div>
+
+            <h3>Post-stream</h3>
+            <div class="button-grid">
+                <button type="button" onclick="runTextAction('chapters', this)">Create chapters</button>
+                <button type="button" onclick="runTextAction('summary', this)">Create detailed summary</button>
+            </div>
+
+            <h3>Thumbnail</h3>
+            <div class="button-grid">
+                <button type="button" onclick="runBriefAction('thumbnail-prompts', this)">Generate thumbnail prompts</button>
+                <button type="button" onclick="createThumbnail(false, this)">Create external prompt package</button>
+                <button type="button" onclick="createThumbnail(true, this)">Generate thumbnail image</button>
+            </div>
+        </section>
+    </div>
 
     <section class="card">
-        <h2>AI Assistant</h2>
-        <p>Run prompts for this project. Results are saved as versioned drafts automatically.</p>
-        <label for="assistantInput">Input brief / transcript / prompt</label>
-        <textarea id="assistantInput" rows="8" placeholder="Describe your stream, transcript, or thumbnail idea"></textarea>
-        <div class="button-grid">
-            <button type="button" onclick="runJsonEndpoint('topic-ideas')">Topic ideas</button>
-            <button type="button" onclick="runJsonEndpoint('guest-ideas')">Guest ideas</button>
-            <button type="button" onclick="runJsonEndpoint('youtube-description')">YouTube descriptions</button>
-            <button type="button" onclick="runJsonEndpoint('linkedin-post')">LinkedIn posts</button>
-            <button type="button" onclick="runJsonEndpoint('social-posts')">Social posts</button>
-            <button type="button" onclick="runJsonEndpoint('hashtags')">Hashtags</button>
-            <button type="button" onclick="runJsonEndpoint('youtube-tags')">YouTube tags</button>
-            <button type="button" onclick="runTextEndpoint('chapters')">Chapters from transcript text</button>
-            <button type="button" onclick="runTextEndpoint('summary')">Detailed summary from transcript text</button>
-            <button type="button" onclick="runJsonEndpoint('thumbnail-prompts')">Thumbnail prompts</button>
-            <button type="button" onclick="createThumbnail(false)">Create thumbnail prompt package</button>
-            <button type="button" onclick="createThumbnail(true)">Create built-in thumbnail (if available)</button>
+        <div class="section-heading">
+            <h2>Result panel</h2>
+            <div class="inline-actions">
+                <button type="button" class="secondary-button" onclick="copyRawResult()">Copy JSON</button>
+                <button type="button" class="secondary-button" onclick="copyRecommendedContent()">Copy recommended</button>
+            </div>
         </div>
-        <h3>Result</h3>
-        <pre id="resultBox">Run an action to see output...</pre>
+        <div id="resultSummary" class="muted">Run an assistant action to view polished output cards here.</div>
+        <div id="variantCards" class="variant-grid"></div>
+        <details class="result-raw">
+            <summary>Raw response JSON</summary>
+            <pre id="resultBox">Run an action to see output...</pre>
+        </details>
     </section>
 
-    <section class="card">
-        <h2>Transcription</h2>
-        <p>Upload a local video/audio file or provide a YouTube URL.</p>
-        <form id="transcriptionFileForm" enctype="multipart/form-data">
-            <input type="file" id="transcriptionFile" name="file" required>
-            <input type="text" id="transcriptionLanguage" placeholder="language (optional, e.g. en)">
-            <label><input type="checkbox" id="transcriptionDiarize" checked> speaker diarization</label>
-            <button type="button" onclick="transcribeFile()">Transcribe file</button>
-        </form>
-        <form id="transcriptionYoutubeForm">
-            <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." required>
-            <button type="button" onclick="transcribeYoutube()">Transcribe YouTube URL</button>
-        </form>
-    </section>
+    <div class="layout-grid">
+        <section class="card">
+            <h2>Transcription</h2>
+            <p class="muted">Use local upload or YouTube URL. Output is stored in transcript artifacts.</p>
+            <form id="transcriptionFileForm" enctype="multipart/form-data" class="compact-form">
+                <label for="transcriptionFile">Local media file</label>
+                <input type="file" id="transcriptionFile" name="file" required>
+                <label for="transcriptionLanguage">Language (optional)</label>
+                <input type="text" id="transcriptionLanguage" placeholder="en">
+                <label><input type="checkbox" id="transcriptionDiarize" checked> Enable speaker diarization</label>
+                <button type="button" onclick="transcribeFile(this)">Transcribe local file</button>
+            </form>
+            <form id="transcriptionYoutubeForm" class="compact-form">
+                <label for="youtubeUrl">YouTube URL</label>
+                <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." required>
+                <button type="button" onclick="transcribeYoutube(this)">Transcribe YouTube URL</button>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Artifact history</h2>
+            <p class="muted">Review versions and mark one as final for each category.</p>
+            <label for="artifactCategorySelect">Category</label>
+            <select id="artifactCategorySelect">
+                <option>TOPIC_IDEA</option>
+                <option>GUEST_IDEA</option>
+                <option>YOUTUBE_DESCRIPTION</option>
+                <option>LINKEDIN_POST</option>
+                <option>SOCIAL_POST</option>
+                <option>HASHTAGS</option>
+                <option>YOUTUBE_TAGS</option>
+                <option>TRANSCRIPT</option>
+                <option>CHAPTERS</option>
+                <option>SUMMARY</option>
+                <option>THUMBNAIL_PROMPT</option>
+                <option>THUMBNAIL_ASSET</option>
+            </select>
+            <div class="inline-actions">
+                <button type="button" onclick="loadArtifactHistory(this)">Load history</button>
+            </div>
+            <div id="artifactHistoryList" class="artifact-list"></div>
+        </section>
+    </div>
 
     <section class="card">
-        <h2>Instructions Preview</h2>
-        <label for="categorySelect">Category</label>
-        <select id="categorySelect">
-            <option>TOPIC_IDEA</option>
-            <option>GUEST_IDEA</option>
-            <option>YOUTUBE_DESCRIPTION</option>
-            <option>LINKEDIN_POST</option>
-            <option>SOCIAL_POST</option>
-            <option>HASHTAGS</option>
-            <option>YOUTUBE_TAGS</option>
-            <option>TRANSCRIPT</option>
-            <option>CHAPTERS</option>
-            <option>SUMMARY</option>
-            <option>THUMBNAIL_PROMPT</option>
-            <option>THUMBNAIL_ASSET</option>
-        </select>
-        <button type="button" onclick="loadEffectivePrompt()">Load effective prompt</button>
+        <h2>Instruction preview</h2>
+        <p class="muted">Inspect the effective prompt composition for a category.</p>
+        <div class="inline-actions">
+            <label for="categorySelect">Category</label>
+            <select id="categorySelect">
+                <option>TOPIC_IDEA</option>
+                <option>GUEST_IDEA</option>
+                <option>YOUTUBE_DESCRIPTION</option>
+                <option>LINKEDIN_POST</option>
+                <option>SOCIAL_POST</option>
+                <option>HASHTAGS</option>
+                <option>YOUTUBE_TAGS</option>
+                <option>TRANSCRIPT</option>
+                <option>CHAPTERS</option>
+                <option>SUMMARY</option>
+                <option>THUMBNAIL_PROMPT</option>
+                <option>THUMBNAIL_ASSET</option>
+            </select>
+            <button type="button" onclick="loadEffectivePrompt(this)">Load effective prompt</button>
+        </div>
         <pre id="effectivePromptBox"></pre>
     </section>
 </main>
 
 <script th:inline="javascript">
     const projectId = /*[[${project.id}]]*/ '';
+    const projectName = /*[[${project.name}]]*/ '';
 </script>
 <script th:src="@{/project.js}"></script>
 </body>

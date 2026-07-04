@@ -8,38 +8,48 @@
 </head>
 <body>
 <main class="container">
-    <h1>Stream Helper</h1>
-    <p>Create and manage local-first projects for your live-coding sessions.</p>
-
-    <section class="card">
-        <h2>Create Project</h2>
-        <form method="post" action="/projects">
+    <section class="hero card">
+        <div>
+            <p class="eyebrow">AI Live-Coding Studio</p>
+            <h1>Stream Helper</h1>
+            <p class="muted">
+                Plan your next session, generate cross-platform content, process stream recordings, and keep everything
+                in local exportable files.
+            </p>
+            <div class="chip-row">
+                <span class="chip">Projects</span>
+                <span class="chip">Markdown notes</span>
+                <span class="chip">Versioned outputs</span>
+                <span class="chip">Ollama/OpenAI</span>
+            </div>
+        </div>
+        <form method="post" action="/projects" class="create-project-form">
+            <h2>Create project</h2>
             <label for="name">Project name</label>
-            <input id="name" name="name" type="text" required placeholder="My next stream series">
-            <button type="submit">Create</button>
+            <input id="name" name="name" type="text" required placeholder="Build modern Spring app with AI assistants">
+            <button type="submit">Create project</button>
+            <p class="error" th:if="${error}" th:text="${error}"></p>
         </form>
-        <p class="error" th:if="${error}" th:text="${error}"></p>
     </section>
 
     <section class="card">
-        <h2>Projects</h2>
-        <div th:if="${#lists.isEmpty(projects)}">No projects yet.</div>
-        <table th:if="${!#lists.isEmpty(projects)}">
-            <thead>
-            <tr>
-                <th>Name</th>
-                <th>ID</th>
-                <th>Updated</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="project : ${projects}">
-                <td><a th:href="@{|/projects/${project.id}|}" th:text="${project.name}"></a></td>
-                <td th:text="${project.id}"></td>
-                <td th:text="${project.updatedAt}"></td>
-            </tr>
-            </tbody>
-        </table>
+        <div class="section-heading">
+            <h2>Your projects</h2>
+            <span th:text="${#lists.size(projects)} + ' total'"></span>
+        </div>
+
+        <div th:if="${#lists.isEmpty(projects)}" class="empty-state">
+            <p>No projects yet. Create your first project to start planning your next stream.</p>
+        </div>
+
+        <div class="projects-grid" th:if="${!#lists.isEmpty(projects)}">
+            <article class="project-tile" th:each="project : ${projects}">
+                <h3 th:text="${project.name}"></h3>
+                <p class="muted"><strong>ID:</strong> <span th:text="${project.id}"></span></p>
+                <p class="muted"><strong>Updated:</strong> <span th:text="${project.updatedAt}"></span></p>
+                <a class="link-button" th:href="@{|/projects/${project.id}|}">Open workspace</a>
+            </article>
+        </div>
     </section>
 </main>
 </body>

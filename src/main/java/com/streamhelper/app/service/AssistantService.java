@@ -207,11 +207,21 @@ public class AssistantService {
                 resolvePostStreamInput(projectId, transcript),
                 List.of("default"),
                 """
-                Produce a detailed summary with:
-                - key technical topics
-                - decisions and trade-offs
-                - notable code/architecture points
-                - follow-up ideas
+                Produce a factual, blog-ready summary of the full video.
+                Focus on what was actually said, not interpretation.
+
+                Include:
+                - Main points discussed, with clear speaker attribution where available.
+                - What each speaker argued, proposed, or explained.
+                - Where speakers agreed.
+                - Where speakers disagreed (and about what).
+                - What the audience asked, suggested, or challenged.
+                - Concrete outcomes, decisions, and unresolved questions.
+
+                Constraints:
+                - Stay neutral and evidence-based.
+                - Do not add advice, speculation, or extra conclusions beyond the source.
+                - If attribution is unclear, state that it is unclear instead of guessing.
                 """);
     }
 

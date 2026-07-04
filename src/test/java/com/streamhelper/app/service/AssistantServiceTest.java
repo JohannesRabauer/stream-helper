@@ -99,6 +99,35 @@ class AssistantServiceTest {
     }
 
     @Test
+    void summaryPromptIsFactualAndBlogReady() {
+        StreamHelperProperties properties = new StreamHelperProperties();
+        properties.getStorage().setDataDir(tempDir);
+        ProjectStorageService storage = new ProjectStorageService(properties, new ObjectMapper().findAndRegisterModules());
+        var project = storage.createProject("Summary Prompt Project");
+        storage.saveArtifact(project.id(), GenerationCategory.TRANSCRIPT, "youtube-transcription", "Stored transcript text", true, false);
+
+        AiClient aiClient = mock(AiClient.class);
+        when(aiClient.generateText(any(), any())).thenAnswer(invocation -> invocation.getArgument(1, String.class));
+
+        AssistantService service = new AssistantService(
+                aiClient,
+                new InstructionComposer(storage),
+                storage,
+                new OutputValidationService(),
+                mock(TranscriptionService.class));
+
+        var result = service.generateSummary(project.id(), "");
+
+        assertThat(result.variants()).hasSize(1);
+        String content = result.variants().getFirst().getContent();
+        assertThat(content).contains("factual, blog-ready summary");
+        assertThat(content).contains("Where speakers agreed");
+        assertThat(content).contains("Where speakers disagreed");
+        assertThat(content).contains("What the audience asked");
+        assertThat(content).contains("Do not add advice, speculation");
+    }
+
+    @Test
     void renamesDiarizedSpeakersUsingConfiguredParticipantNames() {
         StreamHelperProperties properties = new StreamHelperProperties();
         properties.getStorage().setDataDir(tempDir);

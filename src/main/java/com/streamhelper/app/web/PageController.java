@@ -1,7 +1,8 @@
 package com.streamhelper.app.web;
 
 import com.streamhelper.app.project.ProjectStorageService;
-import com.streamhelper.app.service.MarkdownService;
+import com.streamhelper.app.service.InstructionComposer;
+import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,11 +14,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class PageController {
 
     private final ProjectStorageService storageService;
-    private final MarkdownService markdownService;
 
-    public PageController(ProjectStorageService storageService, MarkdownService markdownService) {
+    public PageController(ProjectStorageService storageService) {
         this.storageService = storageService;
-        this.markdownService = markdownService;
     }
 
     @GetMapping("/")
@@ -45,16 +44,20 @@ public class PageController {
     @GetMapping("/projects/{projectId}")
     public String project(@PathVariable String projectId, @RequestParam(value = "noteId", required = false) String noteId, Model model) {
         var project = storageService.getProject(projectId);
-        var notes = storageService.listNoteIds(projectId);
-        String selectedNote = noteId == null && !notes.isEmpty() ? notes.get(0) : noteId;
-        String markdown = selectedNote == null ? "" : storageService.readNote(projectId, selectedNote);
         model.addAttribute("project", project);
-        model.addAttribute("notes", notes);
-        model.addAttribute("selectedNoteId", selectedNote);
-        model.addAttribute("markdown", markdown);
-        model.addAttribute("renderedMarkdown", markdownService.render(markdown));
         model.addAttribute("projectConfig", storageService.readProjectConfig(projectId));
         model.addAttribute("globalConfig", storageService.readGlobalConfig());
+        model.addAttribute(
+                "workflowNotes",
+                Map.of(
+                        "pre-stream",
+                        storageService.readNoteOrEmpty(projectId, InstructionComposer.PRE_STREAM_NOTE_ID),
+                        "promotion",
+                        storageService.readNoteOrEmpty(projectId, InstructionComposer.PROMOTION_NOTE_ID),
+                        "post-stream",
+                        storageService.readNoteOrEmpty(projectId, InstructionComposer.POST_STREAM_NOTE_ID),
+                        "transcription",
+                        storageService.readNoteOrEmpty(projectId, InstructionComposer.TRANSCRIPTION_NOTE_ID)));
         return "project";
     }
 

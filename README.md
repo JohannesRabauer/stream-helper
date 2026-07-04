@@ -5,9 +5,11 @@ Local-first Spring Boot + Thymeleaf application for planning, promoting, and pos
 ## Features
 
 - Project-based workspace with file-backed storage (`schemaVersion: 1`)
-- Markdown notes with edit + rendered preview
+- Workflow tabs for pre-stream planning, promotion, transcription, and post-stream wrap-up
+- Autosaved stage drafts and notes so edits persist immediately
 - Instruction layering (Global + Project + Category)
 - Brand profile constraints
+- Finished stage outputs are reused as shared context for coherent generations (transcripts stay stored but excluded from shared prompt context)
 - AI generation for:
   - topics
   - guest ideas
@@ -23,6 +25,7 @@ Local-first Spring Boot + Thymeleaf application for planning, promoting, and pos
   - local file upload
   - YouTube URL via `yt-dlp`
   - speaker diarization when available
+  - OpenAI mode auto-splits long audio into chunked requests to stay within API upload limits
 - Versioned drafts + final selection for generated outputs
 - Raw-folder persistence + ZIP export with manifest
 

@@ -73,4 +73,62 @@ class AssistantServiceTest {
         assertThat(result.variants()).hasSize(1);
         assertThat(result.variants().getFirst().getContent()).contains("Welcome to the stream");
     }
+
+    @Test
+    void usesStoredTranscriptWhenPostStreamInputIsEmpty() {
+        StreamHelperProperties properties = new StreamHelperProperties();
+        properties.getStorage().setDataDir(tempDir);
+        ProjectStorageService storage = new ProjectStorageService(properties, new ObjectMapper().findAndRegisterModules());
+        var project = storage.createProject("Stored Transcript Project");
+        storage.saveArtifact(project.id(), GenerationCategory.TRANSCRIPT, "youtube-transcription", "Stored transcript text", true, false);
+
+        AiClient aiClient = mock(AiClient.class);
+        when(aiClient.generateText(any(), any())).thenAnswer(invocation -> invocation.getArgument(1, String.class));
+
+        AssistantService service = new AssistantService(
+                aiClient,
+                new InstructionComposer(storage),
+                storage,
+                new OutputValidationService(),
+                mock(TranscriptionService.class));
+
+        var result = service.generateChapters(project.id(), "");
+
+        assertThat(result.variants()).hasSize(1);
+        assertThat(result.variants().getFirst().getContent()).contains("Stored transcript text");
+    }
+
+    @Test
+    void renamesDiarizedSpeakersUsingConfiguredParticipantNames() {
+        StreamHelperProperties properties = new StreamHelperProperties();
+        properties.getStorage().setDataDir(tempDir);
+        ProjectStorageService storage = new ProjectStorageService(properties, new ObjectMapper().findAndRegisterModules());
+        var project = storage.createProject("Speaker Mapping Project");
+
+        var config = storage.readProjectConfig(project.id());
+        config.setHostDisplayName("Johannes");
+        config.setGuestDisplayName("Ada");
+        storage.saveProjectConfig(project.id(), config);
+
+        AiClient aiClient = mock(AiClient.class);
+        TranscriptionService transcriptionService = mock(TranscriptionService.class);
+        when(transcriptionService.transcribeUpload(any(), any(), anyBoolean()))
+                .thenReturn(List.of(
+                        new TranscriptEntry(0, 6, "Speaker 0", "Welcome back"),
+                        new TranscriptEntry(6, 11, "Speaker 1", "Thanks for having me")));
+        when(transcriptionService.toPlainTranscript(any())).thenCallRealMethod();
+
+        AssistantService service = new AssistantService(
+                aiClient,
+                new InstructionComposer(storage),
+                storage,
+                new OutputValidationService(),
+                transcriptionService);
+
+        MockMultipartFile file = new MockMultipartFile("file", "video.mp4", "video/mp4", "fake".getBytes());
+        var result = service.transcribeFile(project.id(), file, "en", true);
+
+        assertThat(result.variants().getFirst().getContent()).contains("Johannes: Welcome back");
+        assertThat(result.variants().getFirst().getContent()).contains("Ada: Thanks for having me");
+    }
 }

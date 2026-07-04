@@ -23,90 +23,29 @@
 
     <section id="statusBar" class="status-bar" hidden></section>
 
-    <div class="layout-grid">
-        <section class="card">
-            <div class="section-heading">
-                <h2>Notes workspace</h2>
-                <span th:text="${#lists.size(notes)} + ' notes'"></span>
-            </div>
-
-            <div class="note-list">
-                <a th:each="note : ${notes}"
-                   th:href="@{|/projects/${project.id}?noteId=${note}|}"
-                   th:text="${note}"
-                   th:classappend="${note == selectedNoteId} ? ' active' : ''"></a>
-            </div>
-
-            <form method="post" th:action="@{|/projects/${project.id}/notes|}">
-                <label for="noteId">Note ID</label>
-                <input id="noteId" name="noteId" type="text" th:value="${selectedNoteId}" placeholder="architecture-notes">
-                <div class="toggle-group">
-                    <button type="button" onclick="toggleNoteView('edit')">Edit</button>
-                    <button type="button" onclick="toggleNoteView('preview')">Preview</button>
-                </div>
-                <div id="noteEditArea">
-                    <label for="markdown">Markdown</label>
-                    <textarea id="markdown" name="markdown" rows="16" th:text="${markdown}"></textarea>
-                </div>
-                <div id="notePreviewArea" class="markdown-preview" hidden th:utext="${renderedMarkdown}"></div>
-                <button type="submit">Save note</button>
-            </form>
-        </section>
-
-        <section class="card">
-            <div class="section-heading">
-                <h2>Assistant studio</h2>
-                <span>Versioned drafts</span>
-            </div>
-
-            <label for="assistantInput">Brief / transcript / prompt context</label>
-            <textarea id="assistantInput" rows="8" placeholder="Example: Build a Spring Boot + AI coding stream with a guest expert..."></textarea>
-
-            <div class="quick-prompt-row">
-                <button type="button" class="chip-button" onclick="injectTemplate('pre')">Pre-stream template</button>
-                <button type="button" class="chip-button" onclick="injectTemplate('promo')">Promotion template</button>
-                <button type="button" class="chip-button" onclick="injectTemplate('post')">Post-stream template</button>
-            </div>
-
-            <h3>Pre-stream planning</h3>
-            <div class="button-grid">
-                <button type="button" onclick="runBriefAction('topic-ideas', this)">Generate topic ideas</button>
-                <button type="button" onclick="runBriefAction('guest-ideas', this)">Find guest ideas</button>
-            </div>
-
-            <h3>Promotion</h3>
-            <div class="button-grid">
-                <button type="button" onclick="runBriefAction('youtube-description', this)">YouTube descriptions</button>
-                <button type="button" onclick="runBriefAction('linkedin-post', this)">LinkedIn posts</button>
-                <button type="button" onclick="runBriefAction('social-posts', this)">Social posts (X-ready)</button>
-                <button type="button" onclick="runBriefAction('hashtags', this)">Hashtags</button>
-                <button type="button" onclick="runBriefAction('youtube-tags', this)">YouTube tags (500 chars)</button>
-            </div>
-
-            <h3>Post-stream</h3>
-            <div class="button-grid">
-                <button type="button" onclick="runTextAction('chapters', this)">Create chapters</button>
-                <button type="button" onclick="runTextAction('summary', this)">Create detailed summary</button>
-            </div>
-
-            <h3>Thumbnail</h3>
-            <div class="button-grid">
-                <button type="button" onclick="runBriefAction('thumbnail-prompts', this)">Generate thumbnail prompts</button>
-                <button type="button" onclick="createThumbnail(false, this)">Create external prompt package</button>
-                <button type="button" onclick="createThumbnail(true, this)">Generate thumbnail image</button>
-            </div>
-        </section>
-    </div>
+    <section class="card">
+        <div class="section-heading">
+            <h2>Workflow cockpit</h2>
+            <span>Everything autosaves</span>
+        </div>
+        <p class="muted">Work through the stream in stages. Drafts and notes are saved immediately, generated outputs create a new version every time, and inline history stays with the stage where you need it.</p>
+        <div class="workflow-tabs" role="tablist" aria-label="Workflow stages">
+            <button type="button" class="tab-button active" data-tab="pre-stream" onclick="selectWorkflowTab('pre-stream', this)">Pre-stream planning</button>
+            <button type="button" class="tab-button" data-tab="promotion" onclick="selectWorkflowTab('promotion', this)">Promotion</button>
+            <button type="button" class="tab-button" data-tab="transcription" onclick="selectWorkflowTab('transcription', this)">Transcription</button>
+            <button type="button" class="tab-button" data-tab="post-stream" onclick="selectWorkflowTab('post-stream', this)">Post-stream wrap-up</button>
+        </div>
+    </section>
 
     <section class="card">
         <div class="section-heading">
-            <h2>Result panel</h2>
+            <h2>Latest result</h2>
             <div class="inline-actions">
                 <button type="button" class="secondary-button" onclick="copyRawResult()">Copy JSON</button>
                 <button type="button" class="secondary-button" onclick="copyRecommendedContent()">Copy recommended</button>
             </div>
         </div>
-        <div id="resultSummary" class="muted">Run an assistant action to view polished output cards here.</div>
+        <div id="resultSummary" class="muted">Run an action in any workflow stage to see the newest output here.</div>
         <div id="variantCards" class="variant-grid"></div>
         <details class="result-raw">
             <summary>Raw response JSON</summary>
@@ -114,53 +53,189 @@
         </details>
     </section>
 
-    <div class="layout-grid">
-        <section class="card">
-            <h2>Transcription</h2>
-            <p class="muted">Use local upload or YouTube URL. Output is stored in transcript artifacts.</p>
-            <form id="transcriptionFileForm" enctype="multipart/form-data" class="compact-form">
-                <label for="transcriptionFile">Local media file</label>
-                <input type="file" id="transcriptionFile" name="file" required>
-                <label for="transcriptionLanguage">Language (optional)</label>
-                <input type="text" id="transcriptionLanguage" placeholder="en">
-                <label><input type="checkbox" id="transcriptionDiarize" checked> Enable speaker diarization</label>
-                <button type="button" onclick="transcribeFile(this)">Transcribe local file</button>
-            </form>
-            <form id="transcriptionYoutubeForm" class="compact-form">
-                <label for="youtubeUrl">YouTube URL</label>
-                <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." required>
-                <button type="button" onclick="transcribeYoutube(this)">Transcribe YouTube URL</button>
-            </form>
-        </section>
+    <section class="workflow-panel card active" data-tab-panel="pre-stream">
+        <div class="section-heading">
+            <h2>Pre-stream planning</h2>
+            <span>1. Decide the stream</span>
+        </div>
+        <div class="workflow-grid">
+            <div class="workflow-main">
+                <div class="workflow-guide">
+                    <strong>Suggested flow</strong>
+                    <ol>
+                        <li>Write the stream brief and boundaries.</li>
+                        <li>Collect topic options and guest angles.</li>
+                        <li>Mark the strongest draft as final before moving on.</li>
+                    </ol>
+                </div>
 
-        <section class="card">
-            <h2>Artifact history</h2>
-            <p class="muted">Review versions and mark one as final for each category.</p>
-            <label for="artifactCategorySelect">Category</label>
-            <select id="artifactCategorySelect">
-                <option>TOPIC_IDEA</option>
-                <option>GUEST_IDEA</option>
-                <option>YOUTUBE_DESCRIPTION</option>
-                <option>LINKEDIN_POST</option>
-                <option>SOCIAL_POST</option>
-                <option>HASHTAGS</option>
-                <option>YOUTUBE_TAGS</option>
-                <option>TRANSCRIPT</option>
-                <option>CHAPTERS</option>
-                <option>SUMMARY</option>
-                <option>THUMBNAIL_PROMPT</option>
-                <option>THUMBNAIL_ASSET</option>
-            </select>
-            <div class="inline-actions">
-                <button type="button" onclick="loadArtifactHistory(this)">Load history</button>
+                <label for="draft-pre-stream">Working brief</label>
+                <textarea id="draft-pre-stream" rows="8" data-draft-key="pre-stream" placeholder="Describe the stream goal, audience, format, constraints, and what a good episode should achieve."></textarea>
+                <div class="autosave-hint">Autosaved to the project and reused in this stage.</div>
+
+                <label for="note-pre-stream">Stage notes</label>
+                <textarea id="note-pre-stream" rows="8" data-note-key="pre-stream" data-note-id="pre-stream-notes" placeholder="Capture research, decisions, open questions, and anything you do not want to lose."></textarea>
+                <div class="autosave-hint">Notes save immediately while you type.</div>
+
+                <div class="button-grid">
+                    <button type="button" onclick="runStageBriefAction('pre-stream', 'topic-ideas', this)">Generate topic ideas</button>
+                    <button type="button" onclick="runStageBriefAction('pre-stream', 'guest-ideas', this)">Find guest ideas</button>
+                </div>
             </div>
-            <div id="artifactHistoryList" class="artifact-list"></div>
-        </section>
-    </div>
+            <aside class="history-panel">
+                <div class="section-heading">
+                    <h3>Stage history</h3>
+                    <span id="history-count-pre-stream">0 entries</span>
+                </div>
+                <div id="history-pre-stream" class="history-groups"></div>
+            </aside>
+        </div>
+    </section>
 
-    <section class="card">
-        <h2>Instruction preview</h2>
-        <p class="muted">Inspect the effective prompt composition for a category.</p>
+    <section class="workflow-panel card" data-tab-panel="promotion" hidden>
+        <div class="section-heading">
+            <h2>Promotion</h2>
+            <span>2. Ship the launch assets</span>
+        </div>
+        <div class="workflow-grid">
+            <div class="workflow-main">
+                <div class="workflow-guide">
+                    <strong>Suggested flow</strong>
+                    <ol>
+                        <li>Refine the stream angle from the planning stage.</li>
+                        <li>Create descriptions, posts, hashtags, and tags.</li>
+                        <li>Generate thumbnail prompts after the copy feels stable.</li>
+                    </ol>
+                </div>
+
+                <label for="draft-promotion">Promotion brief</label>
+                <textarea id="draft-promotion" rows="8" data-draft-key="promotion" placeholder="Add launch messaging, CTA preferences, release timing, and any audience hooks to emphasize."></textarea>
+                <div class="autosave-hint">Autosaved and combined with finished planning outputs for coherent promos.</div>
+
+                <label for="note-promotion">Promotion notes</label>
+                <textarea id="note-promotion" rows="8" data-note-key="promotion" data-note-id="promotion-notes" placeholder="Track messaging experiments, campaign notes, title options, links, and rollout reminders."></textarea>
+                <div class="autosave-hint">Notes save immediately while you type.</div>
+
+                <div class="button-grid">
+                    <button type="button" onclick="runStageBriefAction('promotion', 'youtube-description', this)">YouTube descriptions</button>
+                    <button type="button" onclick="runStageBriefAction('promotion', 'linkedin-post', this)">LinkedIn posts</button>
+                    <button type="button" onclick="runStageBriefAction('promotion', 'social-posts', this)">Social posts (X-ready)</button>
+                    <button type="button" onclick="runStageBriefAction('promotion', 'hashtags', this)">Hashtags</button>
+                    <button type="button" onclick="runStageBriefAction('promotion', 'youtube-tags', this)">YouTube tags</button>
+                    <button type="button" onclick="runStageBriefAction('promotion', 'thumbnail-prompts', this)">Generate thumbnail prompts</button>
+                    <button type="button" onclick="createThumbnailFromStage('promotion', false, this)">Create external prompt package</button>
+                    <button type="button" onclick="createThumbnailFromStage('promotion', true, this)">Generate thumbnail image</button>
+                </div>
+            </div>
+            <aside class="history-panel">
+                <div class="section-heading">
+                    <h3>Stage history</h3>
+                    <span id="history-count-promotion">0 entries</span>
+                </div>
+                <div id="history-promotion" class="history-groups"></div>
+            </aside>
+        </div>
+    </section>
+
+    <section class="workflow-panel card" data-tab-panel="transcription" hidden>
+        <div class="section-heading">
+            <h2>Transcription</h2>
+            <span>3. Capture the conversation</span>
+        </div>
+        <div class="workflow-grid">
+            <div class="workflow-main">
+                <div class="workflow-guide">
+                    <strong>Suggested flow</strong>
+                    <ol>
+                        <li>Set the host and guest names if you want them carried into downstream prompts.</li>
+                        <li>Transcribe from a local file or a YouTube URL.</li>
+                        <li>Move to post-stream actions after the transcript history shows a fresh entry.</li>
+                    </ol>
+                </div>
+
+                <div class="two-column-grid">
+                    <div>
+                        <label for="hostDisplayName">Host name</label>
+                        <input id="hostDisplayName" type="text" placeholder="Your name">
+                    </div>
+                    <div>
+                        <label for="guestDisplayName">Guest name</label>
+                        <input id="guestDisplayName" type="text" placeholder="Guest name">
+                    </div>
+                </div>
+                <p class="muted">When diarized speakers are available, the stored transcript can map the first two speaker labels to these names. The transcript stays saved in the project but is kept out of general prompt context.</p>
+
+                <form id="transcriptionFileForm" enctype="multipart/form-data" class="compact-form">
+                    <label for="transcriptionFile">Local media file</label>
+                    <input type="file" id="transcriptionFile" name="file" required>
+                    <label for="transcriptionLanguage">Language (optional)</label>
+                    <input type="text" id="transcriptionLanguage" placeholder="en">
+                    <label><input type="checkbox" id="transcriptionDiarize" checked> Enable speaker diarization</label>
+                    <button type="button" onclick="transcribeFile(this)">Transcribe local file</button>
+                </form>
+
+                <form id="transcriptionYoutubeForm" class="compact-form">
+                    <label for="youtubeUrl">YouTube URL</label>
+                    <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." required>
+                    <button type="button" onclick="transcribeYoutube(this)">Transcribe YouTube URL</button>
+                </form>
+
+                <label for="note-transcription">Transcription notes</label>
+                <textarea id="note-transcription" rows="7" data-note-key="transcription" data-note-id="transcription-notes" placeholder="Keep notes about speaker attribution, tricky names, or anything to double-check after transcription."></textarea>
+                <div class="autosave-hint">Notes save immediately while you type.</div>
+            </div>
+            <aside class="history-panel">
+                <div class="section-heading">
+                    <h3>Transcript history</h3>
+                    <span id="history-count-transcription">0 entries</span>
+                </div>
+                <div id="history-transcription" class="history-groups"></div>
+            </aside>
+        </div>
+    </section>
+
+    <section class="workflow-panel card" data-tab-panel="post-stream" hidden>
+        <div class="section-heading">
+            <h2>Post-stream wrap-up</h2>
+            <span>4. Package the replay</span>
+        </div>
+        <div class="workflow-grid">
+            <div class="workflow-main">
+                <div class="workflow-guide">
+                    <strong>Suggested flow</strong>
+                    <ol>
+                        <li>Transcribe first so the latest stored transcript is available.</li>
+                        <li>Add optional focus notes for what matters in the recap.</li>
+                        <li>Create chapters, then summary, and mark the best versions as final.</li>
+                    </ol>
+                </div>
+
+                <label for="draft-post-stream">Extra recap guidance</label>
+                <textarea id="draft-post-stream" rows="8" data-draft-key="post-stream" placeholder="Optional: ask for certain takeaways, highlight key moments, or specify what the replay summary should emphasize."></textarea>
+                <div class="autosave-hint">Autosaved. Chapters and summary use the latest stored transcript automatically if this field is empty.</div>
+
+                <label for="note-post-stream">Post-stream notes</label>
+                <textarea id="note-post-stream" rows="8" data-note-key="post-stream" data-note-id="post-stream-notes" placeholder="Track edits to make, standout moments, sponsor mentions, or ideas for the follow-up stream."></textarea>
+                <div class="autosave-hint">Notes save immediately while you type.</div>
+
+                <div class="button-grid">
+                    <button type="button" onclick="runStageTextAction('post-stream', 'chapters', this)">Create chapters</button>
+                    <button type="button" onclick="runStageTextAction('post-stream', 'summary', this)">Create detailed summary</button>
+                </div>
+            </div>
+            <aside class="history-panel">
+                <div class="section-heading">
+                    <h3>Stage history</h3>
+                    <span id="history-count-post-stream">0 entries</span>
+                </div>
+                <div id="history-post-stream" class="history-groups"></div>
+            </aside>
+        </div>
+    </section>
+
+    <details class="card debug-card">
+        <summary>LLM context debug</summary>
+        <p class="muted">This is the debug view for what gets composed before a generation request. It is useful for trust and troubleshooting, but it stays tucked away so it does not interrupt the normal workflow.</p>
         <div class="inline-actions">
             <label for="categorySelect">Category</label>
             <select id="categorySelect">
@@ -177,15 +252,17 @@
                 <option>THUMBNAIL_PROMPT</option>
                 <option>THUMBNAIL_ASSET</option>
             </select>
-            <button type="button" onclick="loadEffectivePrompt(this)">Load effective prompt</button>
+            <button type="button" onclick="loadEffectivePrompt(this)">Load debug preview</button>
         </div>
-        <pre id="effectivePromptBox"></pre>
-    </section>
+        <pre id="effectivePromptBox">Choose a category to inspect the composed LLM context.</pre>
+    </details>
 </main>
 
 <script th:inline="javascript">
     const projectId = /*[[${project.id}]]*/ '';
     const projectName = /*[[${project.name}]]*/ '';
+    const initialProjectConfig = /*[[${projectConfig}]]*/ {};
+    const initialWorkflowNotes = /*[[${workflowNotes}]]*/ {};
 </script>
 <script th:src="@{/project.js}"></script>
 </body>

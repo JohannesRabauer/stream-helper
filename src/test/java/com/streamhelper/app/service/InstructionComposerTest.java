@@ -40,4 +40,29 @@ class InstructionComposerTest {
         assertThat(result).contains("Project category instruction");
         assertThat(result).contains("Priority rules");
     }
+
+    @Test
+    void includesSavedAreaContextButExcludesStoredTranscript() {
+        StreamHelperProperties properties = new StreamHelperProperties();
+        properties.getStorage().setDataDir(tempDir);
+        ProjectStorageService storageService = new ProjectStorageService(properties, new ObjectMapper().findAndRegisterModules());
+        var project = storageService.createProject("Context Demo");
+
+        storageService.saveNote(project.id(), InstructionComposer.PRE_STREAM_NOTE_ID, "Remember to keep the stream practical.");
+        storageService.saveArtifact(project.id(), GenerationCategory.TOPIC_IDEA, "default", "Build an MCP debugging stream", true, true);
+        storageService.saveArtifact(project.id(), GenerationCategory.TRANSCRIPT, "transcription", "Huge transcript body should stay out of shared context", true, false);
+
+        var projectConfig = storageService.readProjectConfig(project.id());
+        projectConfig.setHostDisplayName("Johannes");
+        projectConfig.setGuestDisplayName("Guest Expert");
+        storageService.saveProjectConfig(project.id(), projectConfig);
+
+        InstructionComposer composer = new InstructionComposer(storageService);
+        String result = composer.compose(project.id(), GenerationCategory.YOUTUBE_DESCRIPTION);
+
+        assertThat(result).contains("Remember to keep the stream practical.");
+        assertThat(result).contains("Build an MCP debugging stream");
+        assertThat(result).contains("Johannes");
+        assertThat(result).doesNotContain("Huge transcript body should stay out of shared context");
+    }
 }

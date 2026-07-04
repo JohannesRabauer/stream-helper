@@ -439,6 +439,99 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):hover 
     grid-template-columns: 1fr 1fr;
 }
 
+.workflow-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 1rem;
+}
+
+.tab-button {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--muted);
+    border: 1px solid var(--border);
+}
+
+.tab-button.active {
+    background: rgba(124, 58, 237, 0.18);
+    border-color: rgba(139, 92, 246, 0.45);
+    color: #ddd6fe;
+    box-shadow: 0 0 18px rgba(124, 58, 237, 0.18);
+}
+
+.workflow-panel {
+    animation: fadeInUp 0.35s ease both;
+}
+
+.workflow-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+    gap: 1.25rem;
+}
+
+.workflow-main {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.history-panel {
+    border-left: 1px solid var(--border);
+    padding-left: 1.25rem;
+}
+
+.workflow-guide {
+    border: 1px solid rgba(6, 182, 212, 0.22);
+    background: rgba(6, 182, 212, 0.08);
+    border-radius: var(--radius-sm);
+    padding: 0.9rem 1rem;
+}
+
+.workflow-guide strong {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: #67e8f9;
+}
+
+.workflow-guide ol {
+    margin-left: 1.1rem;
+}
+
+.workflow-guide li + li {
+    margin-top: 0.25rem;
+}
+
+.autosave-hint {
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-top: -0.15rem;
+}
+
+.two-column-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.history-groups {
+    display: grid;
+    gap: 1rem;
+}
+
+.history-group {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.9rem;
+    background: rgba(0, 0, 0, 0.16);
+}
+
+.history-group-heading {
+    margin-bottom: 0.75rem;
+}
+
+.history-group-heading h3 {
+    margin: 0;
+}
+
 /* ── Project header ── */
 .project-header {
     display: flex;
@@ -631,10 +724,8 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):hover 
 }
 
 .artifact-item {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
     gap: 0.8rem;
-    align-items: center;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     padding: 0.75rem 0.95rem;
@@ -643,6 +734,15 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):hover 
 }
 
 .artifact-item:hover { border-color: rgba(139, 92, 246, 0.3); }
+
+.artifact-copy pre {
+    margin-top: 0.65rem;
+    max-height: 220px;
+}
+
+.artifact-actions {
+    justify-content: flex-start;
+}
 
 /* ── Badges ── */
 .badge {
@@ -793,6 +893,13 @@ details[open] .result-raw summary::before,
 .result-raw details[open] summary::before { transform: rotate(90deg); }
 .result-raw summary:hover { color: var(--text); background: rgba(255,255,255,0.04); }
 
+.debug-card summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.85rem;
+}
+
 /* ── Compact form ── */
 .compact-form { margin-bottom: 0.8rem; }
 
@@ -805,6 +912,18 @@ details[open] .result-raw summary::before,
     .hero,
     .layout-grid {
         grid-template-columns: 1fr;
+    }
+
+    .workflow-grid,
+    .two-column-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .history-panel {
+        border-left: none;
+        border-top: 1px solid var(--border);
+        padding-left: 0;
+        padding-top: 1rem;
     }
 
     .create-project-form {

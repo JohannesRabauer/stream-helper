@@ -76,6 +76,24 @@ class ProjectApiControllerIntegrationTest {
     }
 
     @Test
+    void canSaveEmptyAutosaveNote() throws Exception {
+        String projectResponse = mockMvc.perform(post("/api/projects")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Empty Notes Project\"}"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String projectId = projectResponse.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/notes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"noteId\":\"pre-stream-notes\",\"markdown\":\"\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.markdown").value(""));
+    }
+
+    @Test
     void canExportProjectZip() throws Exception {
         String projectResponse = mockMvc.perform(post("/api/projects")
                         .contentType(MediaType.APPLICATION_JSON)

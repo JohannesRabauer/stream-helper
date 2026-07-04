@@ -4,6 +4,8 @@ import com.streamhelper.app.ai.AiClient;
 import com.streamhelper.app.ai.AiClientException;
 import com.streamhelper.app.model.ArtifactVersion;
 import com.streamhelper.app.model.GenerationCategory;
+import com.streamhelper.app.model.ProjectConfig;
+import com.streamhelper.app.model.TranscriptEntry;
 import com.streamhelper.app.model.ValidationIssue;
 import com.streamhelper.app.model.VariantResult;
 import com.streamhelper.app.project.ProjectStorageService;
@@ -11,12 +13,18 @@ import com.streamhelper.app.transcription.TranscriptionService;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class AssistantService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AssistantService.class);
 
     private final AiClient aiClient;
     private final InstructionComposer instructionComposer;
@@ -129,11 +137,23 @@ public class AssistantService {
     }
 
     public VariantResult transcribeFile(String projectId, MultipartFile file, String language, boolean diarize) {
-        var entries = transcriptionService.transcribeUpload(file, language, diarize);
+        logger.info(
+                "Transcribe file requested: projectId={}, filename={}, sizeBytes={}, language={}, diarize={}",
+                projectId,
+                file.getOriginalFilename(),
+                file.getSize(),
+                language,
+                diarize);
+        var entries = applyParticipantLabels(projectId, transcriptionService.transcribeUpload(file, language, diarize));
         String transcript = transcriptionService.toPlainTranscript(entries);
         String normalized = validationService.normalize(GenerationCategory.TRANSCRIPT, transcript);
         ArtifactVersion artifact = storageService.saveArtifact(
                 projectId, GenerationCategory.TRANSCRIPT, "transcription", normalized, true, false);
+        logger.info(
+                "Transcribe file completed: projectId={}, entries={}, transcriptChars={}",
+                projectId,
+                entries.size(),
+                normalized.length());
         return new VariantResult(
                 GenerationCategory.TRANSCRIPT,
                 instructionComposer.effectivePreview(projectId, GenerationCategory.TRANSCRIPT),
@@ -142,11 +162,23 @@ public class AssistantService {
     }
 
     public VariantResult transcribeYoutube(String projectId, String youtubeUrl, String language, boolean diarize) {
-        var entries = transcriptionService.transcribeYoutube(youtubeUrl, language, diarize);
+        logger.info(
+                "Transcribe YouTube requested: projectId={}, url={}, language={}, diarize={}",
+                projectId,
+                youtubeUrl,
+                language,
+                diarize);
+        var entries = applyParticipantLabels(projectId, transcriptionService.transcribeYoutube(youtubeUrl, language, diarize));
         String transcript = transcriptionService.toPlainTranscript(entries);
         String normalized = validationService.normalize(GenerationCategory.TRANSCRIPT, transcript);
         ArtifactVersion artifact = storageService.saveArtifact(
                 projectId, GenerationCategory.TRANSCRIPT, "youtube-transcription", normalized, true, false);
+        logger.info(
+                "Transcribe YouTube completed: projectId={}, url={}, entries={}, transcriptChars={}",
+                projectId,
+                youtubeUrl,
+                entries.size(),
+                normalized.length());
         return new VariantResult(
                 GenerationCategory.TRANSCRIPT,
                 instructionComposer.effectivePreview(projectId, GenerationCategory.TRANSCRIPT),
@@ -158,7 +190,7 @@ public class AssistantService {
         return generateVariants(
                 projectId,
                 GenerationCategory.CHAPTERS,
-                transcript,
+                resolvePostStreamInput(projectId, transcript),
                 List.of("default"),
                 """
                 Create YouTube chapters from the transcript.
@@ -172,7 +204,7 @@ public class AssistantService {
         return generateVariants(
                 projectId,
                 GenerationCategory.SUMMARY,
-                transcript,
+                resolvePostStreamInput(projectId, transcript),
                 List.of("default"),
                 """
                 Produce a detailed summary with:
@@ -257,5 +289,67 @@ public class AssistantService {
             artifacts.add(storageService.saveArtifact(projectId, category, strategy, content, index == 0, false));
         }
         return new VariantResult(category, effective, artifacts, issues);
+    }
+
+    private String resolvePostStreamInput(String projectId, String additionalInstructions) {
+        String transcript = storageService.getLatestArtifact(projectId, GenerationCategory.TRANSCRIPT)
+                .map(ArtifactVersion::getContent)
+                .orElseThrow(() -> new AiClientException("No stored transcript found. Transcribe a video first or paste transcript text."));
+        if (additionalInstructions == null || additionalInstructions.isBlank()) {
+            return transcript;
+        }
+        return """
+                Transcript:
+                %s
+
+                Additional focus:
+                %s
+                """
+                .formatted(transcript, additionalInstructions.trim());
+    }
+
+    private List<TranscriptEntry> applyParticipantLabels(String projectId, List<TranscriptEntry> entries) {
+        ProjectConfig config = storageService.readProjectConfig(projectId);
+        String host = trimToNull(config.getHostDisplayName());
+        String guest = trimToNull(config.getGuestDisplayName());
+        if (host == null && guest == null) {
+            return entries;
+        }
+
+        Map<String, String> aliases = new LinkedHashMap<>();
+        for (TranscriptEntry entry : entries) {
+            String speaker = trimToNull(entry.speaker());
+            if (speaker == null || "Unknown".equalsIgnoreCase(speaker) || aliases.containsKey(speaker)) {
+                continue;
+            }
+            if (aliases.isEmpty() && host != null) {
+                aliases.put(speaker, host);
+                continue;
+            }
+            if (aliases.size() == 1 && guest != null) {
+                aliases.put(speaker, guest);
+            }
+        }
+        if (aliases.isEmpty()) {
+            return entries;
+        }
+
+        List<TranscriptEntry> renamed = new ArrayList<>(entries.size());
+        for (TranscriptEntry entry : entries) {
+            renamed.add(new TranscriptEntry(
+                    entry.startSeconds(),
+                    entry.endSeconds(),
+                    aliases.getOrDefault(entry.speaker(), entry.speaker()),
+                    entry.text()));
+        }
+        return renamed;
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isBlank() ? null : trimmed;
     }
 }

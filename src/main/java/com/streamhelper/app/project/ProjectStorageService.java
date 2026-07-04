@@ -187,6 +187,19 @@ public class ProjectStorageService {
         }
     }
 
+    public String readNoteOrEmpty(String projectId, String noteId) {
+        ensureProjectExists(projectId);
+        Path file = getProjectDir(projectId).resolve("notes").resolve("%s.md".formatted(noteId));
+        if (Files.notExists(file)) {
+            return "";
+        }
+        try {
+            return Files.readString(file, StandardCharsets.UTF_8);
+        } catch (IOException exception) {
+            throw new StorageException("Failed to read note %s".formatted(noteId), exception);
+        }
+    }
+
     public void deleteNote(String projectId, String noteId) {
         ensureProjectExists(projectId);
         Path file = getProjectDir(projectId).resolve("notes").resolve("%s.md".formatted(noteId));
@@ -336,6 +349,10 @@ public class ProjectStorageService {
         } catch (IOException exception) {
             throw new StorageException("Failed to read final artifact", exception);
         }
+    }
+
+    public Optional<ArtifactVersion> getLatestArtifact(String projectId, GenerationCategory category) {
+        return listArtifacts(projectId, category).stream().findFirst();
     }
 
     public Path writeBinaryAsset(String projectId, GenerationCategory category, String extension, InputStream content) {

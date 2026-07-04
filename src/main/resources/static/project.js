@@ -11,7 +11,7 @@ const workflowAreas = {
     draftInputId: "draft-description",
     historyContainerId: "history-description",
     historyCountId: "history-count-description",
-    categories: ["YOUTUBE_DESCRIPTION", "YOUTUBE_TAGS"]
+    categories: ["YOUTUBE_TITLES", "YOUTUBE_DESCRIPTION", "YOUTUBE_TAGS"]
   },
   thumbnail: {
     draftKey: "thumbnail",
@@ -44,6 +44,7 @@ const workflowAreas = {
 const categoryLabels = {
   TOPIC_IDEA: "Topic ideas",
   GUEST_IDEA: "Guest ideas",
+  YOUTUBE_TITLES: "YouTube titles",
   YOUTUBE_DESCRIPTION: "YouTube descriptions",
   LINKEDIN_POST: "LinkedIn posts",
   SOCIAL_POST: "Social posts",
@@ -59,6 +60,7 @@ const categoryLabels = {
 const categoryToArea = {
   TOPIC_IDEA: "pre-stream",
   GUEST_IDEA: "pre-stream",
+  YOUTUBE_TITLES: "description",
   YOUTUBE_DESCRIPTION: "description",
   YOUTUBE_TAGS: "description",
   THUMBNAIL_PROMPT: "thumbnail",
@@ -86,6 +88,7 @@ let projectNotesMode = "edit";
 const editableArtifactCategories = new Set([
   "TOPIC_IDEA",
   "GUEST_IDEA",
+  "YOUTUBE_TITLES",
   "YOUTUBE_DESCRIPTION",
   "LINKEDIN_POST",
   "SOCIAL_POST",

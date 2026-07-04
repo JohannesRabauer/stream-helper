@@ -87,6 +87,26 @@ public class AssistantService {
                 "Write a polished YouTube description with clear value, agenda, and call to action.");
     }
 
+    public VariantResult generateYouTubeTitles(String projectId, String brief) {
+        return generateVariants(
+                projectId,
+                GenerationCategory.YOUTUBE_TITLES,
+                brief,
+                List.of("editor-pick"),
+                """
+                Suggest exactly 15 YouTube titles for the same video.
+                Every title must use a clearly different angle so the set spans very different areas.
+                Include a spread such as: contrarian take, practical tutorial, beginner framing, advanced deep dive,
+                case study, myth-busting, trend/prediction, comparison, mistakes to avoid, and storytelling.
+
+                Output format (strict):
+                - one title per line
+                - mark exactly one strongest choice as: ⭐ RECOMMENDED: <title>
+                - all other 14 lines as: - <title>
+                - do not add explanations or extra lines
+                """);
+    }
+
     public VariantResult generateLinkedInPosts(String projectId, String brief) {
         return generateVariants(
                 projectId,

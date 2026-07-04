@@ -50,6 +50,11 @@ public class AssistantApiController {
         return assistantService.generateYouTubeDescriptions(projectId, request.brief());
     }
 
+    @PostMapping("/youtube-titles")
+    public Object youtubeTitles(@PathVariable String projectId, @Valid @RequestBody GenerationRequest request) {
+        return assistantService.generateYouTubeTitles(projectId, request.brief());
+    }
+
     @PostMapping("/linkedin-post")
     public Object linkedinPost(@PathVariable String projectId, @Valid @RequestBody GenerationRequest request) {
         return assistantService.generateLinkedInPosts(projectId, request.brief());

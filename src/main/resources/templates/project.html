@@ -102,7 +102,7 @@
                     <strong>Suggested flow</strong>
                     <ol>
                         <li>Refine the stream angle from the planning stage.</li>
-                        <li>Create the YouTube description and tags.</li>
+                        <li>Create title ideas, the YouTube description, and tags.</li>
                         <li>Mark the best version as final before moving to thumbnail or announcements.</li>
                     </ol>
                 </div>
@@ -112,6 +112,7 @@
                 <div class="autosave-hint">Autosaved and combined with finished planning outputs for coherent descriptions.</div>
 
                 <div class="button-grid">
+                    <button type="button" onclick="runStageBriefAction('description', 'youtube-titles', this)">Suggest title</button>
                     <button type="button" onclick="runStageBriefAction('description', 'youtube-description', this)">YouTube descriptions</button>
                     <button type="button" onclick="runStageBriefAction('description', 'youtube-tags', this)">YouTube tags</button>
                 </div>
@@ -301,6 +302,7 @@
             <select id="categorySelect">
                 <option>TOPIC_IDEA</option>
                 <option>GUEST_IDEA</option>
+                <option>YOUTUBE_TITLES</option>
                 <option>YOUTUBE_DESCRIPTION</option>
                 <option>LINKEDIN_POST</option>
                 <option>SOCIAL_POST</option>
@@ -411,7 +413,7 @@
             <textarea id="stage-definition-pre-stream" rows="4" data-stage-definition="pre-stream" placeholder="Rules only for pre-stream planning actions."></textarea>
 
             <label for="stage-definition-description">Description definition</label>
-            <textarea id="stage-definition-description" rows="4" data-stage-definition="description" placeholder="Rules only for YouTube descriptions and tags."></textarea>
+            <textarea id="stage-definition-description" rows="4" data-stage-definition="description" placeholder="Rules only for YouTube titles, descriptions, and tags."></textarea>
 
             <label for="stage-definition-thumbnail">Thumbnail definition</label>
             <textarea id="stage-definition-thumbnail" rows="4" data-stage-definition="thumbnail" placeholder="Rules only for thumbnail prompts and assets."></textarea>

@@ -59,6 +59,18 @@ class AssistantApiControllerIntegrationTest {
     }
 
     @Test
+    void generatesYoutubeTitlesWithSingleRecommendedSet() throws Exception {
+        String projectId = createProject("Title API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/youtube-titles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Spring + AI livestream\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("YOUTUBE_TITLES"))
+                .andExpect(jsonPath("$.variants.length()").value(1));
+    }
+
+    @Test
     void finalizesArtifact() throws Exception {
         String projectId = createProject("Finalize API");
         String response = mockMvc.perform(post("/api/projects/" + projectId + "/youtube-description")

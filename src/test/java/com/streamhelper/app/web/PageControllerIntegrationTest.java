@@ -50,6 +50,7 @@ class PageControllerIntegrationTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Project notes")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Show notes")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Markdown notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Suggest title")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Show latest result")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Show LLM definitions")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Edit project name")))

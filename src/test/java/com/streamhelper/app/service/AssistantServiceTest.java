@@ -134,6 +134,34 @@ class AssistantServiceTest {
     }
 
     @Test
+    void titleSuggestionsPromptAsksForFifteenDistinctOptionsWithOneRecommendation() {
+        StreamHelperProperties properties = new StreamHelperProperties();
+        properties.getStorage().setDataDir(tempDir);
+        ProjectStorageService storage = new ProjectStorageService(properties, new ObjectMapper().findAndRegisterModules());
+        var project = storage.createProject("Title Suggestions Project");
+
+        AiClient aiClient = mock(AiClient.class);
+        when(aiClient.generateText(any(), any())).thenAnswer(invocation -> invocation.getArgument(1, String.class));
+
+        AssistantService service = new AssistantService(
+                aiClient,
+                new InstructionComposer(storage),
+                storage,
+                new OutputValidationService(),
+                mock(TranscriptionService.class),
+                new TranscriptionProgressService());
+
+        var result = service.generateYouTubeTitles(project.id(), "AI coding stream");
+
+        assertThat(result.category()).isEqualTo(GenerationCategory.YOUTUBE_TITLES);
+        assertThat(result.variants()).hasSize(1);
+        String content = result.variants().getFirst().getContent();
+        assertThat(content).contains("Suggest exactly 15 YouTube titles");
+        assertThat(content).contains("very different areas");
+        assertThat(content).contains("⭐ RECOMMENDED:");
+    }
+
+    @Test
     void renamesDiarizedSpeakersUsingConfiguredParticipantNames() {
         StreamHelperProperties properties = new StreamHelperProperties();
         properties.getStorage().setDataDir(tempDir);

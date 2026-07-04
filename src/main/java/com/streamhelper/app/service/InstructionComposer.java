@@ -140,14 +140,16 @@ public class InstructionComposer {
     private EnumSet<GenerationCategory> relevantContextCategories(GenerationCategory targetCategory) {
         return switch (targetCategory) {
             case TOPIC_IDEA, GUEST_IDEA -> EnumSet.of(GenerationCategory.TOPIC_IDEA, GenerationCategory.GUEST_IDEA);
-            case YOUTUBE_DESCRIPTION, YOUTUBE_TAGS -> EnumSet.of(
+            case YOUTUBE_TITLES, YOUTUBE_DESCRIPTION, YOUTUBE_TAGS -> EnumSet.of(
                     GenerationCategory.TOPIC_IDEA,
                     GenerationCategory.GUEST_IDEA,
+                    GenerationCategory.YOUTUBE_TITLES,
                     GenerationCategory.YOUTUBE_DESCRIPTION,
                     GenerationCategory.YOUTUBE_TAGS);
             case THUMBNAIL_PROMPT, THUMBNAIL_ASSET -> EnumSet.of(
                     GenerationCategory.TOPIC_IDEA,
                     GenerationCategory.GUEST_IDEA,
+                    GenerationCategory.YOUTUBE_TITLES,
                     GenerationCategory.YOUTUBE_DESCRIPTION,
                     GenerationCategory.YOUTUBE_TAGS,
                     GenerationCategory.LINKEDIN_POST,
@@ -157,6 +159,7 @@ public class InstructionComposer {
             case LINKEDIN_POST, SOCIAL_POST, HASHTAGS -> EnumSet.of(
                     GenerationCategory.TOPIC_IDEA,
                     GenerationCategory.GUEST_IDEA,
+                    GenerationCategory.YOUTUBE_TITLES,
                     GenerationCategory.YOUTUBE_DESCRIPTION,
                     GenerationCategory.YOUTUBE_TAGS,
                     GenerationCategory.LINKEDIN_POST,
@@ -165,6 +168,7 @@ public class InstructionComposer {
             case CHAPTERS, SUMMARY -> EnumSet.of(
                     GenerationCategory.TOPIC_IDEA,
                     GenerationCategory.GUEST_IDEA,
+                    GenerationCategory.YOUTUBE_TITLES,
                     GenerationCategory.YOUTUBE_DESCRIPTION,
                     GenerationCategory.LINKEDIN_POST,
                     GenerationCategory.SOCIAL_POST,
@@ -196,6 +200,7 @@ public class InstructionComposer {
         return switch (category) {
             case TOPIC_IDEA -> "Topic ideas";
             case GUEST_IDEA -> "Guest ideas";
+            case YOUTUBE_TITLES -> "YouTube titles";
             case YOUTUBE_DESCRIPTION -> "YouTube descriptions";
             case LINKEDIN_POST -> "LinkedIn posts";
             case SOCIAL_POST -> "Social posts";

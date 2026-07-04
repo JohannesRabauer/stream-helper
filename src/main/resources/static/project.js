@@ -7,6 +7,24 @@ const templatePrompts = {
 let lastResult = null;
 let lastRawJson = "";
 
+/* ── Braille spinner ── */
+const spinnerFrames = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+
+/* ── Ripple effect ── */
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn || btn.disabled) return;
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  ripple.style.width = ripple.style.height = `${size}px`;
+  ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+  ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+});
+
 function toggleNoteView(mode) {
   document.getElementById("noteEditArea").hidden = mode !== "edit";
   document.getElementById("notePreviewArea").hidden = mode !== "preview";
@@ -80,9 +98,7 @@ async function transcribeFile(button) {
     const formData = new FormData();
     formData.append("file", fileInput.files[0]);
     const language = document.getElementById("transcriptionLanguage").value.trim();
-    if (language) {
-      formData.append("language", language);
-    }
+    if (language) formData.append("language", language);
     formData.append("diarize", document.getElementById("transcriptionDiarize").checked.toString());
     const data = await apiJson(`/api/projects/${projectId}/transcripts/file`, {
       method: "POST",
@@ -189,9 +205,10 @@ function renderResult(data) {
     cards.appendChild(issueWrap);
   }
 
-  data.variants.forEach(variant => {
+  data.variants.forEach((variant, index) => {
     const card = document.createElement("article");
     card.className = "variant-card";
+    card.style.animationDelay = `${index * 0.07}s`;
     card.innerHTML = `
       <div class="variant-card-header">
         <div>
@@ -229,9 +246,10 @@ function renderArtifactHistory(category, artifacts) {
     return;
   }
 
-  artifacts.forEach(artifact => {
+  artifacts.forEach((artifact, index) => {
     const item = document.createElement("article");
     item.className = "artifact-item";
+    item.style.animationDelay = `${index * 0.05}s`;
     item.innerHTML = `
       <div>
         <strong>${escapeHtml(artifact.strategy || "version")}</strong>
@@ -288,24 +306,37 @@ async function copyToClipboard(text) {
 }
 
 function showStatus(message, kind = "success") {
+  const icons = {success: "✓", warning: "⚠", error: "✕"};
   const bar = document.getElementById("statusBar");
   bar.hidden = false;
-  bar.textContent = message;
+  bar.style.animation = '';
   bar.className = `status-bar ${kind}`;
+  bar.textContent = `${icons[kind] ?? ""} ${message}`;
+  clearTimeout(bar._dismissTimer);
+  bar._dismissTimer = setTimeout(() => {
+    bar.style.animation = 'fadeOut 0.4s ease forwards';
+    setTimeout(() => {
+      bar.hidden = true;
+      bar.style.animation = '';
+    }, 400);
+  }, 4000);
 }
 
 async function withButtonLoading(button, fn) {
-  if (!button) {
-    return fn();
-  }
+  if (!button) return fn();
   const original = button.textContent;
   button.disabled = true;
-  button.textContent = "Working...";
+  let frame = 0;
+  const timer = setInterval(() => {
+    button.textContent = `${spinnerFrames[frame % spinnerFrames.length]} Working…`;
+    frame++;
+  }, 75);
   try {
     await fn();
   } catch (error) {
     console.error(error);
   } finally {
+    clearInterval(timer);
     button.disabled = false;
     button.textContent = original;
   }

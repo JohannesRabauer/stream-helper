@@ -552,34 +552,6 @@ function renderAreaHistory(areaKey, categoryResults) {
             source: "history"
           });
         }
-
-        function resolveLatestHistoryEntryId(categoryResults) {
-          let latestId = null;
-          let latestTimestamp = Number.NEGATIVE_INFINITY;
-
-          categoryResults.forEach(({artifacts}) => {
-            if (!Array.isArray(artifacts)) {
-              return;
-            }
-            artifacts.forEach((artifact) => {
-              if (!artifact?.id) {
-                return;
-              }
-              const parsedTimestamp = Date.parse(artifact.createdAt || "");
-              if (latestId === null) {
-                latestId = artifact.id;
-                latestTimestamp = Number.isFinite(parsedTimestamp) ? parsedTimestamp : Number.NEGATIVE_INFINITY;
-                return;
-              }
-              if (Number.isFinite(parsedTimestamp) && parsedTimestamp > latestTimestamp) {
-                latestId = artifact.id;
-                latestTimestamp = parsedTimestamp;
-              }
-            });
-          });
-
-          return latestId;
-        }
         copyButton.addEventListener("click", () => copyToClipboard(textarea ? textarea.value : (artifact.content || "")));
         finalButton.addEventListener("click", async () => {
           await finalizeArtifact(category, artifact.id);
@@ -591,6 +563,34 @@ function renderAreaHistory(areaKey, categoryResults) {
     group.appendChild(list);
     container.appendChild(group);
   });
+}
+
+function resolveLatestHistoryEntryId(categoryResults) {
+  let latestId = null;
+  let latestTimestamp = Number.NEGATIVE_INFINITY;
+
+  categoryResults.forEach(({artifacts}) => {
+    if (!Array.isArray(artifacts)) {
+      return;
+    }
+    artifacts.forEach((artifact) => {
+      if (!artifact?.id) {
+        return;
+      }
+      const parsedTimestamp = Date.parse(artifact.createdAt || "");
+      if (latestId === null) {
+        latestId = artifact.id;
+        latestTimestamp = Number.isFinite(parsedTimestamp) ? parsedTimestamp : Number.NEGATIVE_INFINITY;
+        return;
+      }
+      if (Number.isFinite(parsedTimestamp) && parsedTimestamp > latestTimestamp) {
+        latestId = artifact.id;
+        latestTimestamp = parsedTimestamp;
+      }
+    });
+  });
+
+  return latestId;
 }
 
 function setupArtifactEditor({textarea, artifact, category, areaKey, timestampNode, badgesNode, saveStateNode, source}) {

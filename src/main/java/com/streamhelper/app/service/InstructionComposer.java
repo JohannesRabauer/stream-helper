@@ -16,9 +16,12 @@ import org.springframework.stereotype.Service;
 public class InstructionComposer {
 
     public static final String PRE_STREAM_NOTE_ID = "pre-stream-notes";
-    public static final String PROMOTION_NOTE_ID = "promotion-notes";
+    public static final String DESCRIPTION_NOTE_ID = "description-notes";
+    public static final String THUMBNAIL_NOTE_ID = "thumbnail-notes";
+    public static final String SOCIAL_ANNOUNCEMENTS_NOTE_ID = "social-announcements-notes";
     public static final String POST_STREAM_NOTE_ID = "post-stream-notes";
     public static final String TRANSCRIPTION_NOTE_ID = "transcription-notes";
+    public static final String LEGACY_PROMOTION_NOTE_ID = "promotion-notes";
 
     private final ProjectStorageService storageService;
 
@@ -33,7 +36,6 @@ public class InstructionComposer {
 
         add(blocks, "Global instruction", globalConfig.getGlobalInstruction());
         add(blocks, "Project instruction", projectConfig.getDirectives().getProjectInstruction());
-        add(blocks, "Global category instruction", globalConfig.getCategoryInstructions().get(category));
         add(blocks, "Project category instruction", projectConfig.getDirectives().getCategoryInstructions().get(category));
         add(blocks, "Workflow notes and saved context", buildWorkflowContext(projectId, projectConfig, category));
 
@@ -44,7 +46,7 @@ public class InstructionComposer {
         blocks.add(
                 """
                 Priority rules: if instructions conflict, follow the most specific one.
-                Precedence order: Project category > Global category > Project > Global.
+                Precedence order: Project stage > Project > Global.
                 """);
         return String.join("\n\n", blocks);
     }
@@ -90,9 +92,9 @@ public class InstructionComposer {
     private String buildWorkflowContext(String projectId, ProjectConfig projectConfig, GenerationCategory targetCategory) {
         List<String> blocks = new ArrayList<>();
         add(blocks, "Pre-stream notes", storageService.readNoteOrEmpty(projectId, PRE_STREAM_NOTE_ID));
-        if (usesPromotionContext(targetCategory)) {
-            add(blocks, "Promotion notes", storageService.readNoteOrEmpty(projectId, PROMOTION_NOTE_ID));
-        }
+        add(blocks, "Description notes", readWorkflowNote(projectId, DESCRIPTION_NOTE_ID));
+        add(blocks, "Thumbnail notes", readWorkflowNote(projectId, THUMBNAIL_NOTE_ID));
+        add(blocks, "Social media announcement notes", readWorkflowNote(projectId, SOCIAL_ANNOUNCEMENTS_NOTE_ID));
         if (usesPostStreamContext(targetCategory)) {
             add(blocks, "Post-stream notes", storageService.readNoteOrEmpty(projectId, POST_STREAM_NOTE_ID));
         }
@@ -114,14 +116,6 @@ public class InstructionComposer {
         return String.join("\n\n", blocks);
     }
 
-    private boolean usesPromotionContext(GenerationCategory targetCategory) {
-        return switch (targetCategory) {
-            case YOUTUBE_DESCRIPTION, LINKEDIN_POST, SOCIAL_POST, HASHTAGS, YOUTUBE_TAGS, THUMBNAIL_PROMPT, THUMBNAIL_ASSET,
-                            CHAPTERS, SUMMARY, TRANSCRIPT -> true;
-            default -> false;
-        };
-    }
-
     private boolean usesPostStreamContext(GenerationCategory targetCategory) {
         return switch (targetCategory) {
             case CHAPTERS, SUMMARY -> true;
@@ -129,18 +123,39 @@ public class InstructionComposer {
         };
     }
 
+    private String readWorkflowNote(String projectId, String noteId) {
+        String note = storageService.readNoteOrEmpty(projectId, noteId);
+        if (!note.isBlank()) {
+            return note;
+        }
+        return storageService.readNoteOrEmpty(projectId, LEGACY_PROMOTION_NOTE_ID);
+    }
+
     private EnumSet<GenerationCategory> relevantContextCategories(GenerationCategory targetCategory) {
         return switch (targetCategory) {
             case TOPIC_IDEA, GUEST_IDEA -> EnumSet.of(GenerationCategory.TOPIC_IDEA, GenerationCategory.GUEST_IDEA);
-            case YOUTUBE_DESCRIPTION, LINKEDIN_POST, SOCIAL_POST, HASHTAGS, YOUTUBE_TAGS, THUMBNAIL_PROMPT, THUMBNAIL_ASSET -> EnumSet.of(
+            case YOUTUBE_DESCRIPTION, YOUTUBE_TAGS -> EnumSet.of(
                     GenerationCategory.TOPIC_IDEA,
                     GenerationCategory.GUEST_IDEA,
                     GenerationCategory.YOUTUBE_DESCRIPTION,
+                    GenerationCategory.YOUTUBE_TAGS);
+            case THUMBNAIL_PROMPT, THUMBNAIL_ASSET -> EnumSet.of(
+                    GenerationCategory.TOPIC_IDEA,
+                    GenerationCategory.GUEST_IDEA,
+                    GenerationCategory.YOUTUBE_DESCRIPTION,
+                    GenerationCategory.YOUTUBE_TAGS,
                     GenerationCategory.LINKEDIN_POST,
                     GenerationCategory.SOCIAL_POST,
                     GenerationCategory.HASHTAGS,
-                    GenerationCategory.YOUTUBE_TAGS,
                     GenerationCategory.THUMBNAIL_PROMPT);
+            case LINKEDIN_POST, SOCIAL_POST, HASHTAGS -> EnumSet.of(
+                    GenerationCategory.TOPIC_IDEA,
+                    GenerationCategory.GUEST_IDEA,
+                    GenerationCategory.YOUTUBE_DESCRIPTION,
+                    GenerationCategory.YOUTUBE_TAGS,
+                    GenerationCategory.LINKEDIN_POST,
+                    GenerationCategory.SOCIAL_POST,
+                    GenerationCategory.HASHTAGS);
             case CHAPTERS, SUMMARY -> EnumSet.of(
                     GenerationCategory.TOPIC_IDEA,
                     GenerationCategory.GUEST_IDEA,

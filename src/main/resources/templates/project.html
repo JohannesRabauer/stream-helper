@@ -34,7 +34,9 @@
         <p class="muted">Work through the stream in stages. Drafts and notes are saved immediately, generated outputs create a new version every time, and inline history stays with the stage where you need it.</p>
         <div class="workflow-tabs" role="tablist" aria-label="Workflow stages">
             <button type="button" class="tab-button active" data-tab="pre-stream" onclick="selectWorkflowTab('pre-stream', this)">Pre-stream planning</button>
-            <button type="button" class="tab-button" data-tab="promotion" onclick="selectWorkflowTab('promotion', this)">Promotion</button>
+            <button type="button" class="tab-button" data-tab="description" onclick="selectWorkflowTab('description', this)">Description</button>
+            <button type="button" class="tab-button" data-tab="thumbnail" onclick="selectWorkflowTab('thumbnail', this)">Thumbnail</button>
+            <button type="button" class="tab-button" data-tab="social-announcements" onclick="selectWorkflowTab('social-announcements', this)">Social Media</button>
             <button type="button" class="tab-button" data-tab="transcription" onclick="selectWorkflowTab('transcription', this)">Transcription</button>
             <button type="button" class="tab-button" data-tab="post-stream" onclick="selectWorkflowTab('post-stream', this)">Post-stream wrap-up</button>
         </div>
@@ -95,10 +97,10 @@
         </div>
     </section>
 
-    <section class="workflow-panel card" data-tab-panel="promotion" hidden>
+    <section class="workflow-panel card" data-tab-panel="description" hidden>
         <div class="section-heading">
-            <h2>Promotion</h2>
-            <span>2. Ship the launch assets</span>
+            <h2>Description</h2>
+            <span>2. Nail the YouTube page</span>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -106,36 +108,110 @@
                     <strong>Suggested flow</strong>
                     <ol>
                         <li>Refine the stream angle from the planning stage.</li>
-                        <li>Create descriptions, posts, hashtags, and tags.</li>
-                        <li>Generate thumbnail prompts after the copy feels stable.</li>
+                        <li>Create the YouTube description and tags.</li>
+                        <li>Mark the best version as final before moving to thumbnail or announcements.</li>
                     </ol>
                 </div>
 
-                <label for="draft-promotion">Promotion brief</label>
-                <textarea id="draft-promotion" rows="8" data-draft-key="promotion" placeholder="Add launch messaging, CTA preferences, release timing, and any audience hooks to emphasize."></textarea>
-                <div class="autosave-hint">Autosaved and combined with finished planning outputs for coherent promos.</div>
+                <label for="draft-description">Description brief</label>
+                <textarea id="draft-description" rows="8" data-draft-key="description" placeholder="Describe what the YouTube description and tags should emphasize, including SEO angles, key topics, and viewer expectations."></textarea>
+                <div class="autosave-hint">Autosaved and combined with finished planning outputs for coherent descriptions.</div>
 
-                <label for="note-promotion">Promotion notes</label>
-                <textarea id="note-promotion" rows="8" data-note-key="promotion" data-note-id="promotion-notes" placeholder="Track messaging experiments, campaign notes, title options, links, and rollout reminders."></textarea>
+                <label for="note-description">Description notes</label>
+                <textarea id="note-description" rows="8" data-note-key="description" data-note-id="description-notes" placeholder="Track SEO ideas, title options, links, timestamps to mention, and keywords to reinforce."></textarea>
                 <div class="autosave-hint">Notes save immediately while you type.</div>
 
                 <div class="button-grid">
-                    <button type="button" onclick="runStageBriefAction('promotion', 'youtube-description', this)">YouTube descriptions</button>
-                    <button type="button" onclick="runStageBriefAction('promotion', 'linkedin-post', this)">LinkedIn posts</button>
-                    <button type="button" onclick="runStageBriefAction('promotion', 'social-posts', this)">Social posts (X-ready)</button>
-                    <button type="button" onclick="runStageBriefAction('promotion', 'hashtags', this)">Hashtags</button>
-                    <button type="button" onclick="runStageBriefAction('promotion', 'youtube-tags', this)">YouTube tags</button>
-                    <button type="button" onclick="runStageBriefAction('promotion', 'thumbnail-prompts', this)">Generate thumbnail prompts</button>
-                    <button type="button" onclick="createThumbnailFromStage('promotion', false, this)">Create external prompt package</button>
-                    <button type="button" onclick="createThumbnailFromStage('promotion', true, this)">Generate thumbnail image</button>
+                    <button type="button" onclick="runStageBriefAction('description', 'youtube-description', this)">YouTube descriptions</button>
+                    <button type="button" onclick="runStageBriefAction('description', 'youtube-tags', this)">YouTube tags</button>
                 </div>
             </div>
             <aside class="history-panel">
                 <div class="section-heading">
                     <h3>Stage history</h3>
-                    <span id="history-count-promotion">0 entries</span>
+                    <span id="history-count-description">0 entries</span>
                 </div>
-                <div id="history-promotion" class="history-groups"></div>
+                <div id="history-description" class="history-groups"></div>
+            </aside>
+        </div>
+    </section>
+
+    <section class="workflow-panel card" data-tab-panel="thumbnail" hidden>
+        <div class="section-heading">
+            <h2>Thumbnail</h2>
+            <span>3. Build the visual</span>
+        </div>
+        <div class="workflow-grid">
+            <div class="workflow-main">
+                <div class="workflow-guide">
+                    <strong>Suggested flow</strong>
+                    <ol>
+                        <li>Use the final stream angle and description to shape the visual.</li>
+                        <li>Generate thumbnail prompts first.</li>
+                        <li>Create either an external prompt package or the built-in image.</li>
+                    </ol>
+                </div>
+
+                <label for="draft-thumbnail">Thumbnail brief</label>
+                <textarea id="draft-thumbnail" rows="8" data-draft-key="thumbnail" placeholder="Describe the thumbnail style, contrast, framing, emotions, and text-overlay preferences."></textarea>
+                <div class="autosave-hint">Autosaved and combined with the saved stream positioning for coherent thumbnails.</div>
+
+                <label for="note-thumbnail">Thumbnail notes</label>
+                <textarea id="note-thumbnail" rows="8" data-note-key="thumbnail" data-note-id="thumbnail-notes" placeholder="Track visual ideas, color tests, references, and things to avoid."></textarea>
+                <div class="autosave-hint">Notes save immediately while you type.</div>
+
+                <div class="button-grid">
+                    <button type="button" onclick="runStageBriefAction('thumbnail', 'thumbnail-prompts', this)">Generate thumbnail prompts</button>
+                    <button type="button" onclick="createThumbnailFromStage('thumbnail', false, this)">Create external prompt package</button>
+                    <button type="button" onclick="createThumbnailFromStage('thumbnail', true, this)">Generate thumbnail image</button>
+                </div>
+            </div>
+            <aside class="history-panel">
+                <div class="section-heading">
+                    <h3>Stage history</h3>
+                    <span id="history-count-thumbnail">0 entries</span>
+                </div>
+                <div id="history-thumbnail" class="history-groups"></div>
+            </aside>
+        </div>
+    </section>
+
+    <section class="workflow-panel card" data-tab-panel="social-announcements" hidden>
+        <div class="section-heading">
+            <h2>Social Media (Announcements)</h2>
+            <span>4. Announce the stream</span>
+        </div>
+        <div class="workflow-grid">
+            <div class="workflow-main">
+                <div class="workflow-guide">
+                    <strong>Suggested flow</strong>
+                    <ol>
+                        <li>Reuse the stream positioning and description as the announcement source.</li>
+                        <li>Create LinkedIn, short social posts, and hashtags.</li>
+                        <li>Finalize the versions you want to ship.</li>
+                    </ol>
+                </div>
+
+                <label for="draft-social-announcements">Announcement brief</label>
+                <textarea id="draft-social-announcements" rows="8" data-draft-key="social-announcements" placeholder="Describe tone, CTA, platform-specific goals, and how these announcement posts should sound."></textarea>
+                <div class="autosave-hint">Autosaved and combined with the saved stream context for coherent announcements.</div>
+
+                <label for="note-social-announcements">Announcement notes</label>
+                <textarea id="note-social-announcements" rows="8" data-note-key="social-announcements" data-note-id="social-announcements-notes" placeholder="Track rollout reminders, emojis to use or avoid, links, CTA ideas, and copy experiments."></textarea>
+                <div class="autosave-hint">Notes save immediately while you type.</div>
+
+                <div class="button-grid">
+                    <button type="button" onclick="runStageBriefAction('social-announcements', 'linkedin-post', this)">LinkedIn posts</button>
+                    <button type="button" onclick="runStageBriefAction('social-announcements', 'social-posts', this)">Social posts (X-ready)</button>
+                    <button type="button" onclick="runStageBriefAction('social-announcements', 'hashtags', this)">Hashtags</button>
+                </div>
+            </div>
+            <aside class="history-panel">
+                <div class="section-heading">
+                    <h3>Stage history</h3>
+                    <span id="history-count-social-announcements">0 entries</span>
+                </div>
+                <div id="history-social-announcements" class="history-groups"></div>
             </aside>
         </div>
     </section>
@@ -143,7 +219,7 @@
     <section class="workflow-panel card" data-tab-panel="transcription" hidden>
         <div class="section-heading">
             <h2>Transcription</h2>
-            <span>3. Capture the conversation</span>
+            <span>5. Capture the conversation</span>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -200,7 +276,7 @@
     <section class="workflow-panel card" data-tab-panel="post-stream" hidden>
         <div class="section-heading">
             <h2>Post-stream wrap-up</h2>
-            <span>4. Package the replay</span>
+            <span>6. Package the replay</span>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -267,7 +343,7 @@
             <h2>LLM definitions</h2>
             <button type="submit" class="secondary-button">Close</button>
         </div>
-        <p class="muted">Put reusable rules here, like “Never use '-'”. Global rules apply everywhere, project rules apply in this project, and stage rules apply to every action inside the selected workflow stage.</p>
+        <p class="muted">Put reusable rules here, like “Never use '-'”. Global rules apply everywhere, project rules apply in this project, and each stage definition applies to every action inside that specific stage.</p>
         <div class="workflow-main">
             <label for="globalInstructionInput">Global definitions</label>
             <textarea id="globalInstructionInput" rows="5" placeholder="Rules for all projects and all areas."></textarea>
@@ -279,19 +355,26 @@
 
             <div class="section-heading compact-heading">
                 <h3>Stage-specific definitions</h3>
-                <span id="currentAreaInstructionLabel">Pre-stream planning</span>
+                <span>One definition per stage</span>
             </div>
-            <div class="two-column-grid">
-                <div>
-                    <label for="globalAreaInstructionInput">Global stage definitions</label>
-                    <textarea id="globalAreaInstructionInput" rows="5" placeholder="Rules for this workflow stage across all projects."></textarea>
-                </div>
-                <div>
-                    <label for="projectAreaInstructionInput">Project stage definitions</label>
-                    <textarea id="projectAreaInstructionInput" rows="5" placeholder="Rules for this workflow stage in this project."></textarea>
-                </div>
-            </div>
-            <div class="autosave-hint">These stage rules are applied to all actions in the selected tab.</div>
+            <label for="stage-definition-pre-stream">Pre-stream planning definition</label>
+            <textarea id="stage-definition-pre-stream" rows="4" data-stage-definition="pre-stream" placeholder="Rules only for pre-stream planning actions."></textarea>
+
+            <label for="stage-definition-description">Description definition</label>
+            <textarea id="stage-definition-description" rows="4" data-stage-definition="description" placeholder="Rules only for YouTube descriptions and tags."></textarea>
+
+            <label for="stage-definition-thumbnail">Thumbnail definition</label>
+            <textarea id="stage-definition-thumbnail" rows="4" data-stage-definition="thumbnail" placeholder="Rules only for thumbnail prompts and assets."></textarea>
+
+            <label for="stage-definition-social-announcements">Social Media (Announcements) definition</label>
+            <textarea id="stage-definition-social-announcements" rows="4" data-stage-definition="social-announcements" placeholder="Rules only for announcement posts and hashtags."></textarea>
+
+            <label for="stage-definition-transcription">Transcription definition</label>
+            <textarea id="stage-definition-transcription" rows="4" data-stage-definition="transcription" placeholder="Rules only for transcription-related handling."></textarea>
+
+            <label for="stage-definition-post-stream">Post-stream wrap-up definition</label>
+            <textarea id="stage-definition-post-stream" rows="4" data-stage-definition="post-stream" placeholder="Rules only for chapters and summary generation."></textarea>
+            <div class="autosave-hint">These project definitions are applied to every action inside the matching stage.</div>
         </div>
     </form>
 </dialog>

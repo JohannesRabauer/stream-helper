@@ -6,12 +6,26 @@ const workflowAreas = {
     historyCountId: "history-count-pre-stream",
     categories: ["TOPIC_IDEA", "GUEST_IDEA"]
   },
-  promotion: {
-    draftKey: "promotion",
-    draftInputId: "draft-promotion",
-    historyContainerId: "history-promotion",
-    historyCountId: "history-count-promotion",
-    categories: ["YOUTUBE_DESCRIPTION", "LINKEDIN_POST", "SOCIAL_POST", "HASHTAGS", "YOUTUBE_TAGS", "THUMBNAIL_PROMPT", "THUMBNAIL_ASSET"]
+  description: {
+    draftKey: "description",
+    draftInputId: "draft-description",
+    historyContainerId: "history-description",
+    historyCountId: "history-count-description",
+    categories: ["YOUTUBE_DESCRIPTION", "YOUTUBE_TAGS"]
+  },
+  thumbnail: {
+    draftKey: "thumbnail",
+    draftInputId: "draft-thumbnail",
+    historyContainerId: "history-thumbnail",
+    historyCountId: "history-count-thumbnail",
+    categories: ["THUMBNAIL_PROMPT", "THUMBNAIL_ASSET"]
+  },
+  "social-announcements": {
+    draftKey: "social-announcements",
+    draftInputId: "draft-social-announcements",
+    historyContainerId: "history-social-announcements",
+    historyCountId: "history-count-social-announcements",
+    categories: ["LINKEDIN_POST", "SOCIAL_POST", "HASHTAGS"]
   },
   transcription: {
     historyContainerId: "history-transcription",
@@ -45,13 +59,13 @@ const categoryLabels = {
 const categoryToArea = {
   TOPIC_IDEA: "pre-stream",
   GUEST_IDEA: "pre-stream",
-  YOUTUBE_DESCRIPTION: "promotion",
-  LINKEDIN_POST: "promotion",
-  SOCIAL_POST: "promotion",
-  HASHTAGS: "promotion",
-  YOUTUBE_TAGS: "promotion",
-  THUMBNAIL_PROMPT: "promotion",
-  THUMBNAIL_ASSET: "promotion",
+  YOUTUBE_DESCRIPTION: "description",
+  YOUTUBE_TAGS: "description",
+  THUMBNAIL_PROMPT: "thumbnail",
+  THUMBNAIL_ASSET: "thumbnail",
+  LINKEDIN_POST: "social-announcements",
+  SOCIAL_POST: "social-announcements",
+  HASHTAGS: "social-announcements",
   TRANSCRIPT: "transcription",
   CHAPTERS: "post-stream",
   SUMMARY: "post-stream"
@@ -59,7 +73,9 @@ const categoryToArea = {
 
 const areaLabels = {
   "pre-stream": "Pre-stream planning",
-  promotion: "Promotion",
+  description: "Description",
+  thumbnail: "Thumbnail",
+  "social-announcements": "Social Media (Announcements)",
   transcription: "Transcription",
   "post-stream": "Post-stream wrap-up"
 };
@@ -112,7 +128,6 @@ function openLlmDefinitionsDialog() {
   if (!dialog) {
     return;
   }
-  syncAreaInstructionEditors(projectConfig.currentWorkflowStage || "pre-stream");
   if (typeof dialog.showModal === "function") {
     dialog.showModal();
     return;
@@ -133,7 +148,6 @@ function selectWorkflowTab(areaKey, button) {
   }
   projectConfig.currentWorkflowStage = areaKey;
   scheduleProjectConfigSave();
-  syncAreaInstructionEditors(areaKey);
 }
 
 async function runStageBriefAction(areaKey, endpoint, button) {
@@ -753,8 +767,6 @@ function bindAutosaveInputs() {
 
   const globalInstructionInput = document.getElementById("globalInstructionInput");
   const projectInstructionInput = document.getElementById("projectInstructionInput");
-  const globalAreaInstructionInput = document.getElementById("globalAreaInstructionInput");
-  const projectAreaInstructionInput = document.getElementById("projectAreaInstructionInput");
 
   if (!globalConfig.categoryInstructions) {
     globalConfig.categoryInstructions = {};
@@ -778,26 +790,14 @@ function bindAutosaveInputs() {
     scheduleProjectConfigSave();
   });
 
-  globalAreaInstructionInput.addEventListener("input", () => {
-    applyAreaInstruction(globalConfig.categoryInstructions, projectConfig.currentWorkflowStage || "pre-stream", globalAreaInstructionInput.value);
-    scheduleGlobalConfigSave();
+  document.querySelectorAll("[data-stage-definition]").forEach((textarea) => {
+    const areaKey = textarea.dataset.stageDefinition;
+    textarea.value = readAreaInstruction(projectConfig.directives.categoryInstructions || {}, areaKey);
+    textarea.addEventListener("input", () => {
+      applyAreaInstruction(projectConfig.directives.categoryInstructions, areaKey, textarea.value);
+      scheduleProjectConfigSave();
+    });
   });
-  projectAreaInstructionInput.addEventListener("input", () => {
-    applyAreaInstruction(projectConfig.directives.categoryInstructions, projectConfig.currentWorkflowStage || "pre-stream", projectAreaInstructionInput.value);
-    scheduleProjectConfigSave();
-  });
-}
-
-function syncAreaInstructionEditors(areaKey) {
-  const globalAreaInstructionInput = document.getElementById("globalAreaInstructionInput");
-  const projectAreaInstructionInput = document.getElementById("projectAreaInstructionInput");
-  const currentAreaInstructionLabel = document.getElementById("currentAreaInstructionLabel");
-  if (!globalAreaInstructionInput || !projectAreaInstructionInput || !currentAreaInstructionLabel) {
-    return;
-  }
-  currentAreaInstructionLabel.textContent = areaLabels[areaKey] || areaKey;
-  globalAreaInstructionInput.value = readAreaInstruction(globalConfig.categoryInstructions || {}, areaKey);
-  projectAreaInstructionInput.value = readAreaInstruction(projectConfig.directives?.categoryInstructions || {}, areaKey);
 }
 
 function applyAreaInstruction(categoryInstructions, areaKey, value) {
@@ -818,11 +818,29 @@ function readAreaInstruction(categoryInstructions, areaKey) {
   return "";
 }
 
+function migrateLegacyPromotionState() {
+  if (!projectConfig.workspaceDrafts) {
+    projectConfig.workspaceDrafts = {};
+  }
+  if (projectConfig.workspaceDrafts.promotion && !projectConfig.workspaceDrafts.description && !projectConfig.workspaceDrafts.thumbnail && !projectConfig.workspaceDrafts["social-announcements"]) {
+    const value = projectConfig.workspaceDrafts.promotion;
+    projectConfig.workspaceDrafts.description = value;
+    projectConfig.workspaceDrafts.thumbnail = value;
+    projectConfig.workspaceDrafts["social-announcements"] = value;
+    scheduleProjectConfigSave();
+  }
+  if (projectConfig.currentWorkflowStage === "promotion") {
+    projectConfig.currentWorkflowStage = "description";
+    scheduleProjectConfigSave();
+  }
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   document.title = `${projectName} · Stream Helper`;
   if (!projectConfig.workspaceDrafts) {
     projectConfig.workspaceDrafts = {};
   }
+  migrateLegacyPromotionState();
   bindAutosaveInputs();
   const activeTab = projectConfig.currentWorkflowStage || "pre-stream";
   const activeButton = document.querySelector(`.tab-button[data-tab="${activeTab}"]`) || document.querySelector('.tab-button[data-tab="pre-stream"]');

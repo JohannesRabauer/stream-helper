@@ -52,8 +52,12 @@ public class PageController {
                 Map.of(
                         "pre-stream",
                         storageService.readNoteOrEmpty(projectId, InstructionComposer.PRE_STREAM_NOTE_ID),
-                        "promotion",
-                        storageService.readNoteOrEmpty(projectId, InstructionComposer.PROMOTION_NOTE_ID),
+                        "description",
+                        readWorkflowNote(projectId, InstructionComposer.DESCRIPTION_NOTE_ID),
+                        "thumbnail",
+                        readWorkflowNote(projectId, InstructionComposer.THUMBNAIL_NOTE_ID),
+                        "social-announcements",
+                        readWorkflowNote(projectId, InstructionComposer.SOCIAL_ANNOUNCEMENTS_NOTE_ID),
                         "post-stream",
                         storageService.readNoteOrEmpty(projectId, InstructionComposer.POST_STREAM_NOTE_ID),
                         "transcription",
@@ -68,5 +72,13 @@ public class PageController {
             @RequestParam("markdown") String markdown) {
         String effectiveNoteId = storageService.saveNote(projectId, noteId, markdown);
         return "redirect:/projects/%s?noteId=%s".formatted(projectId, effectiveNoteId);
+    }
+
+    private String readWorkflowNote(String projectId, String noteId) {
+        String note = storageService.readNoteOrEmpty(projectId, noteId);
+        if (!note.isBlank()) {
+            return note;
+        }
+        return storageService.readNoteOrEmpty(projectId, InstructionComposer.LEGACY_PROMOTION_NOTE_ID);
     }
 }

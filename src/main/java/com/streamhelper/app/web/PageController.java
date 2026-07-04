@@ -31,6 +31,7 @@ public class PageController {
     @GetMapping("/projects")
     public String projects(Model model) {
         model.addAttribute("projects", storageService.listProjects());
+        model.addAttribute("globalConfig", storageService.readGlobalConfig());
         return "projects";
     }
 
@@ -38,6 +39,7 @@ public class PageController {
     public String createProject(@RequestParam("name") String name, Model model) {
         if (name == null || name.isBlank()) {
             model.addAttribute("projects", storageService.listProjects());
+            model.addAttribute("globalConfig", storageService.readGlobalConfig());
             model.addAttribute("error", "Project name is required");
             return "projects";
         }

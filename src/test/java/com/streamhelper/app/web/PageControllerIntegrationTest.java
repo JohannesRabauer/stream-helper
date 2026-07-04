@@ -37,7 +37,8 @@ class PageControllerIntegrationTest {
     void projectsPageLoads() throws Exception {
         mockMvc.perform(get("/projects"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Stream Helper")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Stream Helper")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Show global LLM definitions")));
     }
 
     @Test
@@ -48,7 +49,9 @@ class PageControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Project notes")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Show notes")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Markdown notes")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Markdown notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Show latest result")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Show LLM definitions")));
     }
 
     private static Path createTempDir() {

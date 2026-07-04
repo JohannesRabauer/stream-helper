@@ -445,34 +445,57 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):hover 
     margin: 0;
 }
 
-.project-notes-toggle {
+.side-toggle {
     position: fixed;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
     z-index: 40;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
     box-shadow: var(--shadow);
 }
 
-.project-notes-toggle[aria-expanded="true"] {
-    right: min(25rem, calc(100vw - 4rem));
+.side-toggle.left {
+    left: 1rem;
 }
 
-.project-notes-drawer {
+.side-toggle.right {
+    right: 1rem;
+}
+
+#projectNotesToggle {
+    bottom: 1rem;
+}
+
+#projectResultToggle {
+    bottom: 1rem;
+}
+
+#projectLlmDefinitionsToggle {
+    bottom: 4.6rem;
+}
+
+#globalLlmDefinitionsToggle {
+    bottom: 1rem;
+}
+
+.side-drawer {
     position: fixed;
     top: 1rem;
-    right: 1rem;
     bottom: 1rem;
-    width: min(24rem, calc(100vw - 3.5rem));
+    width: min(26rem, calc(100vw - 3.5rem));
     z-index: 35;
-    transform: translateX(calc(100% + 1.5rem));
     transition: transform var(--transition);
     pointer-events: none;
 }
 
-.project-notes-drawer.open {
+.side-drawer.left {
+    left: 1rem;
+    transform: translateX(calc(-100% - 1.5rem));
+}
+
+.side-drawer.right {
+    right: 1rem;
+    transform: translateX(calc(100% + 1.5rem));
+}
+
+.side-drawer.open {
     transform: translateX(0);
     pointer-events: auto;
 }
@@ -986,29 +1009,6 @@ details[open] .result-raw summary::before,
     margin-bottom: 0.85rem;
 }
 
-.modal-dialog {
-    width: min(980px, calc(100vw - 2rem));
-    max-width: 100%;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: rgba(7, 12, 28, 0.96);
-    color: var(--text);
-    padding: 0;
-    box-shadow: var(--shadow);
-}
-
-.modal-dialog::backdrop {
-    background: rgba(2, 6, 23, 0.68);
-    backdrop-filter: blur(8px);
-}
-
-.modal-shell {
-    display: grid;
-    gap: 0.9rem;
-    padding: 1.35rem;
-    margin: 0;
-}
-
 /* ── Compact form ── */
 .compact-form { margin-bottom: 0.8rem; }
 
@@ -1091,23 +1091,37 @@ details[open] .result-raw summary::before,
         align-items: stretch;
     }
 
-    .project-notes-toggle {
-        right: 0.75rem;
-        top: auto;
-        bottom: 1rem;
-        transform: none;
-    }
-
-    .project-notes-toggle[aria-expanded="true"] {
-        right: 0.75rem;
-    }
-
-    .project-notes-drawer {
-        top: auto;
-        right: 0.75rem;
+    .side-toggle.left {
         left: 0.75rem;
-        bottom: 4.75rem;
+    }
+
+    .side-toggle.right {
+        right: 0.75rem;
+    }
+
+    #projectNotesToggle {
+        bottom: 1rem;
+    }
+
+    #projectResultToggle {
+        bottom: 4.6rem;
+    }
+
+    #projectLlmDefinitionsToggle {
+        bottom: 8.2rem;
+    }
+
+    .side-drawer {
+        top: auto;
+        left: 0.75rem;
+        right: 0.75rem;
+        bottom: 12rem;
         width: auto;
+        transform: translateY(calc(100% + 1rem));
+    }
+
+    .side-drawer.open {
+        transform: translateY(0);
     }
 
     .project-notes-card {

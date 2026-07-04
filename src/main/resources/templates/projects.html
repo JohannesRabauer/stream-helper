@@ -9,6 +9,8 @@
 <body>
 <div class="bg-mesh"><div class="bg-orb3"></div></div>
 <main class="container">
+    <section id="projectsStatusBar" class="status-bar" hidden></section>
+
     <section class="hero card">
         <div>
             <p class="eyebrow">AI Live-Coding Studio</p>
@@ -53,5 +55,33 @@
         </div>
     </section>
 </main>
+
+<button
+        id="globalLlmDefinitionsToggle"
+        type="button"
+        class="side-toggle right"
+        aria-controls="globalLlmDefinitionsDrawer"
+        aria-expanded="false"
+        onclick="toggleGlobalLlmDefinitionsDrawer()">
+    Show global LLM definitions
+</button>
+
+<aside id="globalLlmDefinitionsDrawer" class="side-drawer right" aria-hidden="true">
+    <section class="card project-notes-card">
+        <div class="section-heading">
+            <h2>Global LLM definitions</h2>
+            <button type="button" class="secondary-button" onclick="toggleGlobalLlmDefinitionsDrawer(false)">Hide</button>
+        </div>
+        <p class="muted">These rules are always available and apply to all projects.</p>
+        <label for="globalDefinitionsInput">Global definitions</label>
+        <textarea id="globalDefinitionsInput" rows="16" placeholder="Rules for all projects and areas, for example: Never use '-'."></textarea>
+        <div id="globalDefinitionsSaveState" class="autosave-hint">Autosaves while you type.</div>
+    </section>
+</aside>
+
+<script th:inline="javascript">
+    const initialGlobalConfig = /*[[${globalConfig}]]*/ {};
+</script>
+<script th:src="@{/projects.js}"></script>
 </body>
 </html>

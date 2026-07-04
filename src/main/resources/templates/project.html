@@ -28,7 +28,7 @@
                     <h2>Workflow cockpit</h2>
                     <div class="inline-actions">
                         <span>Everything autosaves</span>
-                        <button type="button" class="secondary-button" onclick="openLlmDefinitionsDialog()">LLM definitions</button>
+                        <button type="button" class="secondary-button" onclick="toggleLlmDefinitionsDrawer(true)">LLM definitions</button>
                     </div>
                 </div>
                 <p class="muted">Work through the stream in stages. Drafts are saved immediately, generated outputs create a new version every time, and inline history stays with the stage where you need it.</p>
@@ -40,22 +40,6 @@
                     <button type="button" class="tab-button" data-tab="transcription" onclick="selectWorkflowTab('transcription', this)">Transcription</button>
                     <button type="button" class="tab-button" data-tab="post-stream" onclick="selectWorkflowTab('post-stream', this)">Post-stream wrap-up</button>
                 </div>
-            </section>
-
-            <section class="card">
-                <div class="section-heading">
-                    <h2>Latest result</h2>
-                    <div class="inline-actions">
-                        <button type="button" class="secondary-button" onclick="copyRawResult()">Copy JSON</button>
-                        <button type="button" class="secondary-button" onclick="copyRecommendedContent()">Copy recommended</button>
-                    </div>
-                </div>
-                <div id="resultSummary" class="muted">Run an action in any workflow stage to see the newest output here.</div>
-                <div id="variantCards" class="variant-grid"></div>
-                <details class="result-raw">
-                    <summary>Raw response JSON</summary>
-                    <pre id="resultBox">Run an action to see output...</pre>
-                </details>
             </section>
 
             <section class="workflow-panel card active" data-tab-panel="pre-stream">
@@ -327,14 +311,34 @@
 <button
         id="projectNotesToggle"
         type="button"
-        class="project-notes-toggle"
+        class="side-toggle right"
         aria-controls="projectNotesDrawer"
         aria-expanded="false"
         onclick="toggleProjectNotesDrawer()">
     Show notes
 </button>
 
-<aside id="projectNotesDrawer" class="project-notes-drawer" aria-hidden="true">
+<button
+        id="projectResultToggle"
+        type="button"
+        class="side-toggle left"
+        aria-controls="projectResultDrawer"
+        aria-expanded="false"
+        onclick="toggleLatestResultDrawer()">
+    Show latest result
+</button>
+
+<button
+        id="projectLlmDefinitionsToggle"
+        type="button"
+        class="side-toggle left"
+        aria-controls="projectLlmDefinitionsDrawer"
+        aria-expanded="false"
+        onclick="toggleLlmDefinitionsDrawer()">
+    Show LLM definitions
+</button>
+
+<aside id="projectNotesDrawer" class="side-drawer right" aria-hidden="true">
     <section class="card project-notes-card">
         <div class="section-heading">
             <h2>Project notes</h2>
@@ -354,11 +358,30 @@
     </section>
 </aside>
 
-<dialog id="llmDefinitionsDialog" class="modal-dialog">
-    <form method="dialog" class="modal-shell">
+<aside id="projectResultDrawer" class="side-drawer left" aria-hidden="true">
+    <section class="card project-notes-card">
+        <div class="section-heading">
+            <h2>Latest result</h2>
+            <div class="inline-actions">
+                <button type="button" class="secondary-button" onclick="copyRawResult()">Copy JSON</button>
+                <button type="button" class="secondary-button" onclick="copyRecommendedContent()">Copy recommended</button>
+                <button type="button" class="secondary-button" onclick="toggleLatestResultDrawer(false)">Hide</button>
+            </div>
+        </div>
+        <div id="resultSummary" class="muted">Run an action in any workflow stage to see the newest output here.</div>
+        <div id="variantCards" class="variant-grid"></div>
+        <details class="result-raw">
+            <summary>Raw response JSON</summary>
+            <pre id="resultBox">Run an action to see output...</pre>
+        </details>
+    </section>
+</aside>
+
+<aside id="projectLlmDefinitionsDrawer" class="side-drawer left" aria-hidden="true">
+    <section class="card project-notes-card">
         <div class="section-heading">
             <h2>LLM definitions</h2>
-            <button type="submit" class="secondary-button">Close</button>
+            <button type="button" class="secondary-button" onclick="toggleLlmDefinitionsDrawer(false)">Hide</button>
         </div>
         <p class="muted">Put reusable rules here, like “Never use '-'”. Global rules apply everywhere, project rules apply in this project, and each stage definition applies to every action inside that specific stage.</p>
         <div class="workflow-main">
@@ -393,8 +416,8 @@
             <textarea id="stage-definition-post-stream" rows="4" data-stage-definition="post-stream" placeholder="Rules only for chapters and summary generation."></textarea>
             <div class="autosave-hint">These project definitions are applied to every action inside the matching stage.</div>
         </div>
-    </form>
-</dialog>
+    </section>
+</aside>
 
 <script th:inline="javascript">
     const projectId = /*[[${project.id}]]*/ '';

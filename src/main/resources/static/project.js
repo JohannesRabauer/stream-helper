@@ -131,15 +131,7 @@ function exportProject() {
 }
 
 function openLlmDefinitionsDialog() {
-  const dialog = document.getElementById("llmDefinitionsDialog");
-  if (!dialog) {
-    return;
-  }
-  if (typeof dialog.showModal === "function") {
-    dialog.showModal();
-    return;
-  }
-  dialog.setAttribute("open", "open");
+  toggleLlmDefinitionsDrawer(true);
 }
 
 function selectWorkflowTab(areaKey, button) {
@@ -415,6 +407,7 @@ function renderResult(data) {
   if (areaKey) {
     reloadAreaHistory(areaKey).catch(console.error);
   }
+  toggleLatestResultDrawer(true);
   showStatus("Saved a new version.", "success");
 }
 
@@ -914,6 +907,38 @@ function toggleProjectNotesDrawer(forceOpen) {
   if (!drawer || !toggle) {
     return;
   }
+
+  function toggleLatestResultDrawer(forceOpen) {
+    const drawer = document.getElementById("projectResultDrawer");
+    const toggle = document.getElementById("projectResultToggle");
+    if (!drawer || !toggle) {
+      return;
+    }
+    const open = typeof forceOpen === "boolean" ? forceOpen : !drawer.classList.contains("open");
+    if (open) {
+      toggleLlmDefinitionsDrawer(false);
+    }
+    drawer.classList.toggle("open", open);
+    drawer.setAttribute("aria-hidden", String(!open));
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.textContent = open ? "Hide latest result" : "Show latest result";
+  }
+
+  function toggleLlmDefinitionsDrawer(forceOpen) {
+    const drawer = document.getElementById("projectLlmDefinitionsDrawer");
+    const toggle = document.getElementById("projectLlmDefinitionsToggle");
+    if (!drawer || !toggle) {
+      return;
+    }
+    const open = typeof forceOpen === "boolean" ? forceOpen : !drawer.classList.contains("open");
+    if (open) {
+      toggleLatestResultDrawer(false);
+    }
+    drawer.classList.toggle("open", open);
+    drawer.setAttribute("aria-hidden", String(!open));
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.textContent = open ? "Hide LLM definitions" : "Show LLM definitions";
+  }
   const open = typeof forceOpen === "boolean" ? forceOpen : !drawer.classList.contains("open");
   drawer.classList.toggle("open", open);
   drawer.setAttribute("aria-hidden", String(!open));
@@ -1063,14 +1088,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   const activeTab = projectConfig.currentWorkflowStage || "pre-stream";
   const activeButton = document.querySelector(`.tab-button[data-tab="${activeTab}"]`) || document.querySelector('.tab-button[data-tab="pre-stream"]');
   selectWorkflowTab(activeButton?.dataset.tab || "pre-stream", activeButton);
-  const dialog = document.getElementById("llmDefinitionsDialog");
-  if (dialog) {
-    dialog.addEventListener("click", (event) => {
-      if (event.target === dialog) {
-        dialog.close();
-      }
-    });
-  }
   await Promise.all(Object.keys(workflowAreas).map((areaKey) => reloadAreaHistory(areaKey)));
   await initializeTranscriptionProgress();
 });

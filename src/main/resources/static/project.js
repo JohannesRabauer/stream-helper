@@ -156,8 +156,36 @@ async function renameProject(button) {
     titleNode.textContent = savedName;
     input.value = savedName;
     document.title = `${savedName} · Stream Helper`;
+    toggleProjectRenameEditor(false);
     showStatus("Project renamed.", "success");
   });
+}
+
+function toggleProjectRenameEditor(forceOpen) {
+  const editor = document.getElementById("projectRenameEditor");
+  const input = document.getElementById("projectRenameInput");
+  const titleNode = document.getElementById("projectTitle");
+  const button = document.getElementById("projectTitleEditButton");
+  if (!editor || !input || !titleNode || !button) {
+    return;
+  }
+  const open = typeof forceOpen === "boolean" ? forceOpen : editor.hidden;
+  editor.hidden = !open;
+  button.setAttribute("aria-expanded", String(open));
+  if (open) {
+    input.value = titleNode.textContent.trim();
+    input.focus();
+    input.select();
+  }
+}
+
+function cancelProjectRename() {
+  const input = document.getElementById("projectRenameInput");
+  const titleNode = document.getElementById("projectTitle");
+  if (input && titleNode) {
+    input.value = titleNode.textContent.trim();
+  }
+  toggleProjectRenameEditor(false);
 }
 
 function openLlmDefinitionsDialog() {
@@ -170,13 +198,25 @@ function selectWorkflowTab(areaKey, button) {
     panel.classList.toggle("active", panel.dataset.tabPanel === areaKey);
   });
   document.querySelectorAll(".tab-button").forEach((tabButton) => {
-    tabButton.classList.toggle("active", tabButton.dataset.tab === areaKey);
+    const isActive = tabButton.dataset.tab === areaKey;
+    tabButton.classList.toggle("active", isActive);
+    tabButton.setAttribute("aria-selected", String(isActive));
+    tabButton.setAttribute("aria-current", isActive ? "page" : "false");
   });
   if (button) {
     button.classList.add("active");
   }
   projectConfig.currentWorkflowStage = areaKey;
+  updateCurrentWorkflowLabel(areaKey);
   scheduleProjectConfigSave();
+}
+
+function updateCurrentWorkflowLabel(areaKey) {
+  const label = document.getElementById("currentWorkflowLabel");
+  if (!label) {
+    return;
+  }
+  label.textContent = `Current: ${areaLabels[areaKey] || areaKey}`;
 }
 
 async function runStageBriefAction(areaKey, endpoint, button) {
@@ -1080,6 +1120,21 @@ function bindAutosaveInputs() {
     });
   }
   renderProjectNotesPreview();
+
+  const renameInput = document.getElementById("projectRenameInput");
+  if (renameInput) {
+    renameInput.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        cancelProjectRename();
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        renameProject(document.getElementById("projectRenameSaveButton")).catch(console.error);
+      }
+    });
+  }
 
   const hostInput = document.getElementById("hostDisplayName");
   const guestInput = document.getElementById("guestDisplayName");

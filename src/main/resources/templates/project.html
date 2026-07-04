@@ -12,12 +12,27 @@
     <header class="project-header card">
         <div>
             <a href="/projects">← All projects</a>
-            <h1 id="projectTitle" th:text="${project.name}"></h1>
+            <div class="project-header-title-row">
+                <h1 id="projectTitle" th:text="${project.name}"></h1>
+                <button
+                        id="projectTitleEditButton"
+                        type="button"
+                        class="icon-button"
+                        aria-label="Edit project name"
+                        aria-controls="projectRenameEditor"
+                        aria-expanded="false"
+                        onclick="toggleProjectRenameEditor(true)">
+                    ✎
+                </button>
+            </div>
+            <div id="projectRenameEditor" class="project-rename-editor" hidden>
+                <input id="projectRenameInput" class="project-rename-input" type="text" th:value="${project.name}" aria-label="Project name">
+                <button id="projectRenameSaveButton" type="button" class="secondary-button" onclick="renameProject(this)">Save</button>
+                <button type="button" class="secondary-button" onclick="cancelProjectRename()">Cancel</button>
+            </div>
             <p class="muted">Project ID: <code th:text="${project.id}"></code></p>
         </div>
         <div class="project-header-actions">
-            <input id="projectRenameInput" class="project-rename-input" type="text" th:value="${project.name}" aria-label="Project name">
-            <button type="button" class="secondary-button" onclick="renameProject(this)">Rename project</button>
             <button type="button" class="secondary-button" onclick="exportProject()">Export ZIP</button>
             <button type="button" class="secondary-button" onclick="location.reload()">Refresh</button>
         </div>
@@ -30,24 +45,24 @@
                     <h2>Workflow cockpit</h2>
                     <div class="inline-actions">
                         <span>Everything autosaves</span>
+                        <span id="currentWorkflowLabel" class="workflow-current-label">Current: Pre-stream planning</span>
                         <button type="button" class="secondary-button" onclick="toggleLlmDefinitionsDrawer(true)">LLM definitions</button>
                     </div>
                 </div>
                 <p class="muted">Work through the stream in stages. Drafts are saved immediately, generated outputs create a new version every time, and inline history stays with the stage where you need it.</p>
                 <div class="workflow-tabs" role="tablist" aria-label="Workflow stages">
-                    <button type="button" class="tab-button active" data-tab="pre-stream" onclick="selectWorkflowTab('pre-stream', this)">Pre-stream planning</button>
-                    <button type="button" class="tab-button" data-tab="description" onclick="selectWorkflowTab('description', this)">Description</button>
-                    <button type="button" class="tab-button" data-tab="thumbnail" onclick="selectWorkflowTab('thumbnail', this)">Thumbnail</button>
-                    <button type="button" class="tab-button" data-tab="social-announcements" onclick="selectWorkflowTab('social-announcements', this)">Social Media</button>
-                    <button type="button" class="tab-button" data-tab="transcription" onclick="selectWorkflowTab('transcription', this)">Transcription</button>
-                    <button type="button" class="tab-button" data-tab="post-stream" onclick="selectWorkflowTab('post-stream', this)">Post-stream wrap-up</button>
+                    <button type="button" class="tab-button active" data-tab="pre-stream" aria-selected="true" aria-current="page" onclick="selectWorkflowTab('pre-stream', this)">Pre-stream planning</button>
+                    <button type="button" class="tab-button" data-tab="description" aria-selected="false" onclick="selectWorkflowTab('description', this)">Description</button>
+                    <button type="button" class="tab-button" data-tab="thumbnail" aria-selected="false" onclick="selectWorkflowTab('thumbnail', this)">Thumbnail</button>
+                    <button type="button" class="tab-button" data-tab="social-announcements" aria-selected="false" onclick="selectWorkflowTab('social-announcements', this)">Social Media</button>
+                    <button type="button" class="tab-button" data-tab="transcription" aria-selected="false" onclick="selectWorkflowTab('transcription', this)">Transcription</button>
+                    <button type="button" class="tab-button" data-tab="post-stream" aria-selected="false" onclick="selectWorkflowTab('post-stream', this)">Post-stream wrap-up</button>
                 </div>
             </section>
 
             <section class="workflow-panel card active" data-tab-panel="pre-stream">
         <div class="section-heading">
             <h2>Pre-stream planning</h2>
-            <span>1. Decide the stream</span>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -82,7 +97,6 @@
             <section class="workflow-panel card" data-tab-panel="description" hidden>
         <div class="section-heading">
             <h2>Description</h2>
-            <span>2. Nail the YouTube page</span>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -117,7 +131,6 @@
             <section class="workflow-panel card" data-tab-panel="thumbnail" hidden>
         <div class="section-heading">
             <h2>Thumbnail</h2>
-            <span>3. Build the visual</span>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -153,7 +166,6 @@
             <section class="workflow-panel card" data-tab-panel="social-announcements" hidden>
         <div class="section-heading">
             <h2>Social Media (Announcements)</h2>
-            <span>4. Announce the stream</span>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -189,7 +201,6 @@
             <section class="workflow-panel card" data-tab-panel="transcription" hidden>
         <div class="section-heading">
             <h2>Transcription</h2>
-            <span>5. Capture the conversation</span>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -253,7 +264,6 @@
             <section class="workflow-panel card" data-tab-panel="post-stream" hidden>
         <div class="section-heading">
             <h2>Post-stream wrap-up</h2>
-            <span>6. Package the replay</span>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">

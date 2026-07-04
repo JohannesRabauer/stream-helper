@@ -79,6 +79,36 @@ class AssistantServiceTest {
     }
 
     @Test
+    void refinesArtifactWithPromptAndKeepsThreadMetadata() {
+        StreamHelperProperties properties = new StreamHelperProperties();
+        properties.getStorage().setDataDir(tempDir);
+        ProjectStorageService storage = new ProjectStorageService(properties, new ObjectMapper().findAndRegisterModules());
+        var project = storage.createProject("Refine Project");
+
+        AiClient aiClient = mock(AiClient.class);
+        when(aiClient.generateText(any(), any())).thenReturn("Generated output");
+
+        AssistantService service = new AssistantService(
+                aiClient,
+                new InstructionComposer(storage),
+                storage,
+                new OutputValidationService(),
+                mock(TranscriptionService.class),
+                new TranscriptionProgressService());
+
+        var initial = service.generateYouTubeDescriptions(project.id(), "Base brief");
+        var source = initial.variants().getFirst();
+        var refined = service.refineArtifact(project.id(), GenerationCategory.YOUTUBE_DESCRIPTION, source.getId(), "Make it shorter.");
+        var refinedArtifact = refined.variants().getFirst();
+
+        assertThat(refined.variants()).hasSize(1);
+        assertThat(refinedArtifact.getParentArtifactId()).isEqualTo(source.getId());
+        assertThat(refinedArtifact.getThreadId()).isEqualTo(source.getThreadId());
+        assertThat(refinedArtifact.getRefinementPrompt()).isEqualTo("Make it shorter.");
+        assertThat(storage.listArtifacts(project.id(), GenerationCategory.YOUTUBE_DESCRIPTION)).hasSize(initial.variants().size() + 1);
+    }
+
+    @Test
     void usesStoredTranscriptWhenPostStreamInputIsEmpty() {
         StreamHelperProperties properties = new StreamHelperProperties();
         properties.getStorage().setDataDir(tempDir);

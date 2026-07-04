@@ -327,6 +327,44 @@ public class AssistantService {
         return storageService.markFinal(projectId, category, artifactId);
     }
 
+    public VariantResult refineArtifact(String projectId, GenerationCategory category, String artifactId, String prompt) {
+        ArtifactVersion source = storageService.getArtifact(projectId, category, artifactId);
+        String effective = instructionComposer.compose(projectId, category);
+        String userPrompt = """
+                Category: %s
+                Base strategy: %s
+
+                Existing version:
+                %s
+
+                Refinement request:
+                %s
+
+                Task:
+                Rewrite the existing version so it follows the refinement request while preserving the strongest useful parts.
+                Return only the refined output content.
+                """
+                .formatted(
+                        category.name(),
+                        source.getStrategy() == null ? "version" : source.getStrategy(),
+                        source.getContent() == null ? "" : source.getContent(),
+                        prompt == null ? "" : prompt.trim());
+        String content = aiClient.generateText(effective, userPrompt).trim();
+        content = validationService.normalize(category, content);
+        List<ValidationIssue> issues = validationService.validate(category, content);
+        ArtifactVersion saved = storageService.saveArtifact(
+                projectId,
+                category,
+                refinedStrategy(source.getStrategy()),
+                content,
+                source.isRecommended(),
+                false,
+                source.getId(),
+                source.getThreadId(),
+                prompt == null ? "" : prompt.trim());
+        return new VariantResult(category, effective, List.of(saved), issues);
+    }
+
     private VariantResult generateVariants(
             String projectId, GenerationCategory category, String brief, List<String> strategies, String taskPrompt) {
         String effective = instructionComposer.compose(projectId, category);
@@ -416,5 +454,15 @@ public class AssistantService {
 
     private TranscriptionProgressListener progressReporter(String projectId) {
         return (percent, stage, message) -> transcriptionProgressService.update(projectId, percent, stage, message);
+    }
+
+    private String refinedStrategy(String sourceStrategy) {
+        if (sourceStrategy == null || sourceStrategy.isBlank()) {
+            return "refined";
+        }
+        if (sourceStrategy.endsWith("-refined")) {
+            return sourceStrategy;
+        }
+        return sourceStrategy + "-refined";
     }
 }

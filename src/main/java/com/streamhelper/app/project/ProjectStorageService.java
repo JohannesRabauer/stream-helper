@@ -261,10 +261,33 @@ public class ProjectStorageService {
             String content,
             boolean recommended,
             boolean finalVersion) {
+        return saveArtifact(projectId, category, strategy, content, recommended, finalVersion, null, null, null);
+    }
+
+    public ArtifactVersion saveArtifact(
+            String projectId,
+            GenerationCategory category,
+            String strategy,
+            String content,
+            boolean recommended,
+            boolean finalVersion,
+            String parentArtifactId,
+            String threadId,
+            String refinementPrompt) {
         ensureProjectExists(projectId);
         String artifactId = UUID.randomUUID().toString();
+        String effectiveThreadId = (threadId == null || threadId.isBlank()) ? artifactId : threadId;
         ArtifactVersion version = ArtifactVersion.create(
-                artifactId, category, strategy, content, recommended, finalVersion, OffsetDateTime.now());
+                artifactId,
+                category,
+                strategy,
+                content,
+                parentArtifactId,
+                effectiveThreadId,
+                refinementPrompt,
+                recommended,
+                finalVersion,
+                OffsetDateTime.now());
         Path categoryDir = categoryDir(projectId, category);
         try {
             Files.createDirectories(categoryDir);
@@ -327,7 +350,10 @@ public class ProjectStorageService {
                 editedStrategy(source.getStrategy()),
                 content == null ? "" : content,
                 source.isRecommended(),
-                false);
+                false,
+                source.getId(),
+                source.getThreadId(),
+                null);
         return markFinal(projectId, category, saved.getId());
     }
 

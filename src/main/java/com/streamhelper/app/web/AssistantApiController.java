@@ -6,6 +6,7 @@ import com.streamhelper.app.service.AssistantService;
 import com.streamhelper.app.service.InstructionComposer;
 import com.streamhelper.app.transcription.TranscriptionProgressSnapshot;
 import com.streamhelper.app.web.dto.GenerationRequest;
+import com.streamhelper.app.web.dto.RefineArtifactRequest;
 import com.streamhelper.app.web.dto.TextInputRequest;
 import com.streamhelper.app.web.dto.ThumbnailCreateRequest;
 import com.streamhelper.app.web.dto.YouTubeTranscriptionRequest;
@@ -118,6 +119,15 @@ public class AssistantApiController {
     public ArtifactVersion markFinal(
             @PathVariable String projectId, @PathVariable GenerationCategory category, @PathVariable String artifactId) {
         return assistantService.markFinal(projectId, category, artifactId);
+    }
+
+    @PostMapping("/artifacts/{category}/{artifactId}/refine")
+    public Object refineArtifact(
+            @PathVariable String projectId,
+            @PathVariable GenerationCategory category,
+            @PathVariable String artifactId,
+            @Valid @RequestBody RefineArtifactRequest request) {
+        return assistantService.refineArtifact(projectId, category, artifactId, request.prompt());
     }
 
     @PostMapping("/effective-prompt/{category}")

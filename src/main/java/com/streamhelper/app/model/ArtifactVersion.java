@@ -7,6 +7,9 @@ public class ArtifactVersion {
     private GenerationCategory category;
     private String strategy;
     private String content;
+    private String parentArtifactId;
+    private String threadId;
+    private String refinementPrompt;
     private boolean recommended;
     private boolean finalVersion;
     private OffsetDateTime createdAt;
@@ -16,6 +19,9 @@ public class ArtifactVersion {
             GenerationCategory category,
             String strategy,
             String content,
+            String parentArtifactId,
+            String threadId,
+            String refinementPrompt,
             boolean recommended,
             boolean finalVersion,
             OffsetDateTime createdAt) {
@@ -24,6 +30,9 @@ public class ArtifactVersion {
         version.category = category;
         version.strategy = strategy;
         version.content = content;
+        version.parentArtifactId = parentArtifactId;
+        version.threadId = threadId;
+        version.refinementPrompt = refinementPrompt;
         version.recommended = recommended;
         version.finalVersion = finalVersion;
         version.createdAt = createdAt;
@@ -44,6 +53,18 @@ public class ArtifactVersion {
 
     public String getContent() {
         return content;
+    }
+
+    public String getParentArtifactId() {
+        return parentArtifactId;
+    }
+
+    public String getThreadId() {
+        return threadId;
+    }
+
+    public String getRefinementPrompt() {
+        return refinementPrompt;
     }
 
     public boolean isRecommended() {

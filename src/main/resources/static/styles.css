@@ -468,12 +468,8 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
     bottom: 1rem;
 }
 
-#projectResultToggle {
-    bottom: 4.6rem;
-}
-
 #projectLlmDefinitionsToggle {
-    bottom: 8.2rem;
+    bottom: 4.6rem;
 }
 
 #globalLlmDefinitionsToggle {
@@ -584,6 +580,16 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
     color: var(--muted);
     font-size: 0.82rem;
     margin-top: -0.15rem;
+}
+
+.inline-result-panel {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.16);
+    padding: 0.9rem;
+    margin-top: 0.35rem;
+    display: grid;
+    gap: 0.65rem;
 }
 
 .two-column-grid {
@@ -942,6 +948,56 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
     font-size: 0.82rem;
 }
 
+.artifact-refine-panel {
+    margin-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    padding-top: 0.75rem;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.artifact-refine-panel h5 {
+    margin: 0;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+}
+
+.artifact-refine-label {
+    margin-top: 0.15rem;
+}
+
+.artifact-refine-input {
+    min-height: 86px;
+    margin-top: 0;
+}
+
+.artifact-refine-actions {
+    justify-content: flex-start;
+}
+
+.artifact-refine-empty {
+    margin: 0;
+}
+
+.artifact-refine-turns {
+    margin: 0;
+    padding-left: 1.1rem;
+    display: grid;
+    gap: 0.35rem;
+}
+
+.artifact-refine-turn-meta {
+    font-size: 0.74rem;
+    color: var(--muted);
+    margin-bottom: 0.12rem;
+}
+
+.artifact-refine-turn-prompt {
+    color: var(--text);
+}
+
 /* ── Badges ── */
 .badge {
     border: 1px solid rgba(99, 102, 241, 0.4);
@@ -1217,12 +1273,8 @@ details[open] .result-raw summary::before,
         bottom: 1rem;
     }
 
-    #projectResultToggle {
-        bottom: 4.6rem;
-    }
-
     #projectLlmDefinitionsToggle {
-        bottom: 8.2rem;
+        bottom: 4.6rem;
     }
 
     .side-drawer {

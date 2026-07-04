@@ -73,8 +73,7 @@ const categoryToArea = {
   SUMMARY: "post-stream"
 };
 
-let lastResult = null;
-let lastRawJson = "";
+const latestResultsByArea = {};
 let projectConfig = JSON.parse(JSON.stringify(initialProjectConfig || {}));
 let globalConfig = JSON.parse(JSON.stringify(initialGlobalConfig || {}));
 let projectNotes = {
@@ -94,6 +93,21 @@ const editableArtifactCategories = new Set([
   "SOCIAL_POST",
   "HASHTAGS",
   "YOUTUBE_TAGS",
+  "CHAPTERS",
+  "SUMMARY",
+  "THUMBNAIL_PROMPT"
+]);
+
+const refinableArtifactCategories = new Set([
+  "TOPIC_IDEA",
+  "GUEST_IDEA",
+  "YOUTUBE_TITLES",
+  "YOUTUBE_DESCRIPTION",
+  "LINKEDIN_POST",
+  "SOCIAL_POST",
+  "HASHTAGS",
+  "YOUTUBE_TAGS",
+  "TRANSCRIPT",
   "CHAPTERS",
   "SUMMARY",
   "THUMBNAIL_PROMPT"
@@ -379,12 +393,25 @@ async function apiJsonQuiet(url, options) {
 }
 
 function renderResult(data) {
-  lastResult = data;
-  lastRawJson = JSON.stringify(data, null, 2);
-  document.getElementById("resultBox").textContent = lastRawJson;
+  const areaKey = categoryToArea[data.category];
+  if (areaKey) {
+    latestResultsByArea[areaKey] = data;
+    renderInlineResult(areaKey, data);
+    reloadAreaHistory(areaKey).catch(console.error);
+  }
+  showStatus("Saved a new version.", "success");
+}
 
-  const summary = document.getElementById("resultSummary");
-  const cards = document.getElementById("variantCards");
+function renderInlineResult(areaKey, data) {
+  const panel = document.getElementById(`inline-result-${areaKey}`);
+  const summary = document.getElementById(`inline-result-summary-${areaKey}`);
+  const cards = document.getElementById(`inline-result-cards-${areaKey}`);
+  const rawBox = document.getElementById(`inline-result-json-${areaKey}`);
+  if (!panel || !summary || !cards || !rawBox) {
+    return;
+  }
+  panel.hidden = false;
+  rawBox.textContent = JSON.stringify(data, null, 2);
   cards.innerHTML = "";
 
   if (!data.variants || !Array.isArray(data.variants)) {
@@ -394,6 +421,7 @@ function renderResult(data) {
 
   summary.textContent = `${data.variants.length} saved version(s) for ${formatCategoryLabel(data.category || "result")}.`;
 
+  const threadTurnsById = buildRefinementTurnsByThread(data.variants);
   if (Array.isArray(data.validationIssues) && data.validationIssues.length > 0) {
     const issueWrap = document.createElement("div");
     issueWrap.className = "validation-issues";
@@ -413,6 +441,7 @@ function renderResult(data) {
     card.className = "variant-card";
     card.style.animationDelay = `${index * 0.07}s`;
     const editable = isEditableArtifactCategory(data.category);
+    const threadTurns = threadTurnsById.get(variant.threadId || variant.id) || [];
     card.innerHTML = `
       <div class="variant-card-header">
         <div>
@@ -420,20 +449,21 @@ function renderResult(data) {
           <div class="muted artifact-timestamp">Saved ${escapeHtml(formatTimestamp(variant.createdAt))}</div>
         </div>
         <div class="inline-actions artifact-badges">
-          ${variant.recommended ? '<span class="badge">Recommended</span>' : ""}
-          ${variant.finalVersion ? '<span class="badge final">Final</span>' : ""}
+          ${renderArtifactBadges(variant)}
         </div>
       </div>
       ${editable
         ? `<textarea class="artifact-editor" rows="10" aria-label="Editable ${escapeHtml(formatCategoryLabel(data.category))} text"></textarea>
            <div class="artifact-save-state muted">Autosaves as a new version when you pause typing.</div>`
         : `<pre>${escapeHtml(previewContent(variant.content || "", data.category, 2400))}</pre>`}
-      <div class="inline-actions">
-        <button type="button" class="secondary-button">Copy content</button>
-        <button type="button" class="secondary-button">Mark final</button>
+      <div class="inline-actions artifact-actions">
+        <button type="button" class="secondary-button artifact-copy-button">Copy content</button>
+        <button type="button" class="secondary-button artifact-final-button">Mark final</button>
       </div>
+      ${renderRefinePanel(data.category, threadTurns)}
     `;
-    const [copyButton, finalButton] = card.querySelectorAll("button");
+    const copyButton = card.querySelector(".artifact-copy-button");
+    const finalButton = card.querySelector(".artifact-final-button");
     const textarea = card.querySelector(".artifact-editor");
     if (textarea) {
       setupArtifactEditor({
@@ -447,19 +477,18 @@ function renderResult(data) {
         source: "result"
       });
     }
-    copyButton.addEventListener("click", () => copyToClipboard(textarea ? textarea.value : (variant.content || "")));
-    finalButton.addEventListener("click", async () => {
+    copyButton?.addEventListener("click", () => copyToClipboard(textarea ? textarea.value : (variant.content || "")));
+    finalButton?.addEventListener("click", async () => {
       await finalizeArtifact(data.category, variant.id);
+    });
+    bindRefinementControls({
+      container: card,
+      artifact: variant,
+      category: data.category,
+      areaKey
     });
     cards.appendChild(card);
   });
-
-  const areaKey = categoryToArea[data.category];
-  if (areaKey) {
-    reloadAreaHistory(areaKey).catch(console.error);
-  }
-  toggleLatestResultDrawer(true);
-  showStatus("Saved a new version.", "success");
 }
 
 async function reloadAreaHistory(areaKey) {
@@ -495,6 +524,7 @@ function renderAreaHistory(areaKey, categoryResults) {
   categoryResults.forEach(({category, artifacts}) => {
     const group = document.createElement("section");
     group.className = "history-group";
+    const threadTurnsById = buildRefinementTurnsByThread(artifacts || []);
 
     const header = document.createElement("div");
     header.className = "section-heading history-group-heading";
@@ -535,16 +565,18 @@ function renderAreaHistory(areaKey, categoryResults) {
                   : `<pre>${escapeHtml(previewContent(artifact.content || "", category, 1100))}</pre>`}
               </div>
               <div class="inline-actions artifact-actions">
-                <button type="button" class="secondary-button">Copy</button>
-                <button type="button" class="secondary-button">Mark final</button>
+                <button type="button" class="secondary-button artifact-copy-button">Copy</button>
+                <button type="button" class="secondary-button artifact-final-button">Mark final</button>
               </div>
+              ${renderRefinePanel(category, threadTurnsById.get(artifact.threadId || artifact.id) || [])}
             </div>
           </details>
         `;
-        const [copyButton, finalButton] = item.querySelectorAll("button");
+        const copyButton = item.querySelector(".artifact-copy-button");
+        const finalButton = item.querySelector(".artifact-final-button");
         const textarea = item.querySelector(".artifact-editor");
         if (textarea) {
-          setupArtifactEditor({
+         setupArtifactEditor({
             textarea,
             artifact,
             category,
@@ -558,6 +590,12 @@ function renderAreaHistory(areaKey, categoryResults) {
         copyButton.addEventListener("click", () => copyToClipboard(textarea ? textarea.value : (artifact.content || "")));
         finalButton.addEventListener("click", async () => {
           await finalizeArtifact(category, artifact.id);
+        });
+        bindRefinementControls({
+          container: item,
+          artifact,
+          category,
+          areaKey
         });
         list.appendChild(item);
       });
@@ -693,6 +731,97 @@ function renderArtifactBadges(artifact) {
   return badges.join("");
 }
 
+function isRefinableArtifactCategory(category) {
+  return refinableArtifactCategories.has(category);
+}
+
+function renderRefinePanel(category, threadTurns) {
+  if (!isRefinableArtifactCategory(category)) {
+    return "";
+  }
+  return `
+    <section class="artifact-refine-panel">
+      <h5>Refinement chat</h5>
+      ${renderRefinementTurns(threadTurns)}
+      <label class="artifact-refine-label">Refine with prompt</label>
+      <textarea class="artifact-refine-input" rows="3" placeholder="Ask the LLM to refine this result (tone, length, format, emphasis, etc.)."></textarea>
+      <div class="inline-actions artifact-refine-actions">
+        <button type="button" class="secondary-button artifact-refine-button">Send refine prompt</button>
+      </div>
+    </section>
+  `;
+}
+
+function renderRefinementTurns(threadTurns) {
+  if (!Array.isArray(threadTurns) || threadTurns.length === 0) {
+    return '<p class="muted artifact-refine-empty">No refinement prompts yet.</p>';
+  }
+  const items = threadTurns.map((turn) => `
+    <li>
+      <div class="artifact-refine-turn-meta">Prompt • ${escapeHtml(formatTimestamp(turn.createdAt))}</div>
+      <div class="artifact-refine-turn-prompt">${escapeHtml(turn.prompt)}</div>
+    </li>
+  `);
+  return `<ol class="artifact-refine-turns">${items.join("")}</ol>`;
+}
+
+function buildRefinementTurnsByThread(artifacts) {
+  const turnsByThread = new Map();
+  if (!Array.isArray(artifacts)) {
+    return turnsByThread;
+  }
+  artifacts.forEach((artifact) => {
+    const threadId = artifact?.threadId || artifact?.id;
+    if (!threadId) {
+      return;
+    }
+    if (!turnsByThread.has(threadId)) {
+      turnsByThread.set(threadId, []);
+    }
+    const prompt = (artifact.refinementPrompt || "").trim();
+    if (prompt) {
+      turnsByThread.get(threadId).push({
+        prompt,
+        createdAt: artifact.createdAt || ""
+      });
+    }
+  });
+  turnsByThread.forEach((turns) => {
+    turns.sort((left, right) => Date.parse(left.createdAt || "") - Date.parse(right.createdAt || ""));
+  });
+  return turnsByThread;
+}
+
+function bindRefinementControls({container, artifact, category, areaKey}) {
+  if (!container || !artifact?.id || !isRefinableArtifactCategory(category)) {
+    return;
+  }
+  const promptInput = container.querySelector(".artifact-refine-input");
+  const sendButton = container.querySelector(".artifact-refine-button");
+  if (!promptInput || !sendButton) {
+    return;
+  }
+  sendButton.addEventListener("click", async () => {
+    const prompt = promptInput.value.trim();
+    if (!prompt) {
+      showStatus("Add a refinement prompt first.", "warning");
+      return;
+    }
+    await withButtonLoading(sendButton, async () => {
+      const data = await apiJson(`/api/projects/${projectId}/artifacts/${category}/${artifact.id}/refine`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({prompt})
+      });
+      promptInput.value = "";
+      renderResult(data);
+      if (areaKey) {
+        await reloadAreaHistory(areaKey);
+      }
+    });
+  });
+}
+
 function bumpHistoryCount(areaKey) {
   if (!areaKey) {
     return;
@@ -706,20 +835,22 @@ function bumpHistoryCount(areaKey) {
   node.textContent = `${current + 1} entr${current + 1 === 1 ? "y" : "ies"}`;
 }
 
-function copyRawResult() {
-  if (!lastRawJson) {
+function copyRawResult(areaKey) {
+  const result = latestResultsByArea[areaKey];
+  if (!result) {
     showStatus("No result available yet.", "warning");
     return;
   }
-  copyToClipboard(lastRawJson);
+  copyToClipboard(JSON.stringify(result, null, 2));
 }
 
-function copyRecommendedContent() {
-  if (!lastResult || !Array.isArray(lastResult.variants)) {
+function copyRecommendedContent(areaKey) {
+  const result = latestResultsByArea[areaKey];
+  if (!result || !Array.isArray(result.variants)) {
     showStatus("No result available yet.", "warning");
     return;
   }
-  const recommended = lastResult.variants.find((variant) => variant.recommended) || lastResult.variants[0];
+  const recommended = result.variants.find((variant) => variant.recommended) || result.variants[0];
   if (!recommended) {
     showStatus("No generated content available.", "warning");
     return;
@@ -998,23 +1129,9 @@ function toggleProjectNotesDrawer(forceOpen) {
   }
   const open = typeof forceOpen === "boolean" ? forceOpen : !drawer.classList.contains("open");
   if (open) {
-    closeLatestResultDrawer();
     closeLlmDefinitionsDrawer();
   }
   setDrawerState("projectNotesDrawer", "projectNotesToggle", open, "Show notes", "Hide notes");
-}
-
-function toggleLatestResultDrawer(forceOpen) {
-  const drawer = document.getElementById("projectResultDrawer");
-  if (!drawer) {
-    return;
-  }
-  const open = typeof forceOpen === "boolean" ? forceOpen : !drawer.classList.contains("open");
-  if (open) {
-    closeProjectNotesDrawer();
-    closeLlmDefinitionsDrawer();
-  }
-  setDrawerState("projectResultDrawer", "projectResultToggle", open, "Show latest result", "Hide latest result");
 }
 
 function toggleLlmDefinitionsDrawer(forceOpen) {
@@ -1025,17 +1142,12 @@ function toggleLlmDefinitionsDrawer(forceOpen) {
   const open = typeof forceOpen === "boolean" ? forceOpen : !drawer.classList.contains("open");
   if (open) {
     closeProjectNotesDrawer();
-    closeLatestResultDrawer();
   }
   setDrawerState("projectLlmDefinitionsDrawer", "projectLlmDefinitionsToggle", open, "Show LLM definitions", "Hide LLM definitions");
 }
 
 function closeProjectNotesDrawer() {
   setDrawerState("projectNotesDrawer", "projectNotesToggle", false, "Show notes", "Hide notes");
-}
-
-function closeLatestResultDrawer() {
-  setDrawerState("projectResultDrawer", "projectResultToggle", false, "Show latest result", "Hide latest result");
 }
 
 function closeLlmDefinitionsDrawer() {

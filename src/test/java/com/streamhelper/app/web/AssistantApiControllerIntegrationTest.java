@@ -88,6 +88,29 @@ class AssistantApiControllerIntegrationTest {
     }
 
     @Test
+    void refinesArtifactAndKeepsThreadLineage() throws Exception {
+        String projectId = createProject("Refine API");
+        String generateResponse = mockMvc.perform(post("/api/projects/" + projectId + "/youtube-description")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Test\"}"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String artifactId = generateResponse.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/artifacts/YOUTUBE_DESCRIPTION/" + artifactId + "/refine")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"prompt\":\"Shorter and more direct\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("YOUTUBE_DESCRIPTION"))
+                .andExpect(jsonPath("$.variants.length()").value(1))
+                .andExpect(jsonPath("$.variants[0].parentArtifactId").value(artifactId))
+                .andExpect(jsonPath("$.variants[0].threadId").isNotEmpty())
+                .andExpect(jsonPath("$.variants[0].refinementPrompt").value("Shorter and more direct"));
+    }
+
+    @Test
     void returnsIdleTranscriptionProgressWhenNoTaskHasRunYet() throws Exception {
         String projectId = createProject("Progress API");
 

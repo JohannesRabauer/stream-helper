@@ -39,6 +39,39 @@
 
     <section class="card">
         <div class="section-heading">
+            <h2>LLM definitions</h2>
+            <span>Visible and editable</span>
+        </div>
+        <p class="muted">Put reusable rules here, like “Never use '-'”. Global rules apply everywhere, project rules apply in this project, and stage rules apply to every action inside the selected workflow stage.</p>
+        <div class="workflow-main">
+            <label for="globalInstructionInput">Global definitions</label>
+            <textarea id="globalInstructionInput" rows="5" placeholder="Rules for all projects and all areas."></textarea>
+            <div class="autosave-hint">Autosaved across every project.</div>
+
+            <label for="projectInstructionInput">Project definitions</label>
+            <textarea id="projectInstructionInput" rows="5" placeholder="Rules only for this project."></textarea>
+            <div class="autosave-hint">Autosaved only for this project.</div>
+
+            <div class="section-heading compact-heading">
+                <h3>Stage-specific definitions</h3>
+                <span id="currentAreaInstructionLabel">Pre-stream planning</span>
+            </div>
+            <div class="two-column-grid">
+                <div>
+                    <label for="globalAreaInstructionInput">Global stage definitions</label>
+                    <textarea id="globalAreaInstructionInput" rows="5" placeholder="Rules for this workflow stage across all projects."></textarea>
+                </div>
+                <div>
+                    <label for="projectAreaInstructionInput">Project stage definitions</label>
+                    <textarea id="projectAreaInstructionInput" rows="5" placeholder="Rules for this workflow stage in this project."></textarea>
+                </div>
+            </div>
+            <div class="autosave-hint">These stage rules are applied to all actions in the selected tab.</div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="section-heading">
             <h2>Latest result</h2>
             <div class="inline-actions">
                 <button type="button" class="secondary-button" onclick="copyRawResult()">Copy JSON</button>
@@ -262,6 +295,7 @@
     const projectId = /*[[${project.id}]]*/ '';
     const projectName = /*[[${project.name}]]*/ '';
     const initialProjectConfig = /*[[${projectConfig}]]*/ {};
+    const initialGlobalConfig = /*[[${globalConfig}]]*/ {};
     const initialWorkflowNotes = /*[[${workflowNotes}]]*/ {};
 </script>
 <script th:src="@{/project.js}"></script>

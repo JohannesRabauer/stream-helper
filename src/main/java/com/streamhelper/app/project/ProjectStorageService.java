@@ -306,6 +306,31 @@ public class ProjectStorageService {
         }
     }
 
+    public ArtifactVersion getArtifact(String projectId, GenerationCategory category, String artifactId) {
+        ensureProjectExists(projectId);
+        Path file = categoryDir(projectId, category).resolve("%s.json".formatted(artifactId));
+        if (Files.notExists(file)) {
+            throw new NotFoundException("Artifact %s not found".formatted(artifactId));
+        }
+        try {
+            return objectMapper.readValue(file.toFile(), ArtifactVersion.class);
+        } catch (IOException exception) {
+            throw new StorageException("Failed to read artifact %s".formatted(artifactId), exception);
+        }
+    }
+
+    public ArtifactVersion saveArtifactEdit(String projectId, GenerationCategory category, String sourceArtifactId, String content) {
+        ArtifactVersion source = getArtifact(projectId, category, sourceArtifactId);
+        ArtifactVersion saved = saveArtifact(
+                projectId,
+                category,
+                editedStrategy(source.getStrategy()),
+                content == null ? "" : content,
+                source.isRecommended(),
+                false);
+        return markFinal(projectId, category, saved.getId());
+    }
+
     public ArtifactVersion markFinal(String projectId, GenerationCategory category, String artifactId) {
         ensureProjectExists(projectId);
         Path categoryDir = categoryDir(projectId, category);
@@ -441,6 +466,16 @@ public class ProjectStorageService {
         } catch (IOException exception) {
             throw new StorageException("Failed to read project in %s".formatted(projectDir), exception);
         }
+    }
+
+    private String editedStrategy(String sourceStrategy) {
+        if (sourceStrategy == null || sourceStrategy.isBlank()) {
+            return "edited";
+        }
+        if (sourceStrategy.endsWith("-edited")) {
+            return sourceStrategy;
+        }
+        return sourceStrategy + "-edited";
     }
 
     private String normalizeName(String name) {

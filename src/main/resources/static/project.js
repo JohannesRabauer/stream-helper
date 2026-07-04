@@ -57,12 +57,33 @@ const categoryToArea = {
   SUMMARY: "post-stream"
 };
 
+const areaLabels = {
+  "pre-stream": "Pre-stream planning",
+  promotion: "Promotion",
+  transcription: "Transcription",
+  "post-stream": "Post-stream wrap-up"
+};
+
 let lastResult = null;
 let lastRawJson = "";
 let projectConfig = JSON.parse(JSON.stringify(initialProjectConfig || {}));
+let globalConfig = JSON.parse(JSON.stringify(initialGlobalConfig || {}));
 let workflowNotes = {...(initialWorkflowNotes || {})};
 let configSaveTimer = null;
+let globalConfigSaveTimer = null;
 const noteSaveTimers = new Map();
+const editableArtifactCategories = new Set([
+  "TOPIC_IDEA",
+  "GUEST_IDEA",
+  "YOUTUBE_DESCRIPTION",
+  "LINKEDIN_POST",
+  "SOCIAL_POST",
+  "HASHTAGS",
+  "YOUTUBE_TAGS",
+  "CHAPTERS",
+  "SUMMARY",
+  "THUMBNAIL_PROMPT"
+]);
 
 const spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
@@ -99,6 +120,7 @@ function selectWorkflowTab(areaKey, button) {
   }
   projectConfig.currentWorkflowStage = areaKey;
   scheduleProjectConfigSave();
+  syncAreaInstructionEditors(areaKey);
 }
 
 async function runStageBriefAction(areaKey, endpoint, button) {
@@ -259,25 +281,42 @@ function renderResult(data) {
     const card = document.createElement("article");
     card.className = "variant-card";
     card.style.animationDelay = `${index * 0.07}s`;
+    const editable = isEditableArtifactCategory(data.category);
     card.innerHTML = `
       <div class="variant-card-header">
         <div>
           <h4>${escapeHtml(variant.strategy || "variant")}</h4>
-          <div class="muted">Saved ${escapeHtml(formatTimestamp(variant.createdAt))}</div>
+          <div class="muted artifact-timestamp">Saved ${escapeHtml(formatTimestamp(variant.createdAt))}</div>
         </div>
-        <div class="inline-actions">
+        <div class="inline-actions artifact-badges">
           ${variant.recommended ? '<span class="badge">Recommended</span>' : ""}
           ${variant.finalVersion ? '<span class="badge final">Final</span>' : ""}
         </div>
       </div>
-      <pre>${escapeHtml(previewContent(variant.content || "", data.category, 2400))}</pre>
+      ${editable
+        ? `<textarea class="artifact-editor" rows="10" aria-label="Editable ${escapeHtml(formatCategoryLabel(data.category))} text"></textarea>
+           <div class="artifact-save-state muted">Autosaves as a new version when you pause typing.</div>`
+        : `<pre>${escapeHtml(previewContent(variant.content || "", data.category, 2400))}</pre>`}
       <div class="inline-actions">
         <button type="button" class="secondary-button">Copy content</button>
         <button type="button" class="secondary-button">Mark final</button>
       </div>
     `;
     const [copyButton, finalButton] = card.querySelectorAll("button");
-    copyButton.addEventListener("click", () => copyToClipboard(variant.content || ""));
+    const textarea = card.querySelector(".artifact-editor");
+    if (textarea) {
+      setupArtifactEditor({
+        textarea,
+        artifact: variant,
+        category: data.category,
+        areaKey: categoryToArea[data.category],
+        timestampNode: card.querySelector(".artifact-timestamp"),
+        badgesNode: card.querySelector(".artifact-badges"),
+        saveStateNode: card.querySelector(".artifact-save-state"),
+        source: "result"
+      });
+    }
+    copyButton.addEventListener("click", () => copyToClipboard(textarea ? textarea.value : (variant.content || "")));
     finalButton.addEventListener("click", async () => {
       await finalizeArtifact(data.category, variant.id);
     });
@@ -341,20 +380,39 @@ function renderAreaHistory(areaKey, categoryResults) {
         const item = document.createElement("article");
         item.className = "artifact-item";
         item.style.animationDelay = `${index * 0.05}s`;
+        const editable = isEditableArtifactCategory(category);
         item.innerHTML = `
           <div class="artifact-copy">
             <strong>${escapeHtml(artifact.strategy || "version")}</strong>
-            <div class="muted">Saved ${escapeHtml(formatTimestamp(artifact.createdAt))}</div>
-            <pre>${escapeHtml(previewContent(artifact.content || "", category, 1100))}</pre>
+            <div class="muted artifact-timestamp">Saved ${escapeHtml(formatTimestamp(artifact.createdAt))}</div>
+            ${editable
+              ? `<textarea class="artifact-editor artifact-editor-history" rows="7" aria-label="Editable ${escapeHtml(formatCategoryLabel(category))} history text"></textarea>
+                 <div class="artifact-save-state muted">Autosaves as a new version when you pause typing.</div>`
+              : `<pre>${escapeHtml(previewContent(artifact.content || "", category, 1100))}</pre>`}
           </div>
           <div class="inline-actions artifact-actions">
-            ${artifact.finalVersion ? '<span class="badge final">Final</span>' : ""}
+            <div class="inline-actions artifact-badges">
+              ${renderArtifactBadges(artifact)}
+            </div>
             <button type="button" class="secondary-button">Copy</button>
             <button type="button" class="secondary-button">Mark final</button>
           </div>
         `;
         const [copyButton, finalButton] = item.querySelectorAll("button");
-        copyButton.addEventListener("click", () => copyToClipboard(artifact.content || ""));
+        const textarea = item.querySelector(".artifact-editor");
+        if (textarea) {
+          setupArtifactEditor({
+            textarea,
+            artifact,
+            category,
+            areaKey,
+            timestampNode: item.querySelector(".artifact-timestamp"),
+            badgesNode: item.querySelector(".artifact-badges"),
+            saveStateNode: item.querySelector(".artifact-save-state"),
+            source: "history"
+          });
+        }
+        copyButton.addEventListener("click", () => copyToClipboard(textarea ? textarea.value : (artifact.content || "")));
         finalButton.addEventListener("click", async () => {
           await finalizeArtifact(category, artifact.id);
         });
@@ -365,6 +423,116 @@ function renderAreaHistory(areaKey, categoryResults) {
     group.appendChild(list);
     container.appendChild(group);
   });
+}
+
+function setupArtifactEditor({textarea, artifact, category, areaKey, timestampNode, badgesNode, saveStateNode, source}) {
+  textarea.value = artifact.content || "";
+  textarea.dataset.artifactId = artifact.id;
+  textarea.dataset.lastSavedContent = artifact.content || "";
+  autoResizeTextarea(textarea);
+  textarea.addEventListener("input", () => {
+    autoResizeTextarea(textarea);
+    if (saveStateNode) {
+      saveStateNode.textContent = "Editing… autosave pending.";
+    }
+    scheduleArtifactSave({textarea, artifact, category, areaKey, timestampNode, badgesNode, saveStateNode, source});
+  });
+  textarea.addEventListener("blur", () => {
+    if (!textarea._saving && textarea.value !== textarea.dataset.lastSavedContent && !textarea._artifactSaveTimer) {
+      saveArtifactEdit({textarea, artifact, category, areaKey, timestampNode, badgesNode, saveStateNode, source})
+          .catch(console.error);
+    }
+  });
+}
+
+function scheduleArtifactSave(context) {
+  clearTimeout(context.textarea._artifactSaveTimer);
+  context.textarea._artifactSaveTimer = setTimeout(() => {
+    context.textarea._artifactSaveTimer = null;
+    saveArtifactEdit(context).catch(console.error);
+  }, 900);
+}
+
+async function saveArtifactEdit({textarea, artifact, category, areaKey, timestampNode, badgesNode, saveStateNode, source}) {
+  const content = textarea.value;
+  if (content === textarea.dataset.lastSavedContent) {
+    if (saveStateNode) {
+      saveStateNode.textContent = "All changes saved.";
+    }
+    return;
+  }
+  if (textarea._saving) {
+    textarea._needsSave = true;
+    return;
+  }
+  textarea._saving = true;
+  if (saveStateNode) {
+    saveStateNode.textContent = "Saving a new version…";
+  }
+  try {
+    const saved = await apiJson(`/api/projects/${projectId}/artifacts/${category}/${textarea.dataset.artifactId}`, {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({content})
+    });
+    artifact.id = saved.id;
+    artifact.content = saved.content || "";
+    artifact.strategy = saved.strategy;
+    artifact.createdAt = saved.createdAt;
+    artifact.finalVersion = saved.finalVersion;
+    textarea.dataset.artifactId = saved.id;
+    textarea.dataset.lastSavedContent = saved.content || "";
+    if (timestampNode) {
+      timestampNode.textContent = `Saved ${formatTimestamp(saved.createdAt)}`;
+    }
+    if (badgesNode) {
+      badgesNode.innerHTML = renderArtifactBadges(saved);
+    }
+    if (saveStateNode) {
+      saveStateNode.textContent = "Saved as a new version.";
+    }
+    if (source === "result" && areaKey) {
+      reloadAreaHistory(areaKey).catch(console.error);
+    } else if (source === "history") {
+      bumpHistoryCount(areaKey);
+    }
+  } catch (error) {
+    if (saveStateNode) {
+      saveStateNode.textContent = "Save failed. Keep editing and try again.";
+    }
+    showStatus("Failed to save edited text.", "error");
+    throw error;
+  } finally {
+    textarea._saving = false;
+    if (textarea._needsSave) {
+      textarea._needsSave = false;
+      scheduleArtifactSave({textarea, artifact, category, areaKey, timestampNode, badgesNode, saveStateNode, source});
+    }
+  }
+}
+
+function renderArtifactBadges(artifact) {
+  const badges = [];
+  if (artifact.recommended) {
+    badges.push('<span class="badge">Recommended</span>');
+  }
+  if (artifact.finalVersion) {
+    badges.push('<span class="badge final">Final</span>');
+  }
+  return badges.join("");
+}
+
+function bumpHistoryCount(areaKey) {
+  if (!areaKey) {
+    return;
+  }
+  const node = document.getElementById(workflowAreas[areaKey]?.historyCountId || "");
+  if (!node) {
+    return;
+  }
+  const match = node.textContent.match(/^(\d+)/);
+  const current = match ? Number.parseInt(match[1], 10) : 0;
+  node.textContent = `${current + 1} entr${current + 1 === 1 ? "y" : "ies"}`;
 }
 
 function copyRawResult() {
@@ -457,12 +625,21 @@ function formatCategoryLabel(category) {
   return categoryLabels[category] || category;
 }
 
+function isEditableArtifactCategory(category) {
+  return editableArtifactCategories.has(category);
+}
+
 function previewContent(content, category, defaultMaxChars) {
   const maxChars = category === "TRANSCRIPT" ? 700 : defaultMaxChars;
   if (!content || content.length <= maxChars) {
     return content || "";
   }
   return `${content.slice(0, maxChars)}\n\n… preview truncated …`;
+}
+
+function autoResizeTextarea(textarea) {
+  textarea.style.height = "auto";
+  textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 180), 560)}px`;
 }
 
 function escapeHtml(value) {
@@ -487,6 +664,24 @@ async function saveProjectConfig() {
     method: "PUT",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify(projectConfig)
+  });
+}
+
+function scheduleGlobalConfigSave() {
+  clearTimeout(globalConfigSaveTimer);
+  globalConfigSaveTimer = setTimeout(() => {
+    saveGlobalConfig().catch((error) => {
+      console.error(error);
+      showStatus("Failed to autosave global LLM definitions.", "error");
+    });
+  }, 450);
+}
+
+async function saveGlobalConfig() {
+  globalConfig = await apiJson(`/api/config/global`, {
+    method: "PUT",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(globalConfig)
   });
 }
 
@@ -542,6 +737,72 @@ function bindAutosaveInputs() {
     projectConfig.guestDisplayName = guestInput.value;
     scheduleProjectConfigSave();
   });
+
+  const globalInstructionInput = document.getElementById("globalInstructionInput");
+  const projectInstructionInput = document.getElementById("projectInstructionInput");
+  const globalAreaInstructionInput = document.getElementById("globalAreaInstructionInput");
+  const projectAreaInstructionInput = document.getElementById("projectAreaInstructionInput");
+
+  if (!globalConfig.categoryInstructions) {
+    globalConfig.categoryInstructions = {};
+  }
+  if (!projectConfig.directives) {
+    projectConfig.directives = {projectInstruction: "", categoryInstructions: {}};
+  }
+  if (!projectConfig.directives.categoryInstructions) {
+    projectConfig.directives.categoryInstructions = {};
+  }
+
+  globalInstructionInput.value = globalConfig.globalInstruction || "";
+  projectInstructionInput.value = projectConfig.directives.projectInstruction || "";
+
+  globalInstructionInput.addEventListener("input", () => {
+    globalConfig.globalInstruction = globalInstructionInput.value;
+    scheduleGlobalConfigSave();
+  });
+  projectInstructionInput.addEventListener("input", () => {
+    projectConfig.directives.projectInstruction = projectInstructionInput.value;
+    scheduleProjectConfigSave();
+  });
+
+  globalAreaInstructionInput.addEventListener("input", () => {
+    applyAreaInstruction(globalConfig.categoryInstructions, projectConfig.currentWorkflowStage || "pre-stream", globalAreaInstructionInput.value);
+    scheduleGlobalConfigSave();
+  });
+  projectAreaInstructionInput.addEventListener("input", () => {
+    applyAreaInstruction(projectConfig.directives.categoryInstructions, projectConfig.currentWorkflowStage || "pre-stream", projectAreaInstructionInput.value);
+    scheduleProjectConfigSave();
+  });
+}
+
+function syncAreaInstructionEditors(areaKey) {
+  const globalAreaInstructionInput = document.getElementById("globalAreaInstructionInput");
+  const projectAreaInstructionInput = document.getElementById("projectAreaInstructionInput");
+  const currentAreaInstructionLabel = document.getElementById("currentAreaInstructionLabel");
+  if (!globalAreaInstructionInput || !projectAreaInstructionInput || !currentAreaInstructionLabel) {
+    return;
+  }
+  currentAreaInstructionLabel.textContent = areaLabels[areaKey] || areaKey;
+  globalAreaInstructionInput.value = readAreaInstruction(globalConfig.categoryInstructions || {}, areaKey);
+  projectAreaInstructionInput.value = readAreaInstruction(projectConfig.directives?.categoryInstructions || {}, areaKey);
+}
+
+function applyAreaInstruction(categoryInstructions, areaKey, value) {
+  const categories = workflowAreas[areaKey]?.categories || [];
+  categories.forEach((category) => {
+    categoryInstructions[category] = value;
+  });
+}
+
+function readAreaInstruction(categoryInstructions, areaKey) {
+  const categories = workflowAreas[areaKey]?.categories || [];
+  for (const category of categories) {
+    const value = categoryInstructions?.[category];
+    if (value && value.trim()) {
+      return value;
+    }
+  }
+  return "";
 }
 
 window.addEventListener("DOMContentLoaded", async () => {

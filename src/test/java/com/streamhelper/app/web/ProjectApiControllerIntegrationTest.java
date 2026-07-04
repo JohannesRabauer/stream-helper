@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.streamhelper.app.model.GenerationCategory;
+import com.streamhelper.app.project.ProjectStorageService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +36,9 @@ class ProjectApiControllerIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
+
+    @Autowired
+    ProjectStorageService storageService;
 
     @Test
     void canCreateAndReadProject() throws Exception {
@@ -107,6 +112,28 @@ class ProjectApiControllerIntegrationTest {
         mockMvc.perform(get("/api/projects/" + projectId + "/export"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM));
+    }
+
+    @Test
+    void canSaveEditedArtifactAsNewVersion() throws Exception {
+        String projectResponse = mockMvc.perform(post("/api/projects")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Artifact Edit Project\"}"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String projectId = projectResponse.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
+
+        var original = storageService.saveArtifact(projectId, GenerationCategory.SUMMARY, "default", "Original summary", true, false);
+
+        mockMvc.perform(put("/api/projects/" + projectId + "/artifacts/SUMMARY/" + original.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":\"Edited summary\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value("Edited summary"))
+                .andExpect(jsonPath("$.strategy").value("default-edited"))
+                .andExpect(jsonPath("$.finalVersion").value(true));
     }
 
     private static Path createTempDir() {

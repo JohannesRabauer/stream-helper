@@ -6,6 +6,7 @@ import com.streamhelper.app.model.ProjectConfig;
 import com.streamhelper.app.project.ProjectExportService;
 import com.streamhelper.app.project.ProjectStorageService;
 import com.streamhelper.app.service.MarkdownService;
+import com.streamhelper.app.web.dto.ArtifactEditRequest;
 import com.streamhelper.app.web.dto.CreateProjectRequest;
 import com.streamhelper.app.web.dto.NoteRequest;
 import com.streamhelper.app.web.dto.RenameProjectRequest;
@@ -120,6 +121,15 @@ public class ProjectApiController {
     @GetMapping("/projects/{projectId}/artifacts/{category}")
     public Object listArtifacts(@PathVariable String projectId, @PathVariable GenerationCategory category) {
         return storageService.listArtifacts(projectId, category);
+    }
+
+    @PutMapping("/projects/{projectId}/artifacts/{category}/{artifactId}")
+    public Object saveArtifactEdit(
+            @PathVariable String projectId,
+            @PathVariable GenerationCategory category,
+            @PathVariable String artifactId,
+            @RequestBody ArtifactEditRequest request) {
+        return storageService.saveArtifactEdit(projectId, category, artifactId, request.content());
     }
 
     @GetMapping("/projects/{projectId}/export")

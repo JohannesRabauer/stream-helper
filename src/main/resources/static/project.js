@@ -71,15 +71,6 @@ const categoryToArea = {
   SUMMARY: "post-stream"
 };
 
-const areaLabels = {
-  "pre-stream": "Pre-stream planning",
-  description: "Description",
-  thumbnail: "Thumbnail",
-  "social-announcements": "Social Media (Announcements)",
-  transcription: "Transcription",
-  "post-stream": "Post-stream wrap-up"
-};
-
 let lastResult = null;
 let lastRawJson = "";
 let projectConfig = JSON.parse(JSON.stringify(initialProjectConfig || {}));
@@ -188,10 +179,6 @@ function cancelProjectRename() {
   toggleProjectRenameEditor(false);
 }
 
-function openLlmDefinitionsDialog() {
-  toggleLlmDefinitionsDrawer(true);
-}
-
 function selectWorkflowTab(areaKey, button) {
   document.querySelectorAll("[data-tab-panel]").forEach((panel) => {
     panel.hidden = panel.dataset.tabPanel !== areaKey;
@@ -207,16 +194,7 @@ function selectWorkflowTab(areaKey, button) {
     button.classList.add("active");
   }
   projectConfig.currentWorkflowStage = areaKey;
-  updateCurrentWorkflowLabel(areaKey);
   scheduleProjectConfigSave();
-}
-
-function updateCurrentWorkflowLabel(areaKey) {
-  const label = document.getElementById("currentWorkflowLabel");
-  if (!label) {
-    return;
-  }
-  label.textContent = `Current: ${areaLabels[areaKey] || areaKey}`;
 }
 
 async function runStageBriefAction(areaKey, endpoint, button) {

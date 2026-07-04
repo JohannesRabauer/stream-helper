@@ -337,14 +337,14 @@ button:disabled { opacity: 0.48; cursor: wait; }
 }
 
 /* ── Primary button ── */
-button:not(.secondary-button):not(.chip-button):not(.toggle-group button) {
+button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.tab-button) {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-end) 100%);
     color: #fff;
     border: 1px solid rgba(139, 92, 246, 0.45);
     box-shadow: 0 4px 18px rgba(124, 58, 237, 0.35);
 }
 
-button:not(.secondary-button):not(.chip-button):not(.toggle-group button)::before {
+button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.tab-button)::before {
     content: '';
     position: absolute;
     top: 0; left: -120%;
@@ -355,7 +355,7 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button)::befor
     transition: none;
 }
 
-button:not(.secondary-button):not(.chip-button):not(.toggle-group button):hover::before {
+button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.tab-button):hover::before {
     animation: btnShimmer 0.5s ease forwards;
 }
 
@@ -363,7 +363,7 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):hover:
     to { left: 165%; }
 }
 
-button:not(.secondary-button):not(.chip-button):not(.toggle-group button):hover {
+button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.tab-button):hover {
     box-shadow: 0 6px 28px rgba(124, 58, 237, 0.55);
     transform: translateY(-1px);
 }
@@ -526,7 +526,8 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):hover 
     border: 1px solid var(--border);
 }
 
-.tab-button.active {
+.tab-button.active,
+.tab-button[aria-selected="true"] {
     background: linear-gradient(135deg, rgba(124, 58, 237, 0.35), rgba(99, 102, 241, 0.3));
     border-color: rgba(167, 139, 250, 0.85);
     color: #f5f3ff;
@@ -678,16 +679,6 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):hover 
 
 .project-rename-input {
     min-width: 15rem;
-}
-
-.workflow-current-label {
-    border: 1px solid rgba(139, 92, 246, 0.45);
-    border-radius: 999px;
-    padding: 0.2rem 0.7rem;
-    background: rgba(124, 58, 237, 0.16);
-    color: #ddd6fe;
-    font-weight: 600;
-    font-size: 0.8rem;
 }
 
 /* ── Status bar ── */
@@ -1208,11 +1199,6 @@ details[open] .result-raw summary::before,
     .project-rename-input {
         min-width: 0;
         width: 100%;
-    }
-
-    .workflow-current-label {
-        width: 100%;
-        text-align: center;
     }
 
     .side-toggle.left {

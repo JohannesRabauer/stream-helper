@@ -22,6 +22,7 @@ public class InstructionComposer {
     public static final String POST_STREAM_NOTE_ID = "post-stream-notes";
     public static final String TRANSCRIPTION_NOTE_ID = "transcription-notes";
     public static final String LEGACY_PROMOTION_NOTE_ID = "promotion-notes";
+    public static final String PROJECT_NOTE_ID = "project-notes";
 
     private final ProjectStorageService storageService;
 
@@ -91,16 +92,7 @@ public class InstructionComposer {
 
     private String buildWorkflowContext(String projectId, ProjectConfig projectConfig, GenerationCategory targetCategory) {
         List<String> blocks = new ArrayList<>();
-        add(blocks, "Pre-stream notes", storageService.readNoteOrEmpty(projectId, PRE_STREAM_NOTE_ID));
-        add(blocks, "Description notes", readWorkflowNote(projectId, DESCRIPTION_NOTE_ID));
-        add(blocks, "Thumbnail notes", readWorkflowNote(projectId, THUMBNAIL_NOTE_ID));
-        add(blocks, "Social media announcement notes", readWorkflowNote(projectId, SOCIAL_ANNOUNCEMENTS_NOTE_ID));
-        if (usesPostStreamContext(targetCategory)) {
-            add(blocks, "Post-stream notes", storageService.readNoteOrEmpty(projectId, POST_STREAM_NOTE_ID));
-        }
-        if (targetCategory == GenerationCategory.TRANSCRIPT) {
-            add(blocks, "Transcription notes", storageService.readNoteOrEmpty(projectId, TRANSCRIPTION_NOTE_ID));
-        }
+        add(blocks, "Project notes", readProjectNotes(projectId));
 
         for (GenerationCategory category : relevantContextCategories(targetCategory)) {
             Optional<com.streamhelper.app.model.ArtifactVersion> artifact = storageService.getFinalArtifact(projectId, category);
@@ -116,19 +108,33 @@ public class InstructionComposer {
         return String.join("\n\n", blocks);
     }
 
-    private boolean usesPostStreamContext(GenerationCategory targetCategory) {
-        return switch (targetCategory) {
-            case CHAPTERS, SUMMARY -> true;
-            default -> false;
-        };
-    }
-
-    private String readWorkflowNote(String projectId, String noteId) {
-        String note = storageService.readNoteOrEmpty(projectId, noteId);
-        if (!note.isBlank()) {
-            return note;
+    private String readProjectNotes(String projectId) {
+        if (storageService.listNoteIds(projectId).contains(PROJECT_NOTE_ID)) {
+            return storageService.readNoteOrEmpty(projectId, PROJECT_NOTE_ID);
         }
-        return storageService.readNoteOrEmpty(projectId, LEGACY_PROMOTION_NOTE_ID);
+        String projectNotes = storageService.readNoteOrEmpty(projectId, PROJECT_NOTE_ID);
+        if (!projectNotes.isBlank()) {
+            return projectNotes;
+        }
+
+        List<String> blocks = new ArrayList<>();
+        add(blocks, "Pre-stream planning", storageService.readNoteOrEmpty(projectId, PRE_STREAM_NOTE_ID));
+
+        String description = storageService.readNoteOrEmpty(projectId, DESCRIPTION_NOTE_ID);
+        String thumbnail = storageService.readNoteOrEmpty(projectId, THUMBNAIL_NOTE_ID);
+        String social = storageService.readNoteOrEmpty(projectId, SOCIAL_ANNOUNCEMENTS_NOTE_ID);
+        String legacyPromotion = storageService.readNoteOrEmpty(projectId, LEGACY_PROMOTION_NOTE_ID);
+        if (description.isBlank() && thumbnail.isBlank() && social.isBlank() && !legacyPromotion.isBlank()) {
+            add(blocks, "Promotion", legacyPromotion);
+        } else {
+            add(blocks, "Description", description);
+            add(blocks, "Thumbnail", thumbnail);
+            add(blocks, "Social media announcements", social);
+        }
+
+        add(blocks, "Transcription", storageService.readNoteOrEmpty(projectId, TRANSCRIPTION_NOTE_ID));
+        add(blocks, "Post-stream wrap-up", storageService.readNoteOrEmpty(projectId, POST_STREAM_NOTE_ID));
+        return String.join("\n\n", blocks);
     }
 
     private EnumSet<GenerationCategory> relevantContextCategories(GenerationCategory targetCategory) {

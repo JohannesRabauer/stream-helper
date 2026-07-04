@@ -23,9 +23,7 @@
 
     <section id="statusBar" class="status-bar" hidden></section>
 
-    <div class="project-layout">
-        <div class="project-main-stack">
-            <section class="card">
+    <section class="card">
                 <div class="section-heading">
                     <h2>Workflow cockpit</h2>
                     <div class="inline-actions">
@@ -313,45 +311,37 @@
         </div>
         <pre id="effectivePromptBox">Choose a category to inspect the composed LLM context.</pre>
             </details>
-        </div>
-
-        <aside class="project-sidebar">
-            <section class="card project-notes-card">
-                <div class="section-heading">
-                    <h2>Project notes</h2>
-                    <span>Always visible</span>
-                </div>
-                <p class="muted">Keep notes open while you work. Every note autosaves immediately, stays attached to its stage, and is available from anywhere in the project.</p>
-                <div class="project-notes-list">
-                    <section class="note-section">
-                        <label for="note-pre-stream">Pre-stream planning notes</label>
-                        <textarea id="note-pre-stream" rows="5" data-note-key="pre-stream" data-note-id="pre-stream-notes" placeholder="Capture research, decisions, open questions, and anything you do not want to lose."></textarea>
-                    </section>
-                    <section class="note-section">
-                        <label for="note-description">Description notes</label>
-                        <textarea id="note-description" rows="5" data-note-key="description" data-note-id="description-notes" placeholder="Track SEO ideas, links, timestamps to mention, and keywords to reinforce."></textarea>
-                    </section>
-                    <section class="note-section">
-                        <label for="note-thumbnail">Thumbnail notes</label>
-                        <textarea id="note-thumbnail" rows="5" data-note-key="thumbnail" data-note-id="thumbnail-notes" placeholder="Track visual ideas, color tests, references, and things to avoid."></textarea>
-                    </section>
-                    <section class="note-section">
-                        <label for="note-social-announcements">Social Media notes</label>
-                        <textarea id="note-social-announcements" rows="5" data-note-key="social-announcements" data-note-id="social-announcements-notes" placeholder="Track rollout reminders, emojis to use or avoid, links, CTA ideas, and copy experiments."></textarea>
-                    </section>
-                    <section class="note-section">
-                        <label for="note-transcription">Transcription notes</label>
-                        <textarea id="note-transcription" rows="5" data-note-key="transcription" data-note-id="transcription-notes" placeholder="Keep notes about speaker attribution, tricky names, or anything to double-check after transcription."></textarea>
-                    </section>
-                    <section class="note-section">
-                        <label for="note-post-stream">Post-stream notes</label>
-                        <textarea id="note-post-stream" rows="5" data-note-key="post-stream" data-note-id="post-stream-notes" placeholder="Track edits to make, standout moments, sponsor mentions, or ideas for the follow-up stream."></textarea>
-                    </section>
-                </div>
-            </section>
-        </aside>
-    </div>
 </main>
+
+<button
+        id="projectNotesToggle"
+        type="button"
+        class="project-notes-toggle"
+        aria-controls="projectNotesDrawer"
+        aria-expanded="false"
+        onclick="toggleProjectNotesDrawer()">
+    Show notes
+</button>
+
+<aside id="projectNotesDrawer" class="project-notes-drawer" aria-hidden="true">
+    <section class="card project-notes-card">
+        <div class="section-heading">
+            <h2>Project notes</h2>
+            <div class="inline-actions">
+                <button id="projectNotesEditButton" type="button" class="secondary-button active" onclick="setProjectNotesMode('edit')">Edit</button>
+                <button id="projectNotesPreviewButton" type="button" class="secondary-button" onclick="setProjectNotesMode('preview')">View</button>
+                <button type="button" class="secondary-button" onclick="toggleProjectNotesDrawer(false)">Hide</button>
+            </div>
+        </div>
+        <p class="muted">A single markdown note for the whole project. It autosaves immediately and stays available from every workflow stage.</p>
+        <div id="projectNotesSaveState" class="autosave-hint">Autosaves while you type.</div>
+        <div id="projectNotesEditorPane">
+            <label for="projectNotesInput">Markdown notes</label>
+            <textarea id="projectNotesInput" rows="24" placeholder="Write reusable markdown notes for the whole project."></textarea>
+        </div>
+        <div id="projectNotesPreviewPane" class="markdown-preview project-notes-preview" hidden></div>
+    </section>
+</aside>
 
 <dialog id="llmDefinitionsDialog" class="modal-dialog">
     <form method="dialog" class="modal-shell">
@@ -400,7 +390,8 @@
     const projectName = /*[[${project.name}]]*/ '';
     const initialProjectConfig = /*[[${projectConfig}]]*/ {};
     const initialGlobalConfig = /*[[${globalConfig}]]*/ {};
-    const initialWorkflowNotes = /*[[${workflowNotes}]]*/ {};
+    const initialProjectNoteMarkdown = /*[[${projectNoteMarkdown}]]*/ '';
+    const initialProjectNoteHtml = /*[[${projectNoteHtml}]]*/ '';
 </script>
 <script th:src="@{/project.js}"></script>
 </body>

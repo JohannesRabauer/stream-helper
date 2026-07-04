@@ -48,7 +48,7 @@ class InstructionComposerTest {
         ProjectStorageService storageService = new ProjectStorageService(properties, new ObjectMapper().findAndRegisterModules());
         var project = storageService.createProject("Context Demo");
 
-        storageService.saveNote(project.id(), InstructionComposer.PRE_STREAM_NOTE_ID, "Remember to keep the stream practical.");
+        storageService.saveNote(project.id(), InstructionComposer.PROJECT_NOTE_ID, "Remember to keep the stream practical.");
         storageService.saveArtifact(project.id(), GenerationCategory.TOPIC_IDEA, "default", "Build an MCP debugging stream", true, true);
         storageService.saveArtifact(project.id(), GenerationCategory.TRANSCRIPT, "transcription", "Huge transcript body should stay out of shared context", true, false);
 

@@ -6,7 +6,7 @@ Local-first Spring Boot + Thymeleaf application for planning, promoting, and pos
 
 - Project-based workspace with file-backed storage (`schemaVersion: 1`)
 - Workflow tabs for pre-stream planning, description, thumbnail, social media, transcription, and post-stream wrap-up
-- Autosaved stage drafts and a persistent project notes sidebar so edits persist immediately
+- Autosaved stage drafts and a hideable project markdown notes drawer so edits persist immediately
 - Instruction layering (Global + Project + Stage)
 - Brand profile constraints
 - Finished stage outputs are reused as shared context for coherent generations (transcripts stay stored but excluded from shared prompt context)

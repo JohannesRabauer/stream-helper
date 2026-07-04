@@ -84,10 +84,14 @@ let lastResult = null;
 let lastRawJson = "";
 let projectConfig = JSON.parse(JSON.stringify(initialProjectConfig || {}));
 let globalConfig = JSON.parse(JSON.stringify(initialGlobalConfig || {}));
-let workflowNotes = {...(initialWorkflowNotes || {})};
+let projectNotes = {
+  markdown: initialProjectNoteMarkdown || "",
+  html: initialProjectNoteHtml || ""
+};
 let configSaveTimer = null;
 let globalConfigSaveTimer = null;
 const noteSaveTimers = new Map();
+let projectNotesMode = "edit";
 const editableArtifactCategories = new Set([
   "TOPIC_IDEA",
   "GUEST_IDEA",
@@ -712,21 +716,89 @@ async function saveGlobalConfig() {
   });
 }
 
-function scheduleNoteSave(noteId, markdown) {
-  clearTimeout(noteSaveTimers.get(noteId));
+function scheduleProjectNoteSave(markdown) {
+  clearTimeout(noteSaveTimers.get("project-notes"));
+  updateProjectNotesSaveState("Autosaving project notes…");
   const timer = setTimeout(async () => {
     try {
-      await apiJson(`/api/projects/${projectId}/notes`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({noteId, markdown})
-      });
+      await saveProjectNotes(markdown);
     } catch (error) {
       console.error(error);
-      showStatus(`Failed to autosave ${noteId}.`, "error");
+      updateProjectNotesSaveState("Failed to autosave project notes.", "error");
+      showStatus("Failed to autosave project notes.", "error");
     }
   }, 450);
-  noteSaveTimers.set(noteId, timer);
+  noteSaveTimers.set("project-notes", timer);
+}
+
+async function saveProjectNotes(markdown) {
+  const data = await apiJson(`/api/projects/${projectId}/notes`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({noteId: "project-notes", markdown})
+  });
+  projectNotes.markdown = data.markdown || markdown || "";
+  projectNotes.html = data.html || "";
+  renderProjectNotesPreview();
+  updateProjectNotesSaveState("Project notes saved.");
+  return data;
+}
+
+function updateProjectNotesSaveState(message, tone = "muted") {
+  const node = document.getElementById("projectNotesSaveState");
+  if (!node) {
+    return;
+  }
+  node.textContent = message;
+  node.classList.toggle("error", tone === "error");
+}
+
+function renderProjectNotesPreview() {
+  const previewPane = document.getElementById("projectNotesPreviewPane");
+  if (!previewPane) {
+    return;
+  }
+  previewPane.innerHTML = projectNotes.html && projectNotes.html.trim()
+      ? projectNotes.html
+      : "<p class=\"muted\">No project notes yet.</p>";
+}
+
+function toggleProjectNotesDrawer(forceOpen) {
+  const drawer = document.getElementById("projectNotesDrawer");
+  const toggle = document.getElementById("projectNotesToggle");
+  if (!drawer || !toggle) {
+    return;
+  }
+  const open = typeof forceOpen === "boolean" ? forceOpen : !drawer.classList.contains("open");
+  drawer.classList.toggle("open", open);
+  drawer.setAttribute("aria-hidden", String(!open));
+  toggle.setAttribute("aria-expanded", String(open));
+  toggle.textContent = open ? "Hide notes" : "Show notes";
+}
+
+async function setProjectNotesMode(mode) {
+  const editorPane = document.getElementById("projectNotesEditorPane");
+  const previewPane = document.getElementById("projectNotesPreviewPane");
+  const editButton = document.getElementById("projectNotesEditButton");
+  const previewButton = document.getElementById("projectNotesPreviewButton");
+  if (!editorPane || !previewPane || !editButton || !previewButton) {
+    return;
+  }
+  if (mode === "preview") {
+    const textarea = document.getElementById("projectNotesInput");
+    try {
+      await saveProjectNotes(textarea.value);
+    } catch (error) {
+      console.error(error);
+      return;
+    }
+  }
+  projectNotesMode = mode;
+  const preview = mode === "preview";
+  editorPane.hidden = preview;
+  previewPane.hidden = !preview;
+  editButton.classList.toggle("active", !preview);
+  previewButton.classList.toggle("active", preview);
 }
 
 function bindAutosaveInputs() {
@@ -742,15 +814,15 @@ function bindAutosaveInputs() {
     });
   });
 
-  document.querySelectorAll("[data-note-id]").forEach((textarea) => {
-    const noteKey = textarea.dataset.noteKey;
-    const noteId = textarea.dataset.noteId;
-    textarea.value = workflowNotes[noteKey] || "";
-    textarea.addEventListener("input", () => {
-      workflowNotes[noteKey] = textarea.value;
-      scheduleNoteSave(noteId, textarea.value);
+  const projectNotesInput = document.getElementById("projectNotesInput");
+  if (projectNotesInput) {
+    projectNotesInput.value = projectNotes.markdown || "";
+    projectNotesInput.addEventListener("input", () => {
+      projectNotes.markdown = projectNotesInput.value;
+      scheduleProjectNoteSave(projectNotesInput.value);
     });
-  });
+  }
+  renderProjectNotesPreview();
 
   const hostInput = document.getElementById("hostDisplayName");
   const guestInput = document.getElementById("guestDisplayName");
@@ -842,6 +914,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
   migrateLegacyPromotionState();
   bindAutosaveInputs();
+  await setProjectNotesMode(projectNotesMode);
   const activeTab = projectConfig.currentWorkflowStage || "pre-stream";
   const activeButton = document.querySelector(`.tab-button[data-tab="${activeTab}"]`) || document.querySelector('.tab-button[data-tab="pre-stream"]');
   selectWorkflowTab(activeButton?.dataset.tab || "pre-stream", activeButton);

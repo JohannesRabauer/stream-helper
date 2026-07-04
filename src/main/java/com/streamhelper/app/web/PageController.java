@@ -2,7 +2,9 @@ package com.streamhelper.app.web;
 
 import com.streamhelper.app.project.ProjectStorageService;
 import com.streamhelper.app.service.InstructionComposer;
-import java.util.Map;
+import com.streamhelper.app.service.MarkdownService;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,9 +16,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class PageController {
 
     private final ProjectStorageService storageService;
+    private final MarkdownService markdownService;
 
-    public PageController(ProjectStorageService storageService) {
+    public PageController(ProjectStorageService storageService, MarkdownService markdownService) {
         this.storageService = storageService;
+        this.markdownService = markdownService;
     }
 
     @GetMapping("/")
@@ -44,24 +48,12 @@ public class PageController {
     @GetMapping("/projects/{projectId}")
     public String project(@PathVariable String projectId, @RequestParam(value = "noteId", required = false) String noteId, Model model) {
         var project = storageService.getProject(projectId);
+        String projectNotes = readProjectNotes(projectId);
         model.addAttribute("project", project);
         model.addAttribute("projectConfig", storageService.readProjectConfig(projectId));
         model.addAttribute("globalConfig", storageService.readGlobalConfig());
-        model.addAttribute(
-                "workflowNotes",
-                Map.of(
-                        "pre-stream",
-                        storageService.readNoteOrEmpty(projectId, InstructionComposer.PRE_STREAM_NOTE_ID),
-                        "description",
-                        readWorkflowNote(projectId, InstructionComposer.DESCRIPTION_NOTE_ID),
-                        "thumbnail",
-                        readWorkflowNote(projectId, InstructionComposer.THUMBNAIL_NOTE_ID),
-                        "social-announcements",
-                        readWorkflowNote(projectId, InstructionComposer.SOCIAL_ANNOUNCEMENTS_NOTE_ID),
-                        "post-stream",
-                        storageService.readNoteOrEmpty(projectId, InstructionComposer.POST_STREAM_NOTE_ID),
-                        "transcription",
-                        storageService.readNoteOrEmpty(projectId, InstructionComposer.TRANSCRIPTION_NOTE_ID)));
+        model.addAttribute("projectNoteMarkdown", projectNotes);
+        model.addAttribute("projectNoteHtml", markdownService.render(projectNotes));
         return "project";
     }
 
@@ -74,11 +66,38 @@ public class PageController {
         return "redirect:/projects/%s?noteId=%s".formatted(projectId, effectiveNoteId);
     }
 
-    private String readWorkflowNote(String projectId, String noteId) {
-        String note = storageService.readNoteOrEmpty(projectId, noteId);
-        if (!note.isBlank()) {
-            return note;
+    private String readProjectNotes(String projectId) {
+        if (storageService.listNoteIds(projectId).contains(InstructionComposer.PROJECT_NOTE_ID)) {
+            return storageService.readNoteOrEmpty(projectId, InstructionComposer.PROJECT_NOTE_ID);
         }
-        return storageService.readNoteOrEmpty(projectId, InstructionComposer.LEGACY_PROMOTION_NOTE_ID);
+        String projectNotes = storageService.readNoteOrEmpty(projectId, InstructionComposer.PROJECT_NOTE_ID);
+        if (!projectNotes.isBlank()) {
+            return projectNotes;
+        }
+
+        List<String> blocks = new ArrayList<>();
+        addBlock(blocks, "## Pre-stream planning", storageService.readNoteOrEmpty(projectId, InstructionComposer.PRE_STREAM_NOTE_ID));
+
+        String description = storageService.readNoteOrEmpty(projectId, InstructionComposer.DESCRIPTION_NOTE_ID);
+        String thumbnail = storageService.readNoteOrEmpty(projectId, InstructionComposer.THUMBNAIL_NOTE_ID);
+        String social = storageService.readNoteOrEmpty(projectId, InstructionComposer.SOCIAL_ANNOUNCEMENTS_NOTE_ID);
+        String legacyPromotion = storageService.readNoteOrEmpty(projectId, InstructionComposer.LEGACY_PROMOTION_NOTE_ID);
+        if (description.isBlank() && thumbnail.isBlank() && social.isBlank() && !legacyPromotion.isBlank()) {
+            addBlock(blocks, "## Promotion", legacyPromotion);
+        } else {
+            addBlock(blocks, "## Description", description);
+            addBlock(blocks, "## Thumbnail", thumbnail);
+            addBlock(blocks, "## Social media", social);
+        }
+
+        addBlock(blocks, "## Transcription", storageService.readNoteOrEmpty(projectId, InstructionComposer.TRANSCRIPTION_NOTE_ID));
+        addBlock(blocks, "## Post-stream wrap-up", storageService.readNoteOrEmpty(projectId, InstructionComposer.POST_STREAM_NOTE_ID));
+        return String.join("\n\n", blocks);
+    }
+
+    private void addBlock(List<String> blocks, String heading, String content) {
+        if (content != null && !content.isBlank()) {
+            blocks.add(heading + "\n\n" + content.trim());
+        }
     }
 }

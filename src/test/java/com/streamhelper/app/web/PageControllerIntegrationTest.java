@@ -41,14 +41,14 @@ class PageControllerIntegrationTest {
     }
 
     @Test
-    void projectPageShowsPersistentNotesSidebar() throws Exception {
+    void projectPageShowsProjectNotesDrawer() throws Exception {
         var project = storageService.createProject("Notes Sidebar");
 
         mockMvc.perform(get("/projects/" + project.id()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Project notes")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Pre-stream planning notes")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Post-stream notes")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Show notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Markdown notes")));
     }
 
     private static Path createTempDir() {

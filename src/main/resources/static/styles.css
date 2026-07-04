@@ -439,45 +439,54 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):hover 
     grid-template-columns: 1fr 1fr;
 }
 
-.project-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
-    gap: 1.25rem;
-    align-items: start;
-}
-
-.project-main-stack {
-    min-width: 0;
-}
-
-.project-sidebar {
-    position: sticky;
-    top: 1.5rem;
-    align-self: start;
-}
-
 .project-notes-card {
-    max-height: calc(100vh - 3rem);
+    max-height: calc(100vh - 2rem);
+    overflow: auto;
+    margin: 0;
+}
+
+.project-notes-toggle {
+    position: fixed;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 40;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: var(--shadow);
+}
+
+.project-notes-toggle[aria-expanded="true"] {
+    right: min(25rem, calc(100vw - 4rem));
+}
+
+.project-notes-drawer {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    width: min(24rem, calc(100vw - 3.5rem));
+    z-index: 35;
+    transform: translateX(calc(100% + 1.5rem));
+    transition: transform var(--transition);
+    pointer-events: none;
+}
+
+.project-notes-drawer.open {
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+.project-notes-preview {
+    min-height: 22rem;
+    max-height: calc(100vh - 16rem);
     overflow: auto;
 }
 
-.project-notes-list {
-    display: grid;
-    gap: 1rem;
-}
-
-.note-section {
-    display: grid;
-    gap: 0.45rem;
-}
-
-.note-section + .note-section {
-    border-top: 1px solid var(--border);
-    padding-top: 1rem;
-}
-
-.note-section textarea {
-    min-height: 130px;
+.secondary-button.active {
+    background: rgba(124, 58, 237, 0.18);
+    border-color: rgba(139, 92, 246, 0.6);
+    color: #ddd6fe;
 }
 
 .workflow-tabs {
@@ -1010,8 +1019,7 @@ details[open] .result-raw summary::before,
 /* ── Responsive ── */
 @media (max-width: 980px) {
     .hero,
-    .layout-grid,
-    .project-layout {
+    .layout-grid {
         grid-template-columns: 1fr;
     }
 
@@ -1039,13 +1047,31 @@ details[open] .result-raw summary::before,
         align-items: stretch;
     }
 
-    .project-sidebar {
-        position: static;
+    .project-notes-toggle {
+        right: 0.75rem;
+        top: auto;
+        bottom: 1rem;
+        transform: none;
+    }
+
+    .project-notes-toggle[aria-expanded="true"] {
+        right: 0.75rem;
+    }
+
+    .project-notes-drawer {
+        top: auto;
+        right: 0.75rem;
+        left: 0.75rem;
+        bottom: 4.75rem;
+        width: auto;
     }
 
     .project-notes-card {
-        max-height: none;
-        overflow: visible;
+        max-height: 100%;
+    }
+
+    .project-notes-preview {
+        max-height: calc(100vh - 20rem);
     }
 
     h1 { font-size: 2rem; }

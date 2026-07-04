@@ -4,6 +4,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.streamhelper.app.project.ProjectStorageService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,11 +30,25 @@ class PageControllerIntegrationTest {
     @Autowired
     MockMvc mockMvc;
 
+    @Autowired
+    ProjectStorageService storageService;
+
     @Test
     void projectsPageLoads() throws Exception {
         mockMvc.perform(get("/projects"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Stream Helper")));
+    }
+
+    @Test
+    void projectPageShowsPersistentNotesSidebar() throws Exception {
+        var project = storageService.createProject("Notes Sidebar");
+
+        mockMvc.perform(get("/projects/" + project.id()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Project notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Pre-stream planning notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Post-stream notes")));
     }
 
     private static Path createTempDir() {

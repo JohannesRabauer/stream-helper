@@ -5,9 +5,9 @@ Local-first Spring Boot + Thymeleaf application for planning, promoting, and pos
 ## Features
 
 - Project-based workspace with file-backed storage (`schemaVersion: 1`)
-- Workflow tabs for pre-stream planning, promotion, transcription, and post-stream wrap-up
-- Autosaved stage drafts and notes so edits persist immediately
-- Instruction layering (Global + Project + Category)
+- Workflow tabs for pre-stream planning, description, thumbnail, social media, transcription, and post-stream wrap-up
+- Autosaved stage drafts and a persistent project notes sidebar so edits persist immediately
+- Instruction layering (Global + Project + Stage)
 - Brand profile constraints
 - Finished stage outputs are reused as shared context for coherent generations (transcripts stay stored but excluded from shared prompt context)
 - AI generation for:
@@ -39,6 +39,8 @@ docker compose --profile ollama up --build
 
 App URL: `http://localhost:8080`
 
+Project data is bind-mounted to `./data` so files stay visible on the host.
+
 ### Option 2: OpenAI mode (no Ollama runtime required)
 
 Set your key first:
@@ -54,6 +56,8 @@ docker compose --profile openai up --build
 ```
 
 App URL: `http://localhost:8080`
+
+Project data is bind-mounted to `./data` so files stay visible on the host.
 
 ## Local dev (without Docker)
 

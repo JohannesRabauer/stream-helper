@@ -439,6 +439,47 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):hover 
     grid-template-columns: 1fr 1fr;
 }
 
+.project-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.project-main-stack {
+    min-width: 0;
+}
+
+.project-sidebar {
+    position: sticky;
+    top: 1.5rem;
+    align-self: start;
+}
+
+.project-notes-card {
+    max-height: calc(100vh - 3rem);
+    overflow: auto;
+}
+
+.project-notes-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.note-section {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.note-section + .note-section {
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+}
+
+.note-section textarea {
+    min-height: 130px;
+}
+
 .workflow-tabs {
     display: flex;
     flex-wrap: wrap;
@@ -969,7 +1010,8 @@ details[open] .result-raw summary::before,
 /* ── Responsive ── */
 @media (max-width: 980px) {
     .hero,
-    .layout-grid {
+    .layout-grid,
+    .project-layout {
         grid-template-columns: 1fr;
     }
 
@@ -995,6 +1037,15 @@ details[open] .result-raw summary::before,
     .project-header {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    .project-sidebar {
+        position: static;
+    }
+
+    .project-notes-card {
+        max-height: none;
+        overflow: visible;
     }
 
     h1 { font-size: 2rem; }

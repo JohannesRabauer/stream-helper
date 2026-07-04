@@ -23,42 +23,44 @@
 
     <section id="statusBar" class="status-bar" hidden></section>
 
-    <section class="card">
-        <div class="section-heading">
-            <h2>Workflow cockpit</h2>
-            <div class="inline-actions">
-                <span>Everything autosaves</span>
-                <button type="button" class="secondary-button" onclick="openLlmDefinitionsDialog()">LLM definitions</button>
-            </div>
-        </div>
-        <p class="muted">Work through the stream in stages. Drafts and notes are saved immediately, generated outputs create a new version every time, and inline history stays with the stage where you need it.</p>
-        <div class="workflow-tabs" role="tablist" aria-label="Workflow stages">
-            <button type="button" class="tab-button active" data-tab="pre-stream" onclick="selectWorkflowTab('pre-stream', this)">Pre-stream planning</button>
-            <button type="button" class="tab-button" data-tab="description" onclick="selectWorkflowTab('description', this)">Description</button>
-            <button type="button" class="tab-button" data-tab="thumbnail" onclick="selectWorkflowTab('thumbnail', this)">Thumbnail</button>
-            <button type="button" class="tab-button" data-tab="social-announcements" onclick="selectWorkflowTab('social-announcements', this)">Social Media</button>
-            <button type="button" class="tab-button" data-tab="transcription" onclick="selectWorkflowTab('transcription', this)">Transcription</button>
-            <button type="button" class="tab-button" data-tab="post-stream" onclick="selectWorkflowTab('post-stream', this)">Post-stream wrap-up</button>
-        </div>
-    </section>
+    <div class="project-layout">
+        <div class="project-main-stack">
+            <section class="card">
+                <div class="section-heading">
+                    <h2>Workflow cockpit</h2>
+                    <div class="inline-actions">
+                        <span>Everything autosaves</span>
+                        <button type="button" class="secondary-button" onclick="openLlmDefinitionsDialog()">LLM definitions</button>
+                    </div>
+                </div>
+                <p class="muted">Work through the stream in stages. Drafts are saved immediately, generated outputs create a new version every time, and inline history stays with the stage where you need it.</p>
+                <div class="workflow-tabs" role="tablist" aria-label="Workflow stages">
+                    <button type="button" class="tab-button active" data-tab="pre-stream" onclick="selectWorkflowTab('pre-stream', this)">Pre-stream planning</button>
+                    <button type="button" class="tab-button" data-tab="description" onclick="selectWorkflowTab('description', this)">Description</button>
+                    <button type="button" class="tab-button" data-tab="thumbnail" onclick="selectWorkflowTab('thumbnail', this)">Thumbnail</button>
+                    <button type="button" class="tab-button" data-tab="social-announcements" onclick="selectWorkflowTab('social-announcements', this)">Social Media</button>
+                    <button type="button" class="tab-button" data-tab="transcription" onclick="selectWorkflowTab('transcription', this)">Transcription</button>
+                    <button type="button" class="tab-button" data-tab="post-stream" onclick="selectWorkflowTab('post-stream', this)">Post-stream wrap-up</button>
+                </div>
+            </section>
 
-    <section class="card">
-        <div class="section-heading">
-            <h2>Latest result</h2>
-            <div class="inline-actions">
-                <button type="button" class="secondary-button" onclick="copyRawResult()">Copy JSON</button>
-                <button type="button" class="secondary-button" onclick="copyRecommendedContent()">Copy recommended</button>
-            </div>
-        </div>
-        <div id="resultSummary" class="muted">Run an action in any workflow stage to see the newest output here.</div>
-        <div id="variantCards" class="variant-grid"></div>
-        <details class="result-raw">
-            <summary>Raw response JSON</summary>
-            <pre id="resultBox">Run an action to see output...</pre>
-        </details>
-    </section>
+            <section class="card">
+                <div class="section-heading">
+                    <h2>Latest result</h2>
+                    <div class="inline-actions">
+                        <button type="button" class="secondary-button" onclick="copyRawResult()">Copy JSON</button>
+                        <button type="button" class="secondary-button" onclick="copyRecommendedContent()">Copy recommended</button>
+                    </div>
+                </div>
+                <div id="resultSummary" class="muted">Run an action in any workflow stage to see the newest output here.</div>
+                <div id="variantCards" class="variant-grid"></div>
+                <details class="result-raw">
+                    <summary>Raw response JSON</summary>
+                    <pre id="resultBox">Run an action to see output...</pre>
+                </details>
+            </section>
 
-    <section class="workflow-panel card active" data-tab-panel="pre-stream">
+            <section class="workflow-panel card active" data-tab-panel="pre-stream">
         <div class="section-heading">
             <h2>Pre-stream planning</h2>
             <span>1. Decide the stream</span>
@@ -78,10 +80,6 @@
                 <textarea id="draft-pre-stream" rows="8" data-draft-key="pre-stream" placeholder="Describe the stream goal, audience, format, constraints, and what a good episode should achieve."></textarea>
                 <div class="autosave-hint">Autosaved to the project and reused in this stage.</div>
 
-                <label for="note-pre-stream">Stage notes</label>
-                <textarea id="note-pre-stream" rows="8" data-note-key="pre-stream" data-note-id="pre-stream-notes" placeholder="Capture research, decisions, open questions, and anything you do not want to lose."></textarea>
-                <div class="autosave-hint">Notes save immediately while you type.</div>
-
                 <div class="button-grid">
                     <button type="button" onclick="runStageBriefAction('pre-stream', 'topic-ideas', this)">Generate topic ideas</button>
                     <button type="button" onclick="runStageBriefAction('pre-stream', 'guest-ideas', this)">Find guest ideas</button>
@@ -95,9 +93,9 @@
                 <div id="history-pre-stream" class="history-groups"></div>
             </aside>
         </div>
-    </section>
+            </section>
 
-    <section class="workflow-panel card" data-tab-panel="description" hidden>
+            <section class="workflow-panel card" data-tab-panel="description" hidden>
         <div class="section-heading">
             <h2>Description</h2>
             <span>2. Nail the YouTube page</span>
@@ -117,10 +115,6 @@
                 <textarea id="draft-description" rows="8" data-draft-key="description" placeholder="Describe what the YouTube description and tags should emphasize, including SEO angles, key topics, and viewer expectations."></textarea>
                 <div class="autosave-hint">Autosaved and combined with finished planning outputs for coherent descriptions.</div>
 
-                <label for="note-description">Description notes</label>
-                <textarea id="note-description" rows="8" data-note-key="description" data-note-id="description-notes" placeholder="Track SEO ideas, title options, links, timestamps to mention, and keywords to reinforce."></textarea>
-                <div class="autosave-hint">Notes save immediately while you type.</div>
-
                 <div class="button-grid">
                     <button type="button" onclick="runStageBriefAction('description', 'youtube-description', this)">YouTube descriptions</button>
                     <button type="button" onclick="runStageBriefAction('description', 'youtube-tags', this)">YouTube tags</button>
@@ -134,9 +128,9 @@
                 <div id="history-description" class="history-groups"></div>
             </aside>
         </div>
-    </section>
+            </section>
 
-    <section class="workflow-panel card" data-tab-panel="thumbnail" hidden>
+            <section class="workflow-panel card" data-tab-panel="thumbnail" hidden>
         <div class="section-heading">
             <h2>Thumbnail</h2>
             <span>3. Build the visual</span>
@@ -156,10 +150,6 @@
                 <textarea id="draft-thumbnail" rows="8" data-draft-key="thumbnail" placeholder="Describe the thumbnail style, contrast, framing, emotions, and text-overlay preferences."></textarea>
                 <div class="autosave-hint">Autosaved and combined with the saved stream positioning for coherent thumbnails.</div>
 
-                <label for="note-thumbnail">Thumbnail notes</label>
-                <textarea id="note-thumbnail" rows="8" data-note-key="thumbnail" data-note-id="thumbnail-notes" placeholder="Track visual ideas, color tests, references, and things to avoid."></textarea>
-                <div class="autosave-hint">Notes save immediately while you type.</div>
-
                 <div class="button-grid">
                     <button type="button" onclick="runStageBriefAction('thumbnail', 'thumbnail-prompts', this)">Generate thumbnail prompts</button>
                     <button type="button" onclick="createThumbnailFromStage('thumbnail', false, this)">Create external prompt package</button>
@@ -174,9 +164,9 @@
                 <div id="history-thumbnail" class="history-groups"></div>
             </aside>
         </div>
-    </section>
+            </section>
 
-    <section class="workflow-panel card" data-tab-panel="social-announcements" hidden>
+            <section class="workflow-panel card" data-tab-panel="social-announcements" hidden>
         <div class="section-heading">
             <h2>Social Media (Announcements)</h2>
             <span>4. Announce the stream</span>
@@ -196,10 +186,6 @@
                 <textarea id="draft-social-announcements" rows="8" data-draft-key="social-announcements" placeholder="Describe tone, CTA, platform-specific goals, and how these announcement posts should sound."></textarea>
                 <div class="autosave-hint">Autosaved and combined with the saved stream context for coherent announcements.</div>
 
-                <label for="note-social-announcements">Announcement notes</label>
-                <textarea id="note-social-announcements" rows="8" data-note-key="social-announcements" data-note-id="social-announcements-notes" placeholder="Track rollout reminders, emojis to use or avoid, links, CTA ideas, and copy experiments."></textarea>
-                <div class="autosave-hint">Notes save immediately while you type.</div>
-
                 <div class="button-grid">
                     <button type="button" onclick="runStageBriefAction('social-announcements', 'linkedin-post', this)">LinkedIn posts</button>
                     <button type="button" onclick="runStageBriefAction('social-announcements', 'social-posts', this)">Social posts (X-ready)</button>
@@ -214,9 +200,9 @@
                 <div id="history-social-announcements" class="history-groups"></div>
             </aside>
         </div>
-    </section>
+            </section>
 
-    <section class="workflow-panel card" data-tab-panel="transcription" hidden>
+            <section class="workflow-panel card" data-tab-panel="transcription" hidden>
         <div class="section-heading">
             <h2>Transcription</h2>
             <span>5. Capture the conversation</span>
@@ -258,10 +244,6 @@
                     <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." required>
                     <button type="button" onclick="transcribeYoutube(this)">Transcribe YouTube URL</button>
                 </form>
-
-                <label for="note-transcription">Transcription notes</label>
-                <textarea id="note-transcription" rows="7" data-note-key="transcription" data-note-id="transcription-notes" placeholder="Keep notes about speaker attribution, tricky names, or anything to double-check after transcription."></textarea>
-                <div class="autosave-hint">Notes save immediately while you type.</div>
             </div>
             <aside class="history-panel">
                 <div class="section-heading">
@@ -271,9 +253,9 @@
                 <div id="history-transcription" class="history-groups"></div>
             </aside>
         </div>
-    </section>
+            </section>
 
-    <section class="workflow-panel card" data-tab-panel="post-stream" hidden>
+            <section class="workflow-panel card" data-tab-panel="post-stream" hidden>
         <div class="section-heading">
             <h2>Post-stream wrap-up</h2>
             <span>6. Package the replay</span>
@@ -293,10 +275,6 @@
                 <textarea id="draft-post-stream" rows="8" data-draft-key="post-stream" placeholder="Optional: ask for certain takeaways, highlight key moments, or specify what the replay summary should emphasize."></textarea>
                 <div class="autosave-hint">Autosaved. Chapters and summary use the latest stored transcript automatically if this field is empty.</div>
 
-                <label for="note-post-stream">Post-stream notes</label>
-                <textarea id="note-post-stream" rows="8" data-note-key="post-stream" data-note-id="post-stream-notes" placeholder="Track edits to make, standout moments, sponsor mentions, or ideas for the follow-up stream."></textarea>
-                <div class="autosave-hint">Notes save immediately while you type.</div>
-
                 <div class="button-grid">
                     <button type="button" onclick="runStageTextAction('post-stream', 'chapters', this)">Create chapters</button>
                     <button type="button" onclick="runStageTextAction('post-stream', 'summary', this)">Create detailed summary</button>
@@ -310,9 +288,9 @@
                 <div id="history-post-stream" class="history-groups"></div>
             </aside>
         </div>
-    </section>
+            </section>
 
-    <details class="card debug-card">
+            <details class="card debug-card">
         <summary>LLM context debug</summary>
         <p class="muted">This is the debug view for what gets composed before a generation request. It is useful for trust and troubleshooting, but it stays tucked away so it does not interrupt the normal workflow.</p>
         <div class="inline-actions">
@@ -334,7 +312,45 @@
             <button type="button" onclick="loadEffectivePrompt(this)">Load debug preview</button>
         </div>
         <pre id="effectivePromptBox">Choose a category to inspect the composed LLM context.</pre>
-    </details>
+            </details>
+        </div>
+
+        <aside class="project-sidebar">
+            <section class="card project-notes-card">
+                <div class="section-heading">
+                    <h2>Project notes</h2>
+                    <span>Always visible</span>
+                </div>
+                <p class="muted">Keep notes open while you work. Every note autosaves immediately, stays attached to its stage, and is available from anywhere in the project.</p>
+                <div class="project-notes-list">
+                    <section class="note-section">
+                        <label for="note-pre-stream">Pre-stream planning notes</label>
+                        <textarea id="note-pre-stream" rows="5" data-note-key="pre-stream" data-note-id="pre-stream-notes" placeholder="Capture research, decisions, open questions, and anything you do not want to lose."></textarea>
+                    </section>
+                    <section class="note-section">
+                        <label for="note-description">Description notes</label>
+                        <textarea id="note-description" rows="5" data-note-key="description" data-note-id="description-notes" placeholder="Track SEO ideas, links, timestamps to mention, and keywords to reinforce."></textarea>
+                    </section>
+                    <section class="note-section">
+                        <label for="note-thumbnail">Thumbnail notes</label>
+                        <textarea id="note-thumbnail" rows="5" data-note-key="thumbnail" data-note-id="thumbnail-notes" placeholder="Track visual ideas, color tests, references, and things to avoid."></textarea>
+                    </section>
+                    <section class="note-section">
+                        <label for="note-social-announcements">Social Media notes</label>
+                        <textarea id="note-social-announcements" rows="5" data-note-key="social-announcements" data-note-id="social-announcements-notes" placeholder="Track rollout reminders, emojis to use or avoid, links, CTA ideas, and copy experiments."></textarea>
+                    </section>
+                    <section class="note-section">
+                        <label for="note-transcription">Transcription notes</label>
+                        <textarea id="note-transcription" rows="5" data-note-key="transcription" data-note-id="transcription-notes" placeholder="Keep notes about speaker attribution, tricky names, or anything to double-check after transcription."></textarea>
+                    </section>
+                    <section class="note-section">
+                        <label for="note-post-stream">Post-stream notes</label>
+                        <textarea id="note-post-stream" rows="5" data-note-key="post-stream" data-note-id="post-stream-notes" placeholder="Track edits to make, standout moments, sponsor mentions, or ideas for the follow-up stream."></textarea>
+                    </section>
+                </div>
+            </section>
+        </aside>
+    </div>
 </main>
 
 <dialog id="llmDefinitionsDialog" class="modal-dialog">

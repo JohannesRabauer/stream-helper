@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream Helper - Projects</title>
+    <title>Stream Helper — Projects</title>
     <link rel="stylesheet" th:href="@{/styles.css}">
 </head>
 <body>
+<div class="bg-mesh"><div class="bg-orb3"></div></div>
 <main class="container">
     <section class="hero card">
         <div>
@@ -20,11 +21,11 @@
                 <span class="chip">Projects</span>
                 <span class="chip">Markdown notes</span>
                 <span class="chip">Versioned outputs</span>
-                <span class="chip">Ollama/OpenAI</span>
+                <span class="chip">Ollama / OpenAI</span>
             </div>
         </div>
         <form method="post" action="/projects" class="create-project-form">
-            <h2>Create project</h2>
+            <h2>New project</h2>
             <label for="name">Project name</label>
             <input id="name" name="name" type="text" required placeholder="Build modern Spring app with AI assistants">
             <button type="submit">Create project</button>
@@ -39,7 +40,7 @@
         </div>
 
         <div th:if="${#lists.isEmpty(projects)}" class="empty-state">
-            <p>No projects yet. Create your first project to start planning your next stream.</p>
+            <p>No projects yet — create your first one to start planning your next stream.</p>
         </div>
 
         <div class="projects-grid" th:if="${!#lists.isEmpty(projects)}">

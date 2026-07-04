@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="'Stream Helper - ' + ${project.name}">Project</title>
+    <title th:text="'Stream Helper — ' + ${project.name}">Project</title>
     <link rel="stylesheet" th:href="@{/styles.css}">
 </head>
 <body>
+<div class="bg-mesh"><div class="bg-orb3"></div></div>
 <main class="container">
     <header class="project-header card">
         <div>
-            <a href="/projects">&larr; Back to projects</a>
+            <a href="/projects">← All projects</a>
             <h1 th:text="${project.name}"></h1>
             <p class="muted">Project ID: <code th:text="${project.id}"></code></p>
         </div>
         <div class="project-header-actions">
-            <button type="button" class="secondary-button" onclick="exportProject()">Export project (ZIP)</button>
+            <button type="button" class="secondary-button" onclick="exportProject()">Export ZIP</button>
             <button type="button" class="secondary-button" onclick="location.reload()">Refresh</button>
         </div>
     </header>
@@ -40,8 +41,8 @@
                 <label for="noteId">Note ID</label>
                 <input id="noteId" name="noteId" type="text" th:value="${selectedNoteId}" placeholder="architecture-notes">
                 <div class="toggle-group">
-                    <button type="button" class="secondary-button" onclick="toggleNoteView('edit')">Edit</button>
-                    <button type="button" class="secondary-button" onclick="toggleNoteView('preview')">Preview</button>
+                    <button type="button" onclick="toggleNoteView('edit')">Edit</button>
+                    <button type="button" onclick="toggleNoteView('preview')">Preview</button>
                 </div>
                 <div id="noteEditArea">
                     <label for="markdown">Markdown</label>
@@ -55,7 +56,7 @@
         <section class="card">
             <div class="section-heading">
                 <h2>Assistant studio</h2>
-                <span>Results are saved as versioned drafts</span>
+                <span>Versioned drafts</span>
             </div>
 
             <label for="assistantInput">Brief / transcript / prompt context</label>

@@ -1,0 +1,11 @@
+{
+  "schemaVersion" : "1",
+  "globalInstruction" : "",
+  "categoryInstructions" : { },
+  "brandProfile" : {
+    "preferredColors" : [ ],
+    "requiredWords" : [ ],
+    "bannedWords" : [ ],
+    "thumbnailMaxWords" : 4
+  }
+}

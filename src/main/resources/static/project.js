@@ -469,6 +469,8 @@ function renderAreaHistory(areaKey, categoryResults) {
     return;
   }
 
+  const latestEntryId = resolveLatestHistoryEntryId(categoryResults);
+
   categoryResults.forEach(({category, artifacts}) => {
     const group = document.createElement("section");
     group.className = "history-group";
@@ -492,22 +494,31 @@ function renderAreaHistory(areaKey, categoryResults) {
         item.className = "artifact-item";
         item.style.animationDelay = `${index * 0.05}s`;
         const editable = isEditableArtifactCategory(category);
+        const expanded = artifact.id === latestEntryId;
         item.innerHTML = `
-          <div class="artifact-copy">
-            <strong>${escapeHtml(artifact.strategy || "version")}</strong>
-            <div class="muted artifact-timestamp">Saved ${escapeHtml(formatTimestamp(artifact.createdAt))}</div>
-            ${editable
-              ? `<textarea class="artifact-editor artifact-editor-history" rows="7" aria-label="Editable ${escapeHtml(formatCategoryLabel(category))} history text"></textarea>
-                 <div class="artifact-save-state muted">Autosaves as a new version when you pause typing.</div>`
-              : `<pre>${escapeHtml(previewContent(artifact.content || "", category, 1100))}</pre>`}
-          </div>
-          <div class="inline-actions artifact-actions">
-            <div class="inline-actions artifact-badges">
-              ${renderArtifactBadges(artifact)}
+          <details class="artifact-item-details" ${expanded ? "open" : ""}>
+            <summary class="artifact-item-summary">
+              <div>
+                <strong>${escapeHtml(artifact.strategy || "version")}</strong>
+                <div class="muted artifact-timestamp">Saved ${escapeHtml(formatTimestamp(artifact.createdAt))}</div>
+              </div>
+              <div class="inline-actions artifact-badges">
+                ${renderArtifactBadges(artifact)}
+              </div>
+            </summary>
+            <div class="artifact-item-body">
+              <div class="artifact-copy">
+                ${editable
+                  ? `<textarea class="artifact-editor artifact-editor-history" rows="7" aria-label="Editable ${escapeHtml(formatCategoryLabel(category))} history text"></textarea>
+                     <div class="artifact-save-state muted">Autosaves as a new version when you pause typing.</div>`
+                  : `<pre>${escapeHtml(previewContent(artifact.content || "", category, 1100))}</pre>`}
+              </div>
+              <div class="inline-actions artifact-actions">
+                <button type="button" class="secondary-button">Copy</button>
+                <button type="button" class="secondary-button">Mark final</button>
+              </div>
             </div>
-            <button type="button" class="secondary-button">Copy</button>
-            <button type="button" class="secondary-button">Mark final</button>
-          </div>
+          </details>
         `;
         const [copyButton, finalButton] = item.querySelectorAll("button");
         const textarea = item.querySelector(".artifact-editor");
@@ -522,6 +533,34 @@ function renderAreaHistory(areaKey, categoryResults) {
             saveStateNode: item.querySelector(".artifact-save-state"),
             source: "history"
           });
+        }
+
+        function resolveLatestHistoryEntryId(categoryResults) {
+          let latestId = null;
+          let latestTimestamp = Number.NEGATIVE_INFINITY;
+
+          categoryResults.forEach(({artifacts}) => {
+            if (!Array.isArray(artifacts)) {
+              return;
+            }
+            artifacts.forEach((artifact) => {
+              if (!artifact?.id) {
+                return;
+              }
+              const parsedTimestamp = Date.parse(artifact.createdAt || "");
+              if (latestId === null) {
+                latestId = artifact.id;
+                latestTimestamp = Number.isFinite(parsedTimestamp) ? parsedTimestamp : Number.NEGATIVE_INFINITY;
+                return;
+              }
+              if (Number.isFinite(parsedTimestamp) && parsedTimestamp > latestTimestamp) {
+                latestId = artifact.id;
+                latestTimestamp = parsedTimestamp;
+              }
+            });
+          });
+
+          return latestId;
         }
         copyButton.addEventListener("click", () => copyToClipboard(textarea ? textarea.value : (artifact.content || "")));
         finalButton.addEventListener("click", async () => {

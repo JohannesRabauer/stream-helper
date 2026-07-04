@@ -51,7 +51,18 @@ class PageControllerIntegrationTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Show notes")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Markdown notes")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Show latest result")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Show LLM definitions")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Show LLM definitions")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Rename project")));
+    }
+
+    @Test
+    void projectsPageOpensProjectByClickingCard() throws Exception {
+        var project = storageService.createProject("Card Link Project");
+
+        mockMvc.perform(get("/projects"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("/projects/" + project.id())))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Open workspace"))));
     }
 
     private static Path createTempDir() {

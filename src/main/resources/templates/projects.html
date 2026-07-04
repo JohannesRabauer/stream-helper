@@ -46,12 +46,11 @@
         </div>
 
         <div class="projects-grid" th:if="${!#lists.isEmpty(projects)}">
-            <article class="project-tile" th:each="project : ${projects}">
+            <a class="project-tile project-tile-link" th:each="project : ${projects}" th:href="@{|/projects/${project.id}|}">
                 <h3 th:text="${project.name}"></h3>
                 <p class="muted"><strong>ID:</strong> <span th:text="${project.id}"></span></p>
                 <p class="muted"><strong>Updated:</strong> <span th:text="${project.updatedAt}"></span></p>
-                <a class="link-button" th:href="@{|/projects/${project.id}|}">Open workspace</a>
-            </article>
+            </a>
         </div>
     </section>
 </main>

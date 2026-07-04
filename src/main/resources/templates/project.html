@@ -12,10 +12,12 @@
     <header class="project-header card">
         <div>
             <a href="/projects">← All projects</a>
-            <h1 th:text="${project.name}"></h1>
+            <h1 id="projectTitle" th:text="${project.name}"></h1>
             <p class="muted">Project ID: <code th:text="${project.id}"></code></p>
         </div>
         <div class="project-header-actions">
+            <input id="projectRenameInput" class="project-rename-input" type="text" th:value="${project.name}" aria-label="Project name">
+            <button type="button" class="secondary-button" onclick="renameProject(this)">Rename project</button>
             <button type="button" class="secondary-button" onclick="exportProject()">Export ZIP</button>
             <button type="button" class="secondary-button" onclick="location.reload()">Refresh</button>
         </div>

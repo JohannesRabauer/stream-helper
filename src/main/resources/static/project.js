@@ -130,6 +130,36 @@ function exportProject() {
   window.location.href = `/api/projects/${projectId}/export`;
 }
 
+async function renameProject(button) {
+  await withButtonLoading(button, async () => {
+    const input = document.getElementById("projectRenameInput");
+    const titleNode = document.getElementById("projectTitle");
+    if (!input || !titleNode) {
+      return;
+    }
+    const nextName = input.value.trim();
+    if (!nextName) {
+      showStatus("Project name is required.", "warning");
+      return;
+    }
+    const currentName = titleNode.textContent.trim();
+    if (nextName === currentName) {
+      showStatus("Project name is unchanged.", "warning");
+      return;
+    }
+    const updated = await apiJson(`/api/projects/${projectId}`, {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({name: nextName})
+    });
+    const savedName = (updated?.name || nextName).trim();
+    titleNode.textContent = savedName;
+    input.value = savedName;
+    document.title = `${savedName} · Stream Helper`;
+    showStatus("Project renamed.", "success");
+  });
+}
+
 function openLlmDefinitionsDialog() {
   toggleLlmDefinitionsDrawer(true);
 }

@@ -9,6 +9,9 @@ import com.streamhelper.app.model.TranscriptEntry;
 import com.streamhelper.app.model.ValidationIssue;
 import com.streamhelper.app.model.VariantResult;
 import com.streamhelper.app.project.ProjectStorageService;
+import com.streamhelper.app.transcription.TranscriptionProgressListener;
+import com.streamhelper.app.transcription.TranscriptionProgressService;
+import com.streamhelper.app.transcription.TranscriptionProgressSnapshot;
 import com.streamhelper.app.transcription.TranscriptionService;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -31,18 +34,21 @@ public class AssistantService {
     private final ProjectStorageService storageService;
     private final OutputValidationService validationService;
     private final TranscriptionService transcriptionService;
+    private final TranscriptionProgressService transcriptionProgressService;
 
     public AssistantService(
             AiClient aiClient,
             InstructionComposer instructionComposer,
             ProjectStorageService storageService,
             OutputValidationService validationService,
-            TranscriptionService transcriptionService) {
+            TranscriptionService transcriptionService,
+            TranscriptionProgressService transcriptionProgressService) {
         this.aiClient = aiClient;
         this.instructionComposer = instructionComposer;
         this.storageService = storageService;
         this.validationService = validationService;
         this.transcriptionService = transcriptionService;
+        this.transcriptionProgressService = transcriptionProgressService;
     }
 
     public VariantResult generateTopicIdeas(String projectId, String brief) {
@@ -137,6 +143,8 @@ public class AssistantService {
     }
 
     public VariantResult transcribeFile(String projectId, MultipartFile file, String language, boolean diarize) {
+        transcriptionProgressService.start(projectId, "local file");
+        transcriptionProgressService.update(projectId, 4, "prepare", "Validating uploaded file...");
         logger.info(
                 "Transcribe file requested: projectId={}, filename={}, sizeBytes={}, language={}, diarize={}",
                 projectId,
@@ -144,46 +152,69 @@ public class AssistantService {
                 file.getSize(),
                 language,
                 diarize);
-        var entries = applyParticipantLabels(projectId, transcriptionService.transcribeUpload(file, language, diarize));
-        String transcript = transcriptionService.toPlainTranscript(entries);
-        String normalized = validationService.normalize(GenerationCategory.TRANSCRIPT, transcript);
-        ArtifactVersion artifact = storageService.saveArtifact(
-                projectId, GenerationCategory.TRANSCRIPT, "transcription", normalized, true, false);
-        logger.info(
-                "Transcribe file completed: projectId={}, entries={}, transcriptChars={}",
-                projectId,
-                entries.size(),
-                normalized.length());
-        return new VariantResult(
-                GenerationCategory.TRANSCRIPT,
-                instructionComposer.effectivePreview(projectId, GenerationCategory.TRANSCRIPT),
-                List.of(artifact),
-                List.of());
+        try {
+            var entries = applyParticipantLabels(
+                    projectId, transcriptionService.transcribeUpload(file, language, diarize, progressReporter(projectId)));
+            String transcript = transcriptionService.toPlainTranscript(entries);
+            String normalized = validationService.normalize(GenerationCategory.TRANSCRIPT, transcript);
+            transcriptionProgressService.update(projectId, 96, "saving", "Saving transcript into project history...");
+            ArtifactVersion artifact = storageService.saveArtifact(
+                    projectId, GenerationCategory.TRANSCRIPT, "transcription", normalized, true, false);
+            transcriptionProgressService.complete(projectId, "Transcription completed.");
+            logger.info(
+                    "Transcribe file completed: projectId={}, entries={}, transcriptChars={}",
+                    projectId,
+                    entries.size(),
+                    normalized.length());
+            return new VariantResult(
+                    GenerationCategory.TRANSCRIPT,
+                    instructionComposer.effectivePreview(projectId, GenerationCategory.TRANSCRIPT),
+                    List.of(artifact),
+                    List.of());
+        } catch (RuntimeException exception) {
+            transcriptionProgressService.fail(projectId, exception.getMessage());
+            throw exception;
+        }
     }
 
     public VariantResult transcribeYoutube(String projectId, String youtubeUrl, String language, boolean diarize) {
+        transcriptionProgressService.start(projectId, "YouTube URL");
+        transcriptionProgressService.update(projectId, 4, "prepare", "Validating YouTube URL...");
         logger.info(
                 "Transcribe YouTube requested: projectId={}, url={}, language={}, diarize={}",
                 projectId,
                 youtubeUrl,
                 language,
                 diarize);
-        var entries = applyParticipantLabels(projectId, transcriptionService.transcribeYoutube(youtubeUrl, language, diarize));
-        String transcript = transcriptionService.toPlainTranscript(entries);
-        String normalized = validationService.normalize(GenerationCategory.TRANSCRIPT, transcript);
-        ArtifactVersion artifact = storageService.saveArtifact(
-                projectId, GenerationCategory.TRANSCRIPT, "youtube-transcription", normalized, true, false);
-        logger.info(
-                "Transcribe YouTube completed: projectId={}, url={}, entries={}, transcriptChars={}",
-                projectId,
-                youtubeUrl,
-                entries.size(),
-                normalized.length());
-        return new VariantResult(
-                GenerationCategory.TRANSCRIPT,
-                instructionComposer.effectivePreview(projectId, GenerationCategory.TRANSCRIPT),
-                List.of(artifact),
-                List.of());
+        try {
+            var entries = applyParticipantLabels(
+                    projectId,
+                    transcriptionService.transcribeYoutube(youtubeUrl, language, diarize, progressReporter(projectId)));
+            String transcript = transcriptionService.toPlainTranscript(entries);
+            String normalized = validationService.normalize(GenerationCategory.TRANSCRIPT, transcript);
+            transcriptionProgressService.update(projectId, 96, "saving", "Saving transcript into project history...");
+            ArtifactVersion artifact = storageService.saveArtifact(
+                    projectId, GenerationCategory.TRANSCRIPT, "youtube-transcription", normalized, true, false);
+            transcriptionProgressService.complete(projectId, "Transcription completed.");
+            logger.info(
+                    "Transcribe YouTube completed: projectId={}, url={}, entries={}, transcriptChars={}",
+                    projectId,
+                    youtubeUrl,
+                    entries.size(),
+                    normalized.length());
+            return new VariantResult(
+                    GenerationCategory.TRANSCRIPT,
+                    instructionComposer.effectivePreview(projectId, GenerationCategory.TRANSCRIPT),
+                    List.of(artifact),
+                    List.of());
+        } catch (RuntimeException exception) {
+            transcriptionProgressService.fail(projectId, exception.getMessage());
+            throw exception;
+        }
+    }
+
+    public TranscriptionProgressSnapshot getTranscriptionProgress(String projectId) {
+        return transcriptionProgressService.get(projectId);
     }
 
     public VariantResult generateChapters(String projectId, String transcript) {
@@ -361,5 +392,9 @@ public class AssistantService {
         }
         String trimmed = value.trim();
         return trimmed.isBlank() ? null : trimmed;
+    }
+
+    private TranscriptionProgressListener progressReporter(String projectId) {
+        return (percent, stage, message) -> transcriptionProgressService.update(projectId, percent, stage, message);
     }
 }

@@ -242,6 +242,17 @@
                     <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." required>
                     <button type="button" onclick="transcribeYoutube(this)">Transcribe YouTube URL</button>
                 </form>
+
+                <section id="transcriptionProgressPanel" class="task-progress" hidden aria-live="polite">
+                    <div class="task-progress-header">
+                        <strong>Transcription progress</strong>
+                        <span id="transcriptionProgressPercent">0%</span>
+                    </div>
+                    <div class="task-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                        <div id="transcriptionProgressFill" class="task-progress-fill"></div>
+                    </div>
+                    <p id="transcriptionProgressMessage" class="muted">Waiting to start transcription...</p>
+                </section>
             </div>
             <aside class="history-panel">
                 <div class="section-heading">

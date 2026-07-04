@@ -4,12 +4,14 @@ import com.streamhelper.app.model.ArtifactVersion;
 import com.streamhelper.app.model.GenerationCategory;
 import com.streamhelper.app.service.AssistantService;
 import com.streamhelper.app.service.InstructionComposer;
+import com.streamhelper.app.transcription.TranscriptionProgressSnapshot;
 import com.streamhelper.app.web.dto.GenerationRequest;
 import com.streamhelper.app.web.dto.TextInputRequest;
 import com.streamhelper.app.web.dto.ThumbnailCreateRequest;
 import com.streamhelper.app.web.dto.YouTubeTranscriptionRequest;
 import jakarta.validation.Valid;
 import java.util.Map;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -80,6 +82,11 @@ public class AssistantApiController {
     @PostMapping("/transcripts/youtube")
     public Object transcribeYoutube(@PathVariable String projectId, @Valid @RequestBody YouTubeTranscriptionRequest request) {
         return assistantService.transcribeYoutube(projectId, request.youtubeUrl(), request.language(), request.diarize());
+    }
+
+    @GetMapping("/transcripts/progress")
+    public TranscriptionProgressSnapshot transcriptionProgress(@PathVariable String projectId) {
+        return assistantService.getTranscriptionProgress(projectId);
     }
 
     @PostMapping("/chapters")

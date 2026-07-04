@@ -49,7 +49,13 @@ public class TranscriptionService {
     }
 
     public List<TranscriptEntry> transcribeUpload(MultipartFile file, String language, boolean diarize) {
+        return transcribeUpload(file, language, diarize, TranscriptionProgressListener.NOOP);
+    }
+
+    public List<TranscriptEntry> transcribeUpload(
+            MultipartFile file, String language, boolean diarize, TranscriptionProgressListener progressListener) {
         String filename = file.getOriginalFilename() == null ? "audio" : file.getOriginalFilename();
+        progressListener.update(8, "prepare", "Reading uploaded media file...");
         logger.info(
                 "Starting upload transcription: provider={}, filename={}, sizeBytes={}, language={}, diarize={}",
                 properties.getTranscription().getProvider(),
@@ -62,7 +68,9 @@ public class TranscriptionService {
             try {
                 tempFile = Files.createTempFile("stream-helper-upload-", suffixFromFilename(filename));
                 file.transferTo(tempFile);
-                List<TranscriptEntry> entries = transcribeOpenAiFromPath(tempFile, filename, language);
+                progressListener.update(18, "prepare", "Upload received. Starting OpenAI transcription...");
+                List<TranscriptEntry> entries = transcribeOpenAiFromPath(tempFile, filename, language, progressListener);
+                progressListener.update(92, "transcribe", "OpenAI transcription finished. Preparing transcript output...");
                 logger.info(
                         "Finished upload transcription: filename={}, entries={}, transcriptChars={}",
                         filename,
@@ -77,7 +85,9 @@ public class TranscriptionService {
             }
         }
         try {
+            progressListener.update(20, "transcribe", "Running local Whisper transcription...");
             List<TranscriptEntry> entries = transcribeBytes(file.getBytes(), filename, language, diarize);
+            progressListener.update(92, "transcribe", "Local transcription finished. Preparing transcript output...");
             logger.info(
                     "Finished upload transcription: filename={}, entries={}, transcriptChars={}",
                     filename,
@@ -91,22 +101,30 @@ public class TranscriptionService {
     }
 
     public List<TranscriptEntry> transcribeYoutube(String youtubeUrl, String language, boolean diarize) {
+        return transcribeYoutube(youtubeUrl, language, diarize, TranscriptionProgressListener.NOOP);
+    }
+
+    public List<TranscriptEntry> transcribeYoutube(
+            String youtubeUrl, String language, boolean diarize, TranscriptionProgressListener progressListener) {
+        progressListener.update(6, "prepare", "Preparing YouTube transcription request...");
         logger.info(
                 "Starting YouTube transcription: provider={}, url={}, language={}, diarize={}",
                 properties.getTranscription().getProvider(),
                 youtubeUrl,
                 language,
                 diarize);
-        Path audio = downloader.downloadAudio(youtubeUrl);
+        Path audio = downloader.downloadAudio(youtubeUrl, progressListener);
         try {
             long size = Files.size(audio);
             List<TranscriptEntry> entries;
             if (properties.getTranscription().getProvider() == TranscriptionProvider.OPENAI) {
-                entries = transcribeOpenAiFromPath(audio, audio.getFileName().toString(), language);
+                entries = transcribeOpenAiFromPath(audio, audio.getFileName().toString(), language, progressListener);
             } else {
+                progressListener.update(36, "transcribe", "Running local Whisper transcription...");
                 byte[] bytes = Files.readAllBytes(audio);
                 entries = transcribeBytes(bytes, audio.getFileName().toString(), language, diarize);
             }
+            progressListener.update(92, "transcribe", "Transcription finished. Preparing transcript output...");
             logger.info(
                     "Finished YouTube transcription: url={}, audioFile={}, sizeBytes={}, entries={}, transcriptChars={}",
                     youtubeUrl,
@@ -121,10 +139,13 @@ public class TranscriptionService {
         }
     }
 
-    private List<TranscriptEntry> transcribeOpenAiFromPath(Path audioPath, String filename, String language) throws IOException {
+    private List<TranscriptEntry> transcribeOpenAiFromPath(
+            Path audioPath, String filename, String language, TranscriptionProgressListener progressListener)
+            throws IOException {
         long sizeBytes = Files.size(audioPath);
         if (sizeBytes <= OPENAI_MAX_AUDIO_BYTES) {
             logger.info("OpenAI transcription fits single request: filename={}, sizeBytes={}", filename, sizeBytes);
+            progressListener.update(42, "transcribe", "Sending audio to OpenAI for transcription...");
             return callOpenAi(Files.readAllBytes(audioPath), filename, language);
         }
 
@@ -134,6 +155,7 @@ public class TranscriptionService {
                 sizeBytes,
                 OPENAI_MAX_AUDIO_BYTES,
                 OPENAI_CHUNK_SECONDS);
+        progressListener.update(34, "chunking", "Splitting large audio into chunks...");
 
         Path chunkDir = splitAudioForOpenAi(audioPath);
         try (var files = Files.list(chunkDir)) {
@@ -148,10 +170,20 @@ public class TranscriptionService {
             List<TranscriptEntry> merged = new ArrayList<>();
             for (int index = 0; index < chunks.size(); index++) {
                 Path chunk = chunks.get(index);
+                int chunkStartPercent = 45 + (index * 45 / chunks.size());
+                progressListener.update(
+                        chunkStartPercent,
+                        "transcribe",
+                        "Transcribing chunk %d of %d...".formatted(index + 1, chunks.size()));
                 byte[] chunkBytes = Files.readAllBytes(chunk);
                 double offsetSeconds = (double) index * OPENAI_CHUNK_SECONDS;
                 List<TranscriptEntry> chunkEntries = callOpenAi(chunkBytes, chunk.getFileName().toString(), language);
                 merged.addAll(offsetEntries(chunkEntries, offsetSeconds));
+                int chunkDonePercent = 45 + ((index + 1) * 45 / chunks.size());
+                progressListener.update(
+                        chunkDonePercent,
+                        "transcribe",
+                        "Finished chunk %d of %d.".formatted(index + 1, chunks.size()));
                 logger.info(
                         "OpenAI chunk transcribed: index={}/{}, chunkFile={}, sizeBytes={}, chunkEntries={}, offsetSeconds={}",
                         index + 1,
@@ -162,6 +194,7 @@ public class TranscriptionService {
                         offsetSeconds);
             }
 
+            progressListener.update(92, "merge", "Merging chunk transcripts...");
             logger.info("OpenAI chunked transcription merged: chunks={}, mergedEntries={}", chunks.size(), merged.size());
             return merged;
         } finally {

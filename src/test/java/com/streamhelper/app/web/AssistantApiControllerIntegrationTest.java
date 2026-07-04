@@ -2,6 +2,7 @@ package com.streamhelper.app.web;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -72,6 +73,18 @@ class AssistantApiControllerIntegrationTest {
         mockMvc.perform(post("/api/projects/" + projectId + "/artifacts/YOUTUBE_DESCRIPTION/" + artifactId + "/finalize"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(artifactId));
+    }
+
+    @Test
+    void returnsIdleTranscriptionProgressWhenNoTaskHasRunYet() throws Exception {
+        String projectId = createProject("Progress API");
+
+        mockMvc.perform(get("/api/projects/" + projectId + "/transcripts/progress"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(false))
+                .andExpect(jsonPath("$.failed").value(false))
+                .andExpect(jsonPath("$.percent").value(0))
+                .andExpect(jsonPath("$.stage").value("idle"));
     }
 
     private String createProject(String name) throws Exception {

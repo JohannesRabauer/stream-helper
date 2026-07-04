@@ -28,6 +28,10 @@ public class YouTubeAudioDownloader {
     }
 
     public Path downloadAudio(String youtubeUrl) {
+        return downloadAudio(youtubeUrl, TranscriptionProgressListener.NOOP);
+    }
+
+    public Path downloadAudio(String youtubeUrl, TranscriptionProgressListener progressListener) {
         try {
             Path tempDir = Files.createTempDirectory("stream-helper-ytdlp-");
             Path ytDlpLog = tempDir.resolve("yt-dlp.log");
@@ -35,6 +39,7 @@ public class YouTubeAudioDownloader {
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.redirectErrorStream(true);
             processBuilder.redirectOutput(ytDlpLog.toFile());
+            progressListener.update(12, "download", "Starting YouTube audio download...");
             logger.info(
                     "Starting yt-dlp download: url={}, command={}, outputTemplate={}, log={}, jsRuntimes=node,deno",
                     youtubeUrl,
@@ -62,6 +67,7 @@ public class YouTubeAudioDownloader {
                         .filter(path -> !path.equals(ytDlpLog))
                         .max(Comparator.comparing(path -> path.toFile().lastModified()))
                         .orElseThrow(() -> new TranscriptionException("No downloaded audio file found"));
+                progressListener.update(30, "download", "YouTube audio downloaded. Preparing transcription...");
                 logger.info(
                         "yt-dlp download completed: url={}, file={}, sizeBytes={}",
                         youtubeUrl,

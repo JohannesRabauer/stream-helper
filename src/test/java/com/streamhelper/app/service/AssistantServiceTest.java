@@ -12,6 +12,8 @@ import com.streamhelper.app.config.StreamHelperProperties;
 import com.streamhelper.app.model.GenerationCategory;
 import com.streamhelper.app.model.TranscriptEntry;
 import com.streamhelper.app.project.ProjectStorageService;
+import com.streamhelper.app.transcription.TranscriptionProgressListener;
+import com.streamhelper.app.transcription.TranscriptionProgressService;
 import com.streamhelper.app.transcription.TranscriptionService;
 import java.nio.file.Path;
 import java.util.List;
@@ -41,7 +43,8 @@ class AssistantServiceTest {
                 new InstructionComposer(storage),
                 storage,
                 new OutputValidationService(),
-                transcriptionService);
+                transcriptionService,
+                new TranscriptionProgressService());
 
         var result = service.generateTopicIdeas(project.id(), "Java + Spring");
         assertThat(result.variants()).hasSize(3);
@@ -57,7 +60,7 @@ class AssistantServiceTest {
 
         AiClient aiClient = mock(AiClient.class);
         TranscriptionService transcriptionService = mock(TranscriptionService.class);
-        when(transcriptionService.transcribeUpload(any(), any(), anyBoolean()))
+        when(transcriptionService.transcribeUpload(any(), any(), anyBoolean(), any(TranscriptionProgressListener.class)))
                 .thenReturn(List.of(new TranscriptEntry(0, 12, "Host", "Welcome to the stream")));
         when(transcriptionService.toPlainTranscript(any())).thenReturn("[00:00 - 00:12] Host: Welcome to the stream");
 
@@ -66,7 +69,8 @@ class AssistantServiceTest {
                 new InstructionComposer(storage),
                 storage,
                 new OutputValidationService(),
-                transcriptionService);
+                transcriptionService,
+                new TranscriptionProgressService());
 
         MockMultipartFile file = new MockMultipartFile("file", "video.mp4", "video/mp4", "fake".getBytes());
         var result = service.transcribeFile(project.id(), file, "en", true);
@@ -90,7 +94,8 @@ class AssistantServiceTest {
                 new InstructionComposer(storage),
                 storage,
                 new OutputValidationService(),
-                mock(TranscriptionService.class));
+                mock(TranscriptionService.class),
+                new TranscriptionProgressService());
 
         var result = service.generateChapters(project.id(), "");
 
@@ -114,7 +119,8 @@ class AssistantServiceTest {
                 new InstructionComposer(storage),
                 storage,
                 new OutputValidationService(),
-                mock(TranscriptionService.class));
+                mock(TranscriptionService.class),
+                new TranscriptionProgressService());
 
         var result = service.generateSummary(project.id(), "");
 
@@ -141,7 +147,7 @@ class AssistantServiceTest {
 
         AiClient aiClient = mock(AiClient.class);
         TranscriptionService transcriptionService = mock(TranscriptionService.class);
-        when(transcriptionService.transcribeUpload(any(), any(), anyBoolean()))
+        when(transcriptionService.transcribeUpload(any(), any(), anyBoolean(), any(TranscriptionProgressListener.class)))
                 .thenReturn(List.of(
                         new TranscriptEntry(0, 6, "Speaker 0", "Welcome back"),
                         new TranscriptEntry(6, 11, "Speaker 1", "Thanks for having me")));
@@ -152,12 +158,40 @@ class AssistantServiceTest {
                 new InstructionComposer(storage),
                 storage,
                 new OutputValidationService(),
-                transcriptionService);
+                transcriptionService,
+                new TranscriptionProgressService());
 
         MockMultipartFile file = new MockMultipartFile("file", "video.mp4", "video/mp4", "fake".getBytes());
         var result = service.transcribeFile(project.id(), file, "en", true);
 
         assertThat(result.variants().getFirst().getContent()).contains("Johannes: Welcome back");
         assertThat(result.variants().getFirst().getContent()).contains("Ada: Thanks for having me");
+    }
+
+    @Test
+    void exposesCompletedTranscriptionProgressSnapshot() {
+        StreamHelperProperties properties = new StreamHelperProperties();
+        properties.getStorage().setDataDir(tempDir);
+        ProjectStorageService storage = new ProjectStorageService(properties, new ObjectMapper().findAndRegisterModules());
+        var project = storage.createProject("Progress Snapshot Project");
+
+        AiClient aiClient = mock(AiClient.class);
+        TranscriptionService transcriptionService = mock(TranscriptionService.class);
+        when(transcriptionService.transcribeUpload(any(), any(), anyBoolean(), any(TranscriptionProgressListener.class)))
+                .thenReturn(List.of(new TranscriptEntry(0, 5, "Host", "Quick intro")));
+        when(transcriptionService.toPlainTranscript(any())).thenReturn("[00:00 - 00:05] Host: Quick intro");
+        TranscriptionProgressService progressService = new TranscriptionProgressService();
+
+        AssistantService service = new AssistantService(
+                aiClient, new InstructionComposer(storage), storage, new OutputValidationService(), transcriptionService, progressService);
+
+        MockMultipartFile file = new MockMultipartFile("file", "video.mp4", "video/mp4", "fake".getBytes());
+        service.transcribeFile(project.id(), file, "en", true);
+
+        var snapshot = service.getTranscriptionProgress(project.id());
+        assertThat(snapshot.active()).isFalse();
+        assertThat(snapshot.failed()).isFalse();
+        assertThat(snapshot.percent()).isEqualTo(100);
+        assertThat(snapshot.stage()).isEqualTo("completed");
     }
 }

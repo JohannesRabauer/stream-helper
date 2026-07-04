@@ -106,6 +106,9 @@ const editableArtifactCategories = new Set([
 ]);
 
 const spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+let transcriptionProgressPollTimer = null;
+let transcriptionRequestInFlight = false;
+let transcriptionAwaitingActiveState = false;
 
 document.addEventListener("click", (event) => {
   const button = event.target.closest("button");
@@ -215,12 +218,13 @@ async function transcribeFile(button) {
       formData.append("language", language);
     }
     formData.append("diarize", document.getElementById("transcriptionDiarize").checked.toString());
-    const data = await apiJson(`/api/projects/${projectId}/transcripts/file`, {
-      method: "POST",
-      body: formData
-    });
-    renderResult(data);
-    await reloadAreaHistory("transcription");
+    await runTranscriptionAction(
+        "Uploading media and starting transcription...",
+        () => apiJson(`/api/projects/${projectId}/transcripts/file`, {
+          method: "POST",
+          body: formData
+        })
+    );
   });
 }
 
@@ -232,17 +236,55 @@ async function transcribeYoutube(button) {
       return;
     }
     const language = document.getElementById("transcriptionLanguage").value.trim();
-    const data = await apiJson(`/api/projects/${projectId}/transcripts/youtube`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        youtubeUrl,
-        language: language || null,
-        diarize: document.getElementById("transcriptionDiarize").checked
-      })
-    });
-    renderResult(data);
+    await runTranscriptionAction(
+        "Starting YouTube download and transcription...",
+        () => apiJson(`/api/projects/${projectId}/transcripts/youtube`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            youtubeUrl,
+            language: language || null,
+            diarize: document.getElementById("transcriptionDiarize").checked
+          })
+        })
+    );
+  });
+}
+
+async function runTranscriptionAction(initialMessage, requestFn) {
+  transcriptionRequestInFlight = true;
+  transcriptionAwaitingActiveState = true;
+  startTranscriptionProgressMonitor(initialMessage);
+  let responseData = null;
+  let errorMessage = "";
+  try {
+    responseData = await requestFn();
+  } catch (error) {
+    errorMessage = error?.message || "Transcription failed.";
+  } finally {
+    transcriptionRequestInFlight = false;
+    transcriptionAwaitingActiveState = false;
+    await refreshTranscriptionProgressSnapshot();
+    stopTranscriptionProgressPolling();
+  }
+  if (responseData) {
+    renderResult(responseData);
     await reloadAreaHistory("transcription");
+    showTranscriptionProgressState({
+      active: false,
+      failed: false,
+      percent: 100,
+      stage: "completed",
+      message: "Transcription completed."
+    });
+    return;
+  }
+  showTranscriptionProgressState({
+    active: false,
+    failed: true,
+    percent: readCurrentTranscriptionPercent(),
+    stage: "failed",
+    message: errorMessage
   });
 }
 
@@ -274,6 +316,21 @@ async function apiJson(url, options) {
     const message = data.message || `HTTP ${response.status}`;
     showStatus(message, "error");
     throw new Error(message);
+  }
+  return data;
+}
+
+async function apiJsonQuiet(url, options) {
+  const response = await fetch(url, options);
+  const text = await response.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (_) {
+    data = {raw: text};
+  }
+  if (!response.ok) {
+    throw new Error(data.message || `HTTP ${response.status}`);
   }
   return data;
 }
@@ -621,6 +678,94 @@ async function withButtonLoading(button, fn) {
   if (!button) {
     return fn();
   }
+
+  function startTranscriptionProgressMonitor(initialMessage) {
+    showTranscriptionProgressState({
+      active: true,
+      failed: false,
+      percent: 2,
+      stage: "starting",
+      message: initialMessage || "Starting transcription..."
+    });
+    stopTranscriptionProgressPolling();
+    refreshTranscriptionProgressSnapshot().catch(console.error);
+    transcriptionProgressPollTimer = setInterval(() => {
+      refreshTranscriptionProgressSnapshot().catch(console.error);
+    }, 1200);
+  }
+
+  function stopTranscriptionProgressPolling() {
+    if (transcriptionProgressPollTimer) {
+      clearInterval(transcriptionProgressPollTimer);
+      transcriptionProgressPollTimer = null;
+    }
+  }
+
+  async function initializeTranscriptionProgress() {
+    const panel = document.getElementById("transcriptionProgressPanel");
+    if (!panel) {
+      return;
+    }
+    try {
+      const snapshot = await apiJsonQuiet(`/api/projects/${projectId}/transcripts/progress`, {method: "GET"});
+      if (snapshot.active) {
+        transcriptionRequestInFlight = false;
+        transcriptionAwaitingActiveState = false;
+        showTranscriptionProgressState(snapshot);
+        stopTranscriptionProgressPolling();
+        transcriptionProgressPollTimer = setInterval(() => {
+          refreshTranscriptionProgressSnapshot().catch(console.error);
+        }, 1200);
+        return;
+      }
+      panel.hidden = true;
+    } catch (error) {
+      console.error(error);
+      panel.hidden = true;
+    }
+  }
+
+  async function refreshTranscriptionProgressSnapshot() {
+    const snapshot = await apiJsonQuiet(`/api/projects/${projectId}/transcripts/progress`, {method: "GET"});
+    if (transcriptionRequestInFlight && transcriptionAwaitingActiveState && !snapshot.active) {
+      return;
+    }
+    showTranscriptionProgressState(snapshot);
+  }
+
+  function showTranscriptionProgressState(snapshot) {
+    const panel = document.getElementById("transcriptionProgressPanel");
+    const percentNode = document.getElementById("transcriptionProgressPercent");
+    const fill = document.getElementById("transcriptionProgressFill");
+    const messageNode = document.getElementById("transcriptionProgressMessage");
+    const track = panel?.querySelector(".task-progress-track");
+    if (!panel || !percentNode || !fill || !messageNode || !track) {
+      return;
+    }
+    const percent = clampPercent(snapshot?.percent ?? 0);
+    const message = snapshot?.message || "Transcription in progress...";
+    panel.hidden = false;
+    panel.classList.toggle("running", Boolean(snapshot?.active));
+    panel.classList.toggle("complete", !snapshot?.active && !snapshot?.failed && percent >= 100);
+    panel.classList.toggle("error", Boolean(snapshot?.failed));
+    percentNode.textContent = `${percent}%`;
+    fill.style.width = `${percent}%`;
+    messageNode.textContent = message;
+    track.setAttribute("aria-valuenow", String(percent));
+  }
+
+  function readCurrentTranscriptionPercent() {
+    const node = document.getElementById("transcriptionProgressPercent");
+    if (!node) {
+      return 0;
+    }
+    const match = node.textContent.match(/\d+/);
+    return match ? clampPercent(Number.parseInt(match[0], 10)) : 0;
+  }
+
+  function clampPercent(value) {
+    return Math.min(100, Math.max(0, Number.isFinite(value) ? Math.round(value) : 0));
+  }
   const original = button.textContent;
   button.disabled = true;
   let frame = 0;
@@ -927,4 +1072,5 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
   await Promise.all(Object.keys(workflowAreas).map((areaKey) => reloadAreaHistory(areaKey)));
+  await initializeTranscriptionProgress();
 });

@@ -1012,6 +1012,50 @@ details[open] .result-raw summary::before,
 /* ── Compact form ── */
 .compact-form { margin-bottom: 0.8rem; }
 
+.task-progress {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.8rem 0.95rem;
+    display: grid;
+    gap: 0.55rem;
+}
+
+.task-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.task-progress-track {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.task-progress-fill {
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #06b6d4 0%, #8b5cf6 100%);
+    transition: width 0.35s ease;
+}
+
+.task-progress.running .task-progress-fill {
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.45);
+}
+
+.task-progress.complete .task-progress-fill {
+    background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+}
+
+.task-progress.error .task-progress-fill {
+    background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+}
+
 /* ── Helpers ── */
 .muted { color: var(--muted); }
 .error { color: #fca5a5; }

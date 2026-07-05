@@ -20,7 +20,7 @@ Local-first Spring Boot + Thymeleaf application for planning, promoting, and pos
   - YouTube tags (500 char max enforcement)
   - chapter generation
   - detailed summaries
-  - thumbnail prompts and creation flow
+  - thumbnail ideas, prompts, and creation flow
 - Post-stream transcription:
   - local file upload
   - YouTube URL via `yt-dlp`

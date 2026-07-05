@@ -195,6 +195,82 @@ class AssistantApiControllerIntegrationTest {
     }
 
     @Test
+    void generatesTenThumbnailIdeas() throws Exception {
+        String projectId = createProject("Thumbnail Ideas API");
+        when(aiClient.generateText(anyString(), anyString()))
+                .thenReturn("""
+                        IDEA 01: Hook
+                        Composition: host points at error stack
+                        Background: dark IDE scene
+                        Color palette: red, black, white
+                        Text overlay: Bug fixed in 5 min
+                        Mood: urgent
+                        IDEA 02: Clean
+                        Composition: close-up host, centered title
+                        Background: blurred code editor
+                        Color palette: blue, cyan, white
+                        Text overlay: Ship faster with AI
+                        Mood: confident
+                        IDEA 03: Face-off
+                        Composition: host vs guest split-screen
+                        Background: lightning effect
+                        Color palette: purple, yellow, black
+                        Text overlay: Java vs AI myths
+                        Mood: intense
+                        IDEA 04: Minimal
+                        Composition: host profile with big text block
+                        Background: solid gradient
+                        Color palette: teal, navy, white
+                        Text overlay: Spring AI, real code
+                        Mood: focused
+                        IDEA 05: Reaction
+                        Composition: host surprised expression, code snippet card
+                        Background: radial burst
+                        Color palette: orange, black, white
+                        Text overlay: It finally works
+                        Mood: excited
+                        IDEA 06: Checklist
+                        Composition: host left, checklist right
+                        Background: notebook texture
+                        Color palette: green, white, charcoal
+                        Text overlay: 3 setup rules
+                        Mood: practical
+                        IDEA 07: Retro
+                        Composition: pixel-art frame with host avatar
+                        Background: neon grid
+                        Color palette: magenta, cyan, black
+                        Text overlay: Debugging boss fight
+                        Mood: playful
+                        IDEA 08: Authority
+                        Composition: host holding architecture diagram
+                        Background: soft spotlight
+                        Color palette: gold, navy, white
+                        Text overlay: Architecture that scales
+                        Mood: professional
+                        IDEA 09: Story
+                        Composition: before/after timeline cards
+                        Background: clean studio
+                        Color palette: gray, blue, lime
+                        Text overlay: From bug to release
+                        Mood: optimistic
+                        IDEA 10: Meme
+                        Composition: host + bold emoji callouts
+                        Background: high-contrast collage
+                        Color palette: pink, yellow, black
+                        Text overlay: This code fought back
+                        Mood: chaotic
+                        """);
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/thumbnail-ideas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Focus on the final YouTube description angle\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("THUMBNAIL_IDEA"))
+                .andExpect(jsonPath("$.variants.length()").value(10))
+                .andExpect(jsonPath("$.variants[0].strategy").value("idea-01"));
+    }
+
+    @Test
     void createsExternalThumbnailPromptPackage() throws Exception {
         String projectId = createProject("Thumbnail External API");
 

@@ -18,7 +18,7 @@ const workflowAreas = {
     draftInputId: "draft-thumbnail",
     historyContainerId: "history-thumbnail",
     historyCountId: "history-count-thumbnail",
-    categories: ["THUMBNAIL_PROMPT", "THUMBNAIL_ASSET"]
+    categories: ["THUMBNAIL_IDEA", "THUMBNAIL_PROMPT", "THUMBNAIL_ASSET"]
   },
   "social-announcements": {
     draftKey: "social-announcements",
@@ -53,6 +53,7 @@ const categoryLabels = {
   TRANSCRIPT: "Transcripts",
   CHAPTERS: "Chapters",
   SUMMARY: "Summaries",
+  THUMBNAIL_IDEA: "Thumbnail ideas",
   THUMBNAIL_PROMPT: "Thumbnail prompts",
   THUMBNAIL_ASSET: "Thumbnail assets"
 };
@@ -63,6 +64,7 @@ const categoryToArea = {
   YOUTUBE_TITLES: "description",
   YOUTUBE_DESCRIPTION: "description",
   YOUTUBE_TAGS: "description",
+  THUMBNAIL_IDEA: "thumbnail",
   THUMBNAIL_PROMPT: "thumbnail",
   THUMBNAIL_ASSET: "thumbnail",
   LINKEDIN_POST: "social-announcements",
@@ -95,6 +97,7 @@ const editableArtifactCategories = new Set([
   "YOUTUBE_TAGS",
   "CHAPTERS",
   "SUMMARY",
+  "THUMBNAIL_IDEA",
   "THUMBNAIL_PROMPT"
 ]);
 

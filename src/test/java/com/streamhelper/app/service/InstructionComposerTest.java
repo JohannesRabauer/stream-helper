@@ -65,4 +65,30 @@ class InstructionComposerTest {
         assertThat(result).contains("Johannes");
         assertThat(result).doesNotContain("Huge transcript body should stay out of shared context");
     }
+
+    @Test
+    void thumbnailIdeasUseDescriptionContextAndThumbnailPromptsReuseSavedIdeas() {
+        StreamHelperProperties properties = new StreamHelperProperties();
+        properties.getStorage().setDataDir(tempDir);
+        ProjectStorageService storageService = new ProjectStorageService(properties, new ObjectMapper().findAndRegisterModules());
+        var project = storageService.createProject("Thumbnail Context Demo");
+
+        storageService.saveArtifact(
+                project.id(), GenerationCategory.YOUTUBE_DESCRIPTION, "default", "Created YouTube description context", true, true);
+        storageService.saveArtifact(
+                project.id(), GenerationCategory.THUMBNAIL_IDEA, "idea-01", "IDEA 01: Dramatic split-screen visual", true, false);
+        storageService.saveArtifact(
+                project.id(), GenerationCategory.THUMBNAIL_PROMPT, "high-contrast", "Legacy thumbnail prompt context", true, false);
+
+        InstructionComposer composer = new InstructionComposer(storageService);
+
+        String ideasContext = composer.compose(project.id(), GenerationCategory.THUMBNAIL_IDEA);
+        assertThat(ideasContext).contains("Created YouTube description context");
+        assertThat(ideasContext).doesNotContain("Legacy thumbnail prompt context");
+
+        String promptContext = composer.compose(project.id(), GenerationCategory.THUMBNAIL_PROMPT);
+        assertThat(promptContext).contains("Created YouTube description context");
+        assertThat(promptContext).contains("IDEA 01: Dramatic split-screen visual");
+        assertThat(promptContext).contains("Legacy thumbnail prompt context");
+    }
 }

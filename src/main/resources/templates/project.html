@@ -167,7 +167,7 @@
                     <strong>Suggested flow</strong>
                     <ol>
                         <li>Use the final stream angle and description to shape the visual.</li>
-                        <li>Generate thumbnail prompts first.</li>
+                        <li>Generate thumbnail ideas first, then turn the strongest one into prompts.</li>
                         <li>Create either an external prompt package or the built-in image.</li>
                     </ol>
                 </div>
@@ -177,8 +177,8 @@
                 <div class="autosave-hint">Autosaved and combined with the saved stream positioning for coherent thumbnails.</div>
 
                 <div class="button-grid">
-                    <button type="button" onclick="runStageBriefAction('thumbnail', 'thumbnail-prompts', this)">Generate thumbnail prompts</button>
                     <button type="button" onclick="runStageBriefAction('thumbnail', 'thumbnail-ideas', this)">Generate 10 thumbnail ideas</button>
+                    <button type="button" onclick="runStageBriefAction('thumbnail', 'thumbnail-prompts', this)">Generate thumbnail prompts</button>
                     <button type="button" onclick="createThumbnailFromStage('thumbnail', false, this)">Create external prompt package</button>
                     <button type="button" onclick="createThumbnailFromStage('thumbnail', true, this)">Generate thumbnail image</button>
                 </div>

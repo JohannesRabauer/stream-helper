@@ -206,6 +206,23 @@ class PageControllerIntegrationTest {
     }
 
     @Test
+    void thumbnailStagePlacesIdeaGenerationBeforePromptGeneration() throws Exception {
+        var project = storageService.createProject("Thumbnail Order Project");
+
+        String html = mockMvc.perform(get("/projects/" + project.id()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        int ideasButtonIndex = html.indexOf("runStageBriefAction('thumbnail', 'thumbnail-ideas'");
+        int promptsButtonIndex = html.indexOf("runStageBriefAction('thumbnail', 'thumbnail-prompts'");
+
+        org.assertj.core.api.Assertions.assertThat(ideasButtonIndex).isGreaterThan(-1);
+        org.assertj.core.api.Assertions.assertThat(promptsButtonIndex).isGreaterThan(ideasButtonIndex);
+    }
+
+    @Test
     void projectPageContainsPreStreamTabPanelNotHidden() throws Exception {
         var project = storageService.createProject("Pre-stream Panel Project");
 

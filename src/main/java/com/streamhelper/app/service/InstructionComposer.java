@@ -146,7 +146,16 @@ public class InstructionComposer {
                     GenerationCategory.YOUTUBE_TITLES,
                     GenerationCategory.YOUTUBE_DESCRIPTION,
                     GenerationCategory.YOUTUBE_TAGS);
-            case THUMBNAIL_PROMPT, THUMBNAIL_ASSET, THUMBNAIL_IDEA -> EnumSet.of(
+            case THUMBNAIL_IDEA -> EnumSet.of(
+                    GenerationCategory.TOPIC_IDEA,
+                    GenerationCategory.GUEST_IDEA,
+                    GenerationCategory.YOUTUBE_TITLES,
+                    GenerationCategory.YOUTUBE_DESCRIPTION,
+                    GenerationCategory.YOUTUBE_TAGS,
+                    GenerationCategory.LINKEDIN_POST,
+                    GenerationCategory.SOCIAL_POST,
+                    GenerationCategory.HASHTAGS);
+            case THUMBNAIL_PROMPT -> EnumSet.of(
                     GenerationCategory.TOPIC_IDEA,
                     GenerationCategory.GUEST_IDEA,
                     GenerationCategory.YOUTUBE_TITLES,
@@ -155,6 +164,18 @@ public class InstructionComposer {
                     GenerationCategory.LINKEDIN_POST,
                     GenerationCategory.SOCIAL_POST,
                     GenerationCategory.HASHTAGS,
+                    GenerationCategory.THUMBNAIL_IDEA,
+                    GenerationCategory.THUMBNAIL_PROMPT);
+            case THUMBNAIL_ASSET -> EnumSet.of(
+                    GenerationCategory.TOPIC_IDEA,
+                    GenerationCategory.GUEST_IDEA,
+                    GenerationCategory.YOUTUBE_TITLES,
+                    GenerationCategory.YOUTUBE_DESCRIPTION,
+                    GenerationCategory.YOUTUBE_TAGS,
+                    GenerationCategory.LINKEDIN_POST,
+                    GenerationCategory.SOCIAL_POST,
+                    GenerationCategory.HASHTAGS,
+                    GenerationCategory.THUMBNAIL_IDEA,
                     GenerationCategory.THUMBNAIL_PROMPT);
             case LINKEDIN_POST, SOCIAL_POST, HASHTAGS -> EnumSet.of(
                     GenerationCategory.TOPIC_IDEA,

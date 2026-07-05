@@ -1,6 +1,7 @@
 package com.streamhelper.app.web;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -216,6 +217,130 @@ class ProjectApiControllerIntegrationTest {
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/projects/" + projectId + "/notes/temp-note"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+    }
+
+    @Test
+    void rejectsBlankProjectNameViaApi() throws Exception {
+        mockMvc.perform(post("/api/projects")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void rejectsBlankRenameProjectNameViaApi() throws Exception {
+        String projectId = createProject("Valid Name");
+
+        mockMvc.perform(put("/api/projects/" + projectId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void globalConfigSavesAndReadsAcrossRequests() throws Exception {
+        mockMvc.perform(put("/api/config/global")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"globalInstruction\":\"Never use dashes\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.globalInstruction").value("Never use dashes"));
+
+        mockMvc.perform(get("/api/config/global"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.globalInstruction").value("Never use dashes"));
+    }
+
+    @Test
+    void listProjectsReturnsAllCreatedProjects() throws Exception {
+        createProject("List First Project");
+        createProject("List Second Project");
+        createProject("List Third Project");
+
+        mockMvc.perform(get("/api/projects"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(greaterThanOrEqualTo(3)));
+    }
+
+    @Test
+    void savedNoteAppearsInNoteIdList() throws Exception {
+        String projectId = createProject("Note List Project");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/notes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"noteId\":\"my-note\",\"markdown\":\"# Hello\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/projects/" + projectId + "/notes"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(content().string(containsString("my-note")));
+    }
+
+    @Test
+    void noteMissingNoteIdGetsGeneratedId() throws Exception {
+        String projectId = createProject("Auto Note ID Project");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/notes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"markdown\":\"# Auto note\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.noteId").isString())
+                .andExpect(jsonPath("$.markdown").value("# Auto note"));
+    }
+
+    @Test
+    void artifactListIsEmptyForFreshProject() throws Exception {
+        String projectId = createProject("Fresh Artifacts Project");
+
+        mockMvc.perform(get("/api/projects/" + projectId + "/artifacts/YOUTUBE_DESCRIPTION"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void projectConfigDefaultsAreReturnedForNewProject() throws Exception {
+        String projectId = createProject("Default Config Project");
+
+        mockMvc.perform(get("/api/projects/" + projectId + "/config"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.defaultLanguage").value("en"));
+    }
+
+    @Test
+    void projectConfigDefaultLanguageCanBeUpdated() throws Exception {
+        String projectId = createProject("Language Config Project");
+
+        mockMvc.perform(put("/api/projects/" + projectId + "/config")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"defaultLanguage\":\"fr\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.defaultLanguage").value("fr"));
+    }
+
+    @Test
+    void multipleSavedArtifactsAreReturnedInDescendingOrder() throws Exception {
+        String projectId = createProject("Artifact Order Project");
+
+        storageService.saveArtifact(projectId, GenerationCategory.SUMMARY, "first", "First version", false, false);
+        Thread.sleep(10);
+        storageService.saveArtifact(projectId, GenerationCategory.SUMMARY, "second", "Second version", true, false);
+
+        mockMvc.perform(get("/api/projects/" + projectId + "/artifacts/SUMMARY"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].strategy").value("second"))
+                .andExpect(jsonPath("$[1].strategy").value("first"));
+    }
+
+    @Test
+    void readingNonExistentNoteReturns404() throws Exception {
+        String projectId = createProject("Missing Note Project");
+
+        mockMvc.perform(get("/api/projects/" + projectId + "/notes/does-not-exist"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("NOT_FOUND"));
     }

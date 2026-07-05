@@ -244,6 +244,149 @@ class AssistantApiControllerIntegrationTest {
                 .andExpect(jsonPath("$.variants[0].content").isString());
     }
 
+    @Test
+    void generatesLinkedInPosts() throws Exception {
+        String projectId = createProject("LinkedIn Posts API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/linkedin-post")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Spring AI coding session\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("LINKEDIN_POST"))
+                .andExpect(jsonPath("$.variants.length()").value(3));
+    }
+
+    @Test
+    void generatesSocialPosts() throws Exception {
+        String projectId = createProject("Social Posts API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/social-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Announcing new Spring AI stream\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("SOCIAL_POST"))
+                .andExpect(jsonPath("$.variants.length()").value(3));
+    }
+
+    @Test
+    void generatesHashtags() throws Exception {
+        String projectId = createProject("Hashtags API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/hashtags")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Spring Boot AI Java\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("HASHTAGS"))
+                .andExpect(jsonPath("$.variants.length()").value(1));
+    }
+
+    @Test
+    void generatesGuestIdeas() throws Exception {
+        String projectId = createProject("Guest Ideas API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/guest-ideas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Spring AI experts\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("GUEST_IDEA"))
+                .andExpect(jsonPath("$.variants.length()").value(3));
+    }
+
+    @Test
+    void finalizingNonExistentArtifactReturns404() throws Exception {
+        String projectId = createProject("Non-existent Artifact API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/artifacts/YOUTUBE_DESCRIPTION/non-existent-id/finalize"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+    }
+
+    @Test
+    void refiningNonExistentArtifactReturns404() throws Exception {
+        String projectId = createProject("Non-existent Refine API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/artifacts/YOUTUBE_DESCRIPTION/non-existent-id/refine")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"prompt\":\"Make it shorter\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+    }
+
+    @Test
+    void allGeneratedVariantsHaveNonBlankContent() throws Exception {
+        String projectId = createProject("Non-blank Content API");
+
+        String response = mockMvc.perform(post("/api/projects/" + projectId + "/topic-ideas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Spring Boot and AI\"}"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(response);
+        com.fasterxml.jackson.databind.JsonNode variants = root.get("variants");
+        org.assertj.core.api.Assertions.assertThat(variants).isNotNull();
+        variants.forEach(v -> org.assertj.core.api.Assertions.assertThat(v.get("content").asText()).isNotBlank());
+    }
+
+    @Test
+    void generatedArtifactsHaveUniqueIds() throws Exception {
+        String projectId = createProject("Unique IDs API");
+
+        String response = mockMvc.perform(post("/api/projects/" + projectId + "/topic-ideas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Testing uniqueness\"}"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(response);
+        com.fasterxml.jackson.databind.JsonNode variants = root.get("variants");
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        variants.forEach(v -> ids.add(v.get("id").asText()));
+        org.assertj.core.api.Assertions.assertThat(ids).hasSameSizeAs(new java.util.ArrayList<>(ids));
+    }
+
+    @Test
+    void generatedArtifactsArePersisted() throws Exception {
+        String projectId = createProject("Persistence Check API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/youtube-description")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Testing persistence\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/projects/" + projectId + "/artifacts/YOUTUBE_DESCRIPTION"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3));
+    }
+
+    @Test
+    void socialPostsAreTruncatedTo280Chars() throws Exception {
+        String projectId = createProject("Social Post Truncation API");
+        String longContent = "A".repeat(500);
+        when(aiClient.generateText(anyString(), anyString())).thenReturn(longContent);
+
+        String response = mockMvc.perform(post("/api/projects/" + projectId + "/social-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Test truncation\"}"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(response);
+        root.get("variants").forEach(v -> {
+            String content = v.get("content").asText();
+            org.assertj.core.api.Assertions.assertThat(content.length()).isLessThanOrEqualTo(280);
+        });
+    }
+
     private String createProject(String name) throws Exception {
         String response = mockMvc.perform(post("/api/projects")
                         .contentType(MediaType.APPLICATION_JSON)

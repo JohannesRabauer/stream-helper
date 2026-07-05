@@ -751,22 +751,22 @@ function renderRefinementTurns(threadTurns) {
   return `<ol class="artifact-refine-turns">${items.join("")}</ol>`;
 }
 
+function resolveRefinementTurnsForArtifact(turnsByThread, artifact) {
+  const turns = turnsByThread.get(artifact?.threadId || artifact?.id) || [];
+  const artifactTimestamp = Date.parse(artifact?.createdAt || "");
+  if (!Number.isFinite(artifactTimestamp)) {
+    return turns;
+  }
+  return turns.filter((turn) => {
+    const turnTimestamp = Date.parse(turn.createdAt || "");
+    return !Number.isFinite(turnTimestamp) || turnTimestamp <= artifactTimestamp;
+  });
+}
+
 function buildRefinementTurnsByThread(artifacts) {
   const turnsByThread = new Map();
   if (!Array.isArray(artifacts)) {
     return turnsByThread;
-  }
-
-  function resolveRefinementTurnsForArtifact(turnsByThread, artifact) {
-    const turns = turnsByThread.get(artifact?.threadId || artifact?.id) || [];
-    const artifactTimestamp = Date.parse(artifact?.createdAt || "");
-    if (!Number.isFinite(artifactTimestamp)) {
-      return turns;
-    }
-    return turns.filter((turn) => {
-      const turnTimestamp = Date.parse(turn.createdAt || "");
-      return !Number.isFinite(turnTimestamp) || turnTimestamp <= artifactTimestamp;
-    });
   }
   artifacts.forEach((artifact) => {
     const threadId = artifact?.threadId || artifact?.id;
@@ -890,94 +890,6 @@ async function withButtonLoading(button, fn) {
   if (!button) {
     return fn();
   }
-
-  function startTranscriptionProgressMonitor(initialMessage) {
-    showTranscriptionProgressState({
-      active: true,
-      failed: false,
-      percent: 2,
-      stage: "starting",
-      message: initialMessage || "Starting transcription..."
-    });
-    stopTranscriptionProgressPolling();
-    refreshTranscriptionProgressSnapshot().catch(console.error);
-    transcriptionProgressPollTimer = setInterval(() => {
-      refreshTranscriptionProgressSnapshot().catch(console.error);
-    }, 1200);
-  }
-
-  function stopTranscriptionProgressPolling() {
-    if (transcriptionProgressPollTimer) {
-      clearInterval(transcriptionProgressPollTimer);
-      transcriptionProgressPollTimer = null;
-    }
-  }
-
-  async function initializeTranscriptionProgress() {
-    const panel = document.getElementById("transcriptionProgressPanel");
-    if (!panel) {
-      return;
-    }
-    try {
-      const snapshot = await apiJsonQuiet(`/api/projects/${projectId}/transcripts/progress`, {method: "GET"});
-      if (snapshot.active) {
-        transcriptionRequestInFlight = false;
-        transcriptionAwaitingActiveState = false;
-        showTranscriptionProgressState(snapshot);
-        stopTranscriptionProgressPolling();
-        transcriptionProgressPollTimer = setInterval(() => {
-          refreshTranscriptionProgressSnapshot().catch(console.error);
-        }, 1200);
-        return;
-      }
-      panel.hidden = true;
-    } catch (error) {
-      console.error(error);
-      panel.hidden = true;
-    }
-  }
-
-  async function refreshTranscriptionProgressSnapshot() {
-    const snapshot = await apiJsonQuiet(`/api/projects/${projectId}/transcripts/progress`, {method: "GET"});
-    if (transcriptionRequestInFlight && transcriptionAwaitingActiveState && !snapshot.active) {
-      return;
-    }
-    showTranscriptionProgressState(snapshot);
-  }
-
-  function showTranscriptionProgressState(snapshot) {
-    const panel = document.getElementById("transcriptionProgressPanel");
-    const percentNode = document.getElementById("transcriptionProgressPercent");
-    const fill = document.getElementById("transcriptionProgressFill");
-    const messageNode = document.getElementById("transcriptionProgressMessage");
-    const track = panel?.querySelector(".task-progress-track");
-    if (!panel || !percentNode || !fill || !messageNode || !track) {
-      return;
-    }
-    const percent = clampPercent(snapshot?.percent ?? 0);
-    const message = snapshot?.message || "Transcription in progress...";
-    panel.hidden = false;
-    panel.classList.toggle("running", Boolean(snapshot?.active));
-    panel.classList.toggle("complete", !snapshot?.active && !snapshot?.failed && percent >= 100);
-    panel.classList.toggle("error", Boolean(snapshot?.failed));
-    percentNode.textContent = `${percent}%`;
-    fill.style.width = `${percent}%`;
-    messageNode.textContent = message;
-    track.setAttribute("aria-valuenow", String(percent));
-  }
-
-  function readCurrentTranscriptionPercent() {
-    const node = document.getElementById("transcriptionProgressPercent");
-    if (!node) {
-      return 0;
-    }
-    const match = node.textContent.match(/\d+/);
-    return match ? clampPercent(Number.parseInt(match[0], 10)) : 0;
-  }
-
-  function clampPercent(value) {
-    return Math.min(100, Math.max(0, Number.isFinite(value) ? Math.round(value) : 0));
-  }
   const original = button.textContent;
   button.disabled = true;
   let frame = 0;
@@ -994,6 +906,94 @@ async function withButtonLoading(button, fn) {
     button.disabled = false;
     button.textContent = original;
   }
+}
+
+function startTranscriptionProgressMonitor(initialMessage) {
+  showTranscriptionProgressState({
+    active: true,
+    failed: false,
+    percent: 2,
+    stage: "starting",
+    message: initialMessage || "Starting transcription..."
+  });
+  stopTranscriptionProgressPolling();
+  refreshTranscriptionProgressSnapshot().catch(console.error);
+  transcriptionProgressPollTimer = setInterval(() => {
+    refreshTranscriptionProgressSnapshot().catch(console.error);
+  }, 1200);
+}
+
+function stopTranscriptionProgressPolling() {
+  if (transcriptionProgressPollTimer) {
+    clearInterval(transcriptionProgressPollTimer);
+    transcriptionProgressPollTimer = null;
+  }
+}
+
+async function initializeTranscriptionProgress() {
+  const panel = document.getElementById("transcriptionProgressPanel");
+  if (!panel) {
+    return;
+  }
+  try {
+    const snapshot = await apiJsonQuiet(`/api/projects/${projectId}/transcripts/progress`, {method: "GET"});
+    if (snapshot.active) {
+      transcriptionRequestInFlight = false;
+      transcriptionAwaitingActiveState = false;
+      showTranscriptionProgressState(snapshot);
+      stopTranscriptionProgressPolling();
+      transcriptionProgressPollTimer = setInterval(() => {
+        refreshTranscriptionProgressSnapshot().catch(console.error);
+      }, 1200);
+      return;
+    }
+    panel.hidden = true;
+  } catch (error) {
+    console.error(error);
+    panel.hidden = true;
+  }
+}
+
+async function refreshTranscriptionProgressSnapshot() {
+  const snapshot = await apiJsonQuiet(`/api/projects/${projectId}/transcripts/progress`, {method: "GET"});
+  if (transcriptionRequestInFlight && transcriptionAwaitingActiveState && !snapshot.active) {
+    return;
+  }
+  showTranscriptionProgressState(snapshot);
+}
+
+function showTranscriptionProgressState(snapshot) {
+  const panel = document.getElementById("transcriptionProgressPanel");
+  const percentNode = document.getElementById("transcriptionProgressPercent");
+  const fill = document.getElementById("transcriptionProgressFill");
+  const messageNode = document.getElementById("transcriptionProgressMessage");
+  const track = panel?.querySelector(".task-progress-track");
+  if (!panel || !percentNode || !fill || !messageNode || !track) {
+    return;
+  }
+  const percent = clampPercent(snapshot?.percent ?? 0);
+  const message = snapshot?.message || "Transcription in progress...";
+  panel.hidden = false;
+  panel.classList.toggle("running", Boolean(snapshot?.active));
+  panel.classList.toggle("complete", !snapshot?.active && !snapshot?.failed && percent >= 100);
+  panel.classList.toggle("error", Boolean(snapshot?.failed));
+  percentNode.textContent = `${percent}%`;
+  fill.style.width = `${percent}%`;
+  messageNode.textContent = message;
+  track.setAttribute("aria-valuenow", String(percent));
+}
+
+function readCurrentTranscriptionPercent() {
+  const node = document.getElementById("transcriptionProgressPercent");
+  if (!node) {
+    return 0;
+  }
+  const match = node.textContent.match(/\d+/);
+  return match ? clampPercent(Number.parseInt(match[0], 10)) : 0;
+}
+
+function clampPercent(value) {
+  return Math.min(100, Math.max(0, Number.isFinite(value) ? Math.round(value) : 0));
 }
 
 function getDraftValue(areaKey) {

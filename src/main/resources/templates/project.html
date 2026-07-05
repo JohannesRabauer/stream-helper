@@ -209,50 +209,160 @@
         <div class="section-heading">
             <h2>2 · Title &amp; description</h2>
         </div>
-        <div class="workflow-grid">
-            <div class="workflow-main">
-                <div class="workflow-guide">
-                    <strong>Suggested flow</strong>
-                    <ol>
-                        <li>Refine the stream angle from the planning stage.</li>
-                        <li>Create title ideas, the YouTube description, and tags.</li>
-                        <li>Mark the best version as final before moving to thumbnail or announcements.</li>
-                    </ol>
-                </div>
 
-                <label for="draft-description">Description brief</label>
-                <textarea id="draft-description" rows="8" data-draft-key="description" placeholder="Describe what the YouTube description and tags should emphasize, including SEO angles, key topics, and viewer expectations."></textarea>
-                <div class="autosave-hint">Autosaved and combined with finished planning outputs for coherent descriptions.</div>
-
-                <div class="button-grid">
-                    <button type="button" onclick="runStageBriefAction('description', 'youtube-titles', this)">Suggest title</button>
-                    <button type="button" onclick="runStageBriefAction('description', 'youtube-description', this)">YouTube descriptions</button>
-                    <button type="button" onclick="runStageBriefAction('description', 'youtube-tags', this)">YouTube tags</button>
-                </div>
-                <section id="inline-result-description" class="inline-result-panel" hidden>
-                    <div class="section-heading compact-heading">
-                        <h3>Latest stage result</h3>
-                        <div class="inline-actions">
-                            <button type="button" class="secondary-button" onclick="copyRawResult('description')">Copy JSON</button>
-                            <button type="button" class="secondary-button" onclick="copyRecommendedContent('description')">Copy recommended</button>
-                        </div>
+        <div class="stage-flow">
+            <!-- YouTube titles block -->
+            <article class="asset-block" data-category="YOUTUBE_TITLES" data-state="empty">
+                <div class="asset-block-head">
+                    <div>
+                        <h3>YouTube titles</h3>
+                        <p class="muted">Generate compelling title options optimized for YouTube SEO and click-through.</p>
                     </div>
-                    <div id="inline-result-summary-description" class="muted">Run an action in this stage to see the newest output here.</div>
-                    <div id="inline-result-cards-description" class="variant-grid"></div>
+                    <div class="asset-status-chip">empty</div>
+                </div>
+                <details class="asset-guidance" data-category="YOUTUBE_TITLES">
+                    <summary>＋ Add guidance</summary>
+                    <div class="guidance-content">
+                        <div class="guidance-chips">
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Include keyword')">Include keyword</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Lean technical')">Lean technical</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'More hooks')">More hooks</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Avoid clickbait')">Avoid clickbait</button>
+                        </div>
+                        <textarea class="guidance-textarea" placeholder="e.g. lean technical, include keyword Spring Boot, more engaging" rows="3"></textarea>
+                        <div class="autosave-hint">Autosaved to project</div>
+                    </div>
+                </details>
+                <div id="asset-current-YOUTUBE_TITLES" class="asset-current"></div>
+                <div class="asset-actions">
+                    <button type="button" class="primary-button" onclick="runStageBriefAction('description', 'youtube-titles', this)">Generate titles</button>
+                    <button type="button" class="secondary-button asset-copy-button" hidden>Copy</button>
+                    <button type="button" class="secondary-button asset-regenerate-button" hidden>Regenerate</button>
+                    <button type="button" class="secondary-button asset-refine-button" hidden>Refine ▾</button>
+                    <button type="button" class="secondary-button asset-final-button" hidden>Set as final</button>
+                </div>
+                <section id="inline-result-YOUTUBE_TITLES" class="inline-result-panel" hidden>
+                    <div id="inline-result-cards-YOUTUBE_TITLES" class="variant-grid"></div>
                     <details class="result-raw">
                         <summary>Raw response JSON</summary>
-                        <pre id="inline-result-json-description">Run an action to see output...</pre>
+                        <pre id="inline-result-json-YOUTUBE_TITLES">Run an action to see output...</pre>
                     </details>
                 </section>
-            </div>
-            <aside class="history-panel">
-                <div class="section-heading">
-                    <h3>Stage history</h3>
-                    <span id="history-count-description">0 entries</span>
+                <details class="asset-versions">
+                    <summary id="versions-summary-YOUTUBE_TITLES">Versions (0)</summary>
+                    <div id="asset-versions-YOUTUBE_TITLES" class="version-timeline"></div>
+                </details>
+            </article>
+
+            <!-- YouTube description block -->
+            <article class="asset-block" data-category="YOUTUBE_DESCRIPTION" data-state="empty">
+                <div class="asset-block-head">
+                    <div>
+                        <h3>YouTube description</h3>
+                        <p class="muted">Create an informative, SEO-friendly description with links and timestamps.</p>
+                    </div>
+                    <div class="asset-status-chip">empty</div>
                 </div>
-                <div id="history-description" class="history-groups"></div>
-            </aside>
+                <details class="asset-guidance" data-category="YOUTUBE_DESCRIPTION">
+                    <summary>＋ Add guidance</summary>
+                    <div class="guidance-content">
+                        <div class="guidance-chips">
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Add timestamps')">Add timestamps</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'More SEO focus')">More SEO focus</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Include links')">Include links</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Shorter version')">Shorter version</button>
+                        </div>
+                        <textarea class="guidance-textarea" placeholder="e.g. more SEO, add timestamps note, include relevant links" rows="3"></textarea>
+                        <div class="autosave-hint">Autosaved to project</div>
+                    </div>
+                </details>
+                <div id="asset-current-YOUTUBE_DESCRIPTION" class="asset-current"></div>
+                <div class="asset-actions">
+                    <button type="button" class="primary-button" onclick="runStageBriefAction('description', 'youtube-description', this)">Generate description</button>
+                    <button type="button" class="secondary-button asset-copy-button" hidden>Copy</button>
+                    <button type="button" class="secondary-button asset-regenerate-button" hidden>Regenerate</button>
+                    <button type="button" class="secondary-button asset-refine-button" hidden>Refine ▾</button>
+                    <button type="button" class="secondary-button asset-final-button" hidden>Set as final</button>
+                </div>
+                <section id="inline-result-YOUTUBE_DESCRIPTION" class="inline-result-panel" hidden>
+                    <div id="inline-result-cards-YOUTUBE_DESCRIPTION" class="variant-grid"></div>
+                    <details class="result-raw">
+                        <summary>Raw response JSON</summary>
+                        <pre id="inline-result-json-YOUTUBE_DESCRIPTION">Run an action to see output...</pre>
+                    </details>
+                </section>
+                <details class="asset-versions">
+                    <summary id="versions-summary-YOUTUBE_DESCRIPTION">Versions (0)</summary>
+                    <div id="asset-versions-YOUTUBE_DESCRIPTION" class="version-timeline"></div>
+                </details>
+            </article>
+
+            <!-- YouTube tags block -->
+            <article class="asset-block" data-category="YOUTUBE_TAGS" data-state="empty">
+                <div class="asset-block-head">
+                    <div>
+                        <h3>YouTube tags</h3>
+                        <p class="muted">Generate relevant tags to improve discoverability and reach the right audience.</p>
+                    </div>
+                    <div class="asset-status-chip">empty</div>
+                </div>
+                <details class="asset-guidance" data-category="YOUTUBE_TAGS">
+                    <summary>＋ Add guidance</summary>
+                    <div class="guidance-content">
+                        <div class="guidance-chips">
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Broader reach')">Broader reach</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'More niche')">More niche</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Technical focus')">Technical focus</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Fewer tags')">Fewer tags</button>
+                        </div>
+                        <textarea class="guidance-textarea" placeholder="e.g. fewer/broader or niche/technical, industry-specific focus" rows="3"></textarea>
+                        <div class="autosave-hint">Autosaved to project</div>
+                    </div>
+                </details>
+                <div id="asset-current-YOUTUBE_TAGS" class="asset-current"></div>
+                <div class="asset-actions">
+                    <button type="button" class="primary-button" onclick="runStageBriefAction('description', 'youtube-tags', this)">Generate tags</button>
+                    <button type="button" class="secondary-button asset-copy-button" hidden>Copy</button>
+                    <button type="button" class="secondary-button asset-regenerate-button" hidden>Regenerate</button>
+                    <button type="button" class="secondary-button asset-refine-button" hidden>Refine ▾</button>
+                    <button type="button" class="secondary-button asset-final-button" hidden>Set as final</button>
+                </div>
+                <section id="inline-result-YOUTUBE_TAGS" class="inline-result-panel" hidden>
+                    <div id="inline-result-cards-YOUTUBE_TAGS" class="variant-grid"></div>
+                    <details class="result-raw">
+                        <summary>Raw response JSON</summary>
+                        <pre id="inline-result-json-YOUTUBE_TAGS">Run an action to see output...</pre>
+                    </details>
+                </section>
+                <details class="asset-versions">
+                    <summary id="versions-summary-YOUTUBE_TAGS">Versions (0)</summary>
+                    <div id="asset-versions-YOUTUBE_TAGS" class="version-timeline"></div>
+                </details>
+            </article>
         </div>
+
+        <section id="inline-result-description" class="inline-result-panel" hidden>
+            <div class="section-heading compact-heading">
+                <h3>Latest stage result</h3>
+                <div class="inline-actions">
+                    <button type="button" class="secondary-button" onclick="copyRawResult('description')">Copy JSON</button>
+                    <button type="button" class="secondary-button" onclick="copyRecommendedContent('description')">Copy recommended</button>
+                </div>
+            </div>
+            <div id="inline-result-summary-description" class="muted">Run an action in this stage to see the newest output here.</div>
+            <div id="inline-result-cards-description" class="variant-grid"></div>
+            <details class="result-raw">
+                <summary>Raw response JSON</summary>
+                <pre id="inline-result-json-description">Run an action to see output...</pre>
+            </details>
+        </section>
+        <aside class="history-panel" hidden>
+            <div class="section-heading">
+                <h3>Stage history</h3>
+                <span id="history-count-description">0 entries</span>
+            </div>
+            <div id="history-description" class="history-groups"></div>
+        </aside>
             </section>
 
             <section class="workflow-panel card" data-tab-panel="thumbnail" hidden>
@@ -310,50 +420,160 @@
         <div class="section-heading">
             <h2>4 · Announce</h2>
         </div>
-        <div class="workflow-grid">
-            <div class="workflow-main">
-                <div class="workflow-guide">
-                    <strong>Suggested flow</strong>
-                    <ol>
-                        <li>Reuse the stream positioning and description as the announcement source.</li>
-                        <li>Create LinkedIn, short social posts, and hashtags.</li>
-                        <li>Finalize the versions you want to ship.</li>
-                    </ol>
-                </div>
 
-                <label for="draft-social-announcements">Announcement brief</label>
-                <textarea id="draft-social-announcements" rows="8" data-draft-key="social-announcements" placeholder="Describe tone, CTA, platform-specific goals, and how these announcement posts should sound."></textarea>
-                <div class="autosave-hint">Autosaved and combined with the saved stream context for coherent announcements.</div>
-
-                <div class="button-grid">
-                    <button type="button" onclick="runStageBriefAction('social-announcements', 'linkedin-post', this)">LinkedIn posts</button>
-                    <button type="button" onclick="runStageBriefAction('social-announcements', 'social-posts', this)">Social posts (X-ready)</button>
-                    <button type="button" onclick="runStageBriefAction('social-announcements', 'hashtags', this)">Hashtags</button>
-                </div>
-                <section id="inline-result-social-announcements" class="inline-result-panel" hidden>
-                    <div class="section-heading compact-heading">
-                        <h3>Latest stage result</h3>
-                        <div class="inline-actions">
-                            <button type="button" class="secondary-button" onclick="copyRawResult('social-announcements')">Copy JSON</button>
-                            <button type="button" class="secondary-button" onclick="copyRecommendedContent('social-announcements')">Copy recommended</button>
-                        </div>
+        <div class="stage-flow">
+            <!-- LinkedIn post block -->
+            <article class="asset-block" data-category="LINKEDIN_POST" data-state="empty">
+                <div class="asset-block-head">
+                    <div>
+                        <h3>LinkedIn post</h3>
+                        <p class="muted">Create a professional LinkedIn post to announce your stream to your professional network.</p>
                     </div>
-                    <div id="inline-result-summary-social-announcements" class="muted">Run an action in this stage to see the newest output here.</div>
-                    <div id="inline-result-cards-social-announcements" class="variant-grid"></div>
+                    <div class="asset-status-chip">empty</div>
+                </div>
+                <details class="asset-guidance" data-category="LINKEDIN_POST">
+                    <summary>＋ Add guidance</summary>
+                    <div class="guidance-content">
+                        <div class="guidance-chips">
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'More professional')">More professional</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Personal story')">Personal story</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Add CTA')">Add CTA</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Shorter version')">Shorter version</button>
+                        </div>
+                        <textarea class="guidance-textarea" placeholder="e.g. more professional, personal story, include call-to-action" rows="3"></textarea>
+                        <div class="autosave-hint">Autosaved to project</div>
+                    </div>
+                </details>
+                <div id="asset-current-LINKEDIN_POST" class="asset-current"></div>
+                <div class="asset-actions">
+                    <button type="button" class="primary-button" onclick="runStageBriefAction('social-announcements', 'linkedin-post', this)">Generate LinkedIn post</button>
+                    <button type="button" class="secondary-button asset-copy-button" hidden>Copy</button>
+                    <button type="button" class="secondary-button asset-regenerate-button" hidden>Regenerate</button>
+                    <button type="button" class="secondary-button asset-refine-button" hidden>Refine ▾</button>
+                    <button type="button" class="secondary-button asset-final-button" hidden>Set as final</button>
+                </div>
+                <section id="inline-result-LINKEDIN_POST" class="inline-result-panel" hidden>
+                    <div id="inline-result-cards-LINKEDIN_POST" class="variant-grid"></div>
                     <details class="result-raw">
                         <summary>Raw response JSON</summary>
-                        <pre id="inline-result-json-social-announcements">Run an action to see output...</pre>
+                        <pre id="inline-result-json-LINKEDIN_POST">Run an action to see output...</pre>
                     </details>
                 </section>
-            </div>
-            <aside class="history-panel">
-                <div class="section-heading">
-                    <h3>Stage history</h3>
-                    <span id="history-count-social-announcements">0 entries</span>
+                <details class="asset-versions">
+                    <summary id="versions-summary-LINKEDIN_POST">Versions (0)</summary>
+                    <div id="asset-versions-LINKEDIN_POST" class="version-timeline"></div>
+                </details>
+            </article>
+
+            <!-- Social posts block -->
+            <article class="asset-block" data-category="SOCIAL_POST" data-state="empty">
+                <div class="asset-block-head">
+                    <div>
+                        <h3>Social posts</h3>
+                        <p class="muted">Generate concise social posts ready for X, Meta, and other platforms.</p>
+                    </div>
+                    <div class="asset-status-chip">empty</div>
                 </div>
-                <div id="history-social-announcements" class="history-groups"></div>
-            </aside>
+                <details class="asset-guidance" data-category="SOCIAL_POST">
+                    <summary>＋ Add guidance</summary>
+                    <div class="guidance-content">
+                        <div class="guidance-chips">
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'More engaging')">More engaging</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Shorter')">Shorter</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Include emoji')">Include emoji</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Multiple variations')">Multiple variations</button>
+                        </div>
+                        <textarea class="guidance-textarea" placeholder="e.g. more engaging, shorter, include emoji, multiple variations" rows="3"></textarea>
+                        <div class="autosave-hint">Autosaved to project</div>
+                    </div>
+                </details>
+                <div id="asset-current-SOCIAL_POST" class="asset-current"></div>
+                <div class="asset-actions">
+                    <button type="button" class="primary-button" onclick="runStageBriefAction('social-announcements', 'social-posts', this)">Generate social posts</button>
+                    <button type="button" class="secondary-button asset-copy-button" hidden>Copy</button>
+                    <button type="button" class="secondary-button asset-regenerate-button" hidden>Regenerate</button>
+                    <button type="button" class="secondary-button asset-refine-button" hidden>Refine ▾</button>
+                    <button type="button" class="secondary-button asset-final-button" hidden>Set as final</button>
+                </div>
+                <section id="inline-result-SOCIAL_POST" class="inline-result-panel" hidden>
+                    <div id="inline-result-cards-SOCIAL_POST" class="variant-grid"></div>
+                    <details class="result-raw">
+                        <summary>Raw response JSON</summary>
+                        <pre id="inline-result-json-SOCIAL_POST">Run an action to see output...</pre>
+                    </details>
+                </section>
+                <details class="asset-versions">
+                    <summary id="versions-summary-SOCIAL_POST">Versions (0)</summary>
+                    <div id="asset-versions-SOCIAL_POST" class="version-timeline"></div>
+                </details>
+            </article>
+
+            <!-- Hashtags block -->
+            <article class="asset-block" data-category="HASHTAGS" data-state="empty">
+                <div class="asset-block-head">
+                    <div>
+                        <h3>Hashtags</h3>
+                        <p class="muted">Generate relevant hashtags to maximize reach and discoverability on social platforms.</p>
+                    </div>
+                    <div class="asset-status-chip">empty</div>
+                </div>
+                <details class="asset-guidance" data-category="HASHTAGS">
+                    <summary>＋ Add guidance</summary>
+                    <div class="guidance-content">
+                        <div class="guidance-chips">
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Broader reach')">Broader reach</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Niche/technical')">Niche/technical</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Industry-specific')">Industry-specific</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Fewer hashtags')">Fewer hashtags</button>
+                        </div>
+                        <textarea class="guidance-textarea" placeholder="e.g. broader/narrower, industry-specific, mix of popular and niche" rows="3"></textarea>
+                        <div class="autosave-hint">Autosaved to project</div>
+                    </div>
+                </details>
+                <div id="asset-current-HASHTAGS" class="asset-current"></div>
+                <div class="asset-actions">
+                    <button type="button" class="primary-button" onclick="runStageBriefAction('social-announcements', 'hashtags', this)">Generate hashtags</button>
+                    <button type="button" class="secondary-button asset-copy-button" hidden>Copy</button>
+                    <button type="button" class="secondary-button asset-regenerate-button" hidden>Regenerate</button>
+                    <button type="button" class="secondary-button asset-refine-button" hidden>Refine ▾</button>
+                    <button type="button" class="secondary-button asset-final-button" hidden>Set as final</button>
+                </div>
+                <section id="inline-result-HASHTAGS" class="inline-result-panel" hidden>
+                    <div id="inline-result-cards-HASHTAGS" class="variant-grid"></div>
+                    <details class="result-raw">
+                        <summary>Raw response JSON</summary>
+                        <pre id="inline-result-json-HASHTAGS">Run an action to see output...</pre>
+                    </details>
+                </section>
+                <details class="asset-versions">
+                    <summary id="versions-summary-HASHTAGS">Versions (0)</summary>
+                    <div id="asset-versions-HASHTAGS" class="version-timeline"></div>
+                </details>
+            </article>
         </div>
+
+        <section id="inline-result-social-announcements" class="inline-result-panel" hidden>
+            <div class="section-heading compact-heading">
+                <h3>Latest stage result</h3>
+                <div class="inline-actions">
+                    <button type="button" class="secondary-button" onclick="copyRawResult('social-announcements')">Copy JSON</button>
+                    <button type="button" class="secondary-button" onclick="copyRecommendedContent('social-announcements')">Copy recommended</button>
+                </div>
+            </div>
+            <div id="inline-result-summary-social-announcements" class="muted">Run an action in this stage to see the newest output here.</div>
+            <div id="inline-result-cards-social-announcements" class="variant-grid"></div>
+            <details class="result-raw">
+                <summary>Raw response JSON</summary>
+                <pre id="inline-result-json-social-announcements">Run an action to see output...</pre>
+            </details>
+        </section>
+        <aside class="history-panel" hidden>
+            <div class="section-heading">
+                <h3>Stage history</h3>
+                <span id="history-count-social-announcements">0 entries</span>
+            </div>
+            <div id="history-social-announcements" class="history-groups"></div>
+        </aside>
             </section>
 
             <section class="workflow-panel card" data-tab-panel="transcription" hidden>
@@ -438,49 +658,117 @@
         <div class="section-heading">
             <h2>6 · Wrap-up</h2>
         </div>
-        <div class="workflow-grid">
-            <div class="workflow-main">
-                <div class="workflow-guide">
-                    <strong>Suggested flow</strong>
-                    <ol>
-                        <li>Transcribe first so the latest stored transcript is available.</li>
-                        <li>Add optional focus notes for what matters in the recap.</li>
-                        <li>Create chapters, then summary, and mark the best versions as final.</li>
-                    </ol>
-                </div>
 
-                <label for="draft-post-stream">Extra recap guidance</label>
-                <textarea id="draft-post-stream" rows="8" data-draft-key="post-stream" placeholder="Optional: ask for certain takeaways, highlight key moments, or specify what the replay summary should emphasize."></textarea>
-                <div class="autosave-hint">Autosaved. Chapters and summary use the latest stored transcript automatically if this field is empty.</div>
-
-                <div class="button-grid">
-                    <button type="button" onclick="runStageTextAction('post-stream', 'chapters', this)">Create chapters</button>
-                    <button type="button" onclick="runStageTextAction('post-stream', 'summary', this)">Create detailed summary</button>
-                </div>
-                <section id="inline-result-post-stream" class="inline-result-panel" hidden>
-                    <div class="section-heading compact-heading">
-                        <h3>Latest stage result</h3>
-                        <div class="inline-actions">
-                            <button type="button" class="secondary-button" onclick="copyRawResult('post-stream')">Copy JSON</button>
-                            <button type="button" class="secondary-button" onclick="copyRecommendedContent('post-stream')">Copy recommended</button>
-                        </div>
+        <div class="stage-flow">
+            <!-- Chapters block -->
+            <article class="asset-block" data-category="CHAPTERS" data-state="empty">
+                <div class="asset-block-head">
+                    <div>
+                        <h3>Chapters</h3>
+                        <p class="muted">Generate chapter timestamps to help viewers navigate your stream recording.</p>
                     </div>
-                    <div id="inline-result-summary-post-stream" class="muted">Run an action in this stage to see the newest output here.</div>
-                    <div id="inline-result-cards-post-stream" class="variant-grid"></div>
+                    <div class="asset-status-chip">empty</div>
+                </div>
+                <details class="asset-guidance" data-category="CHAPTERS">
+                    <summary>＋ Add guidance</summary>
+                    <div class="guidance-content">
+                        <div class="guidance-chips">
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Add timestamps')">Add timestamps</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'More granular')">More granular</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Fewer chapters')">Fewer chapters</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Shorter titles')">Shorter titles</button>
+                        </div>
+                        <textarea class="guidance-textarea" placeholder="e.g. add timestamps, more granular sections, include key moments" rows="3"></textarea>
+                        <div class="autosave-hint">Autosaved to project</div>
+                    </div>
+                </details>
+                <div id="asset-current-CHAPTERS" class="asset-current"></div>
+                <div class="asset-actions">
+                    <button type="button" class="primary-button" onclick="runStageTextAction('post-stream', 'chapters', this)">Generate chapters</button>
+                    <button type="button" class="secondary-button asset-copy-button" hidden>Copy</button>
+                    <button type="button" class="secondary-button asset-regenerate-button" hidden>Regenerate</button>
+                    <button type="button" class="secondary-button asset-refine-button" hidden>Refine ▾</button>
+                    <button type="button" class="secondary-button asset-final-button" hidden>Set as final</button>
+                </div>
+                <section id="inline-result-CHAPTERS" class="inline-result-panel" hidden>
+                    <div id="inline-result-cards-CHAPTERS" class="variant-grid"></div>
                     <details class="result-raw">
                         <summary>Raw response JSON</summary>
-                        <pre id="inline-result-json-post-stream">Run an action to see output...</pre>
+                        <pre id="inline-result-json-CHAPTERS">Run an action to see output...</pre>
                     </details>
                 </section>
-            </div>
-            <aside class="history-panel">
-                <div class="section-heading">
-                    <h3>Stage history</h3>
-                    <span id="history-count-post-stream">0 entries</span>
+                <details class="asset-versions">
+                    <summary id="versions-summary-CHAPTERS">Versions (0)</summary>
+                    <div id="asset-versions-CHAPTERS" class="version-timeline"></div>
+                </details>
+            </article>
+
+            <!-- Summary block -->
+            <article class="asset-block" data-category="SUMMARY" data-state="empty">
+                <div class="asset-block-head">
+                    <div>
+                        <h3>Summary</h3>
+                        <p class="muted">Generate a detailed summary of key takeaways and important moments from the stream.</p>
+                    </div>
+                    <div class="asset-status-chip">empty</div>
                 </div>
-                <div id="history-post-stream" class="history-groups"></div>
-            </aside>
+                <details class="asset-guidance" data-category="SUMMARY">
+                    <summary>＋ Add guidance</summary>
+                    <div class="guidance-content">
+                        <div class="guidance-chips">
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Key takeaways')">Key takeaways</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Shorter')">Shorter</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'More detailed')">More detailed</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Include timestamps')">Include timestamps</button>
+                        </div>
+                        <textarea class="guidance-textarea" placeholder="e.g. focus on key takeaways, shorter version, include timestamps" rows="3"></textarea>
+                        <div class="autosave-hint">Autosaved to project</div>
+                    </div>
+                </details>
+                <div id="asset-current-SUMMARY" class="asset-current"></div>
+                <div class="asset-actions">
+                    <button type="button" class="primary-button" onclick="runStageTextAction('post-stream', 'summary', this)">Generate summary</button>
+                    <button type="button" class="secondary-button asset-copy-button" hidden>Copy</button>
+                    <button type="button" class="secondary-button asset-regenerate-button" hidden>Regenerate</button>
+                    <button type="button" class="secondary-button asset-refine-button" hidden>Refine ▾</button>
+                    <button type="button" class="secondary-button asset-final-button" hidden>Set as final</button>
+                </div>
+                <section id="inline-result-SUMMARY" class="inline-result-panel" hidden>
+                    <div id="inline-result-cards-SUMMARY" class="variant-grid"></div>
+                    <details class="result-raw">
+                        <summary>Raw response JSON</summary>
+                        <pre id="inline-result-json-SUMMARY">Run an action to see output...</pre>
+                    </details>
+                </section>
+                <details class="asset-versions">
+                    <summary id="versions-summary-SUMMARY">Versions (0)</summary>
+                    <div id="asset-versions-SUMMARY" class="version-timeline"></div>
+                </details>
+            </article>
         </div>
+
+        <section id="inline-result-post-stream" class="inline-result-panel" hidden>
+            <div class="section-heading compact-heading">
+                <h3>Latest stage result</h3>
+                <div class="inline-actions">
+                    <button type="button" class="secondary-button" onclick="copyRawResult('post-stream')">Copy JSON</button>
+                    <button type="button" class="secondary-button" onclick="copyRecommendedContent('post-stream')">Copy recommended</button>
+                </div>
+            </div>
+            <div id="inline-result-summary-post-stream" class="muted">Run an action in this stage to see the newest output here.</div>
+            <div id="inline-result-cards-post-stream" class="variant-grid"></div>
+            <details class="result-raw">
+                <summary>Raw response JSON</summary>
+                <pre id="inline-result-json-post-stream">Run an action to see output...</pre>
+            </details>
+        </section>
+        <aside class="history-panel" hidden>
+            <div class="section-heading">
+                <h3>Stage history</h3>
+                <span id="history-count-post-stream">0 entries</span>
+            </div>
+            <div id="history-post-stream" class="history-groups"></div>
+        </aside>
             </section>
 
             <details class="card debug-card">

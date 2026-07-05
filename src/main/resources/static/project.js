@@ -83,6 +83,38 @@ const guidanceConfig = {
   GUEST_IDEA: {
     placeholder: "e.g. similar background, different perspective, industry expert",
     chips: ["Similar background", "Different perspective", "Industry expert", "First-time guest"]
+  },
+  YOUTUBE_TITLES: {
+    placeholder: "e.g. lean technical, include keyword Spring Boot, more engaging",
+    chips: ["Include keyword", "Lean technical", "More hooks", "Avoid clickbait"]
+  },
+  YOUTUBE_DESCRIPTION: {
+    placeholder: "e.g. more SEO, add timestamps note, include relevant links",
+    chips: ["Add timestamps", "More SEO focus", "Include links", "Shorter version"]
+  },
+  YOUTUBE_TAGS: {
+    placeholder: "e.g. fewer/broader or niche/technical, industry-specific focus",
+    chips: ["Broader reach", "More niche", "Technical focus", "Fewer tags"]
+  },
+  LINKEDIN_POST: {
+    placeholder: "e.g. more professional, personal story, include call-to-action",
+    chips: ["More professional", "Personal story", "Add CTA", "Shorter version"]
+  },
+  SOCIAL_POST: {
+    placeholder: "e.g. more engaging, shorter, include emoji, multiple variations",
+    chips: ["More engaging", "Shorter", "Include emoji", "Multiple variations"]
+  },
+  HASHTAGS: {
+    placeholder: "e.g. broader/narrower, industry-specific, mix of popular and niche",
+    chips: ["Broader reach", "Niche/technical", "Industry-specific", "Fewer hashtags"]
+  },
+  CHAPTERS: {
+    placeholder: "e.g. add timestamps, more granular sections, include key moments",
+    chips: ["Add timestamps", "More granular", "Fewer chapters", "Shorter titles"]
+  },
+  SUMMARY: {
+    placeholder: "e.g. focus on key takeaways, shorter version, include timestamps",
+    chips: ["Key takeaways", "Shorter", "More detailed", "Include timestamps"]
   }
 };
 

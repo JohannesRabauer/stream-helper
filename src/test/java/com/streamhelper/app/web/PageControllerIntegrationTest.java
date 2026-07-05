@@ -52,7 +52,7 @@ class PageControllerIntegrationTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Project notes")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Show notes")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Markdown notes")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Suggest title")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Generate titles")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Topic ideas")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Show LLM definitions")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Edit project name")))
@@ -78,10 +78,18 @@ class PageControllerIntegrationTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-TOPIC_IDEA")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-GUEST_IDEA")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-pre-stream")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-YOUTUBE_TITLES")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-YOUTUBE_DESCRIPTION")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-YOUTUBE_TAGS")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-description")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-thumbnail")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-LINKEDIN_POST")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-SOCIAL_POST")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-HASHTAGS")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-social-announcements")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-transcription")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-CHAPTERS")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-SUMMARY")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-post-stream")));
     }
 

@@ -171,7 +171,24 @@ class AssistantServiceTest {
         var project = storage.createProject("Title Suggestions Project");
 
         AiClient aiClient = mock(AiClient.class);
-        when(aiClient.generateText(any(), any())).thenAnswer(invocation -> invocation.getArgument(1, String.class));
+        when(aiClient.generateText(any(), any()))
+                .thenReturn("""
+                        ⭐ RECOMMENDED: Spring AI in 2026: What Actually Works
+                        - 10 Spring AI Mistakes to Avoid in Production
+                        - Build an AI Feature in Spring Boot in 30 Minutes
+                        - Beginner Guide: Your First Spring AI Service
+                        - Advanced Spring AI Patterns for Real Systems
+                        - From Prompt to Product: Shipping with Spring AI
+                        - Spring AI vs LangChain: Practical Comparison
+                        - Is Spring AI Overhyped? Honest Developer Take
+                        - Debugging Spring AI Apps Without Losing Hours
+                        - Cost-Optimized Spring AI Architectures
+                        - Designing Safer AI APIs with Spring Security
+                        - Real-world RAG with Spring AI and PostgreSQL
+                        - How We Scaled a Spring AI Feature to 1M Requests
+                        - Event-Driven AI Workflows in Spring
+                        - What to Learn Next After Spring AI Basics
+                        """);
 
         AssistantService service = new AssistantService(
                 aiClient,
@@ -184,11 +201,10 @@ class AssistantServiceTest {
         var result = service.generateYouTubeTitles(project.id(), "AI coding stream");
 
         assertThat(result.category()).isEqualTo(GenerationCategory.YOUTUBE_TITLES);
-        assertThat(result.variants()).hasSize(1);
-        String content = result.variants().getFirst().getContent();
-        assertThat(content).contains("Suggest exactly 15 YouTube titles");
-        assertThat(content).contains("very different areas");
-        assertThat(content).contains("⭐ RECOMMENDED:");
+        assertThat(result.variants()).hasSize(15);
+        assertThat(result.variants()).extracting(artifact -> artifact.getContent()).allMatch(content -> !content.contains("\n"));
+        assertThat(result.variants().stream().filter(artifact -> artifact.isRecommended()).count()).isEqualTo(1);
+        assertThat(result.variants().getFirst().getContent()).contains("Spring AI in 2026");
     }
 
     @Test

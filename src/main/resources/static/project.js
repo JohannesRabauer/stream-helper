@@ -98,25 +98,11 @@ const editableArtifactCategories = new Set([
   "THUMBNAIL_PROMPT"
 ]);
 
-const refinableArtifactCategories = new Set([
-  "TOPIC_IDEA",
-  "GUEST_IDEA",
-  "YOUTUBE_TITLES",
-  "YOUTUBE_DESCRIPTION",
-  "LINKEDIN_POST",
-  "SOCIAL_POST",
-  "HASHTAGS",
-  "YOUTUBE_TAGS",
-  "TRANSCRIPT",
-  "CHAPTERS",
-  "SUMMARY",
-  "THUMBNAIL_PROMPT"
-]);
-
 const spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 let transcriptionProgressPollTimer = null;
 let transcriptionRequestInFlight = false;
 let transcriptionAwaitingActiveState = false;
+const timestampFormatter = createTimestampFormatter();
 
 document.addEventListener("click", (event) => {
   const button = event.target.closest("button");
@@ -732,7 +718,7 @@ function renderArtifactBadges(artifact) {
 }
 
 function isRefinableArtifactCategory(category) {
-  return refinableArtifactCategories.has(category);
+  return Boolean(category);
 }
 
 function renderRefinePanel(category, threadTurns) {
@@ -1008,7 +994,13 @@ function formatTimestamp(value) {
     return "unknown time";
   }
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  if (timestampFormatter) {
+    return timestampFormatter.format(date);
+  }
+  return date.toLocaleString();
 }
 
 function formatCategoryLabel(category) {
@@ -1037,6 +1029,35 @@ function escapeHtml(value) {
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;");
+}
+
+function createTimestampFormatter() {
+  const locales = [];
+  if (Array.isArray(navigator.languages) && navigator.languages.length > 0) {
+    locales.push(...navigator.languages.filter(Boolean));
+  }
+  if (navigator.language) {
+    locales.push(navigator.language);
+  }
+  const htmlLang = document?.documentElement?.lang;
+  if (htmlLang) {
+    locales.push(htmlLang);
+  }
+  try {
+    return new Intl.DateTimeFormat(locales.length > 0 ? locales : undefined, {
+      dateStyle: "medium",
+      timeStyle: "short"
+    });
+  } catch (_) {
+    try {
+      return new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short"
+      });
+    } catch (_) {
+      return null;
+    }
+  }
 }
 
 function scheduleProjectConfigSave() {

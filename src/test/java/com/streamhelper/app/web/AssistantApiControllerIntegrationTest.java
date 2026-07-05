@@ -59,15 +59,35 @@ class AssistantApiControllerIntegrationTest {
     }
 
     @Test
-    void generatesYoutubeTitlesWithSingleRecommendedSet() throws Exception {
+    void generatesYoutubeTitlesAsSeparateSelectableVariants() throws Exception {
         String projectId = createProject("Title API");
+        when(aiClient.generateText(anyString(), anyString()))
+                .thenReturn("""
+                        ⭐ RECOMMENDED: Spring AI in 2026: What Actually Works
+                        - 10 Spring AI Mistakes to Avoid in Production
+                        - Build an AI Feature in Spring Boot in 30 Minutes
+                        - Beginner Guide: Your First Spring AI Service
+                        - Advanced Spring AI Patterns for Real Systems
+                        - From Prompt to Product: Shipping with Spring AI
+                        - Spring AI vs LangChain: Practical Comparison
+                        - Is Spring AI Overhyped? Honest Developer Take
+                        - Debugging Spring AI Apps Without Losing Hours
+                        - Cost-Optimized Spring AI Architectures
+                        - Designing Safer AI APIs with Spring Security
+                        - Real-world RAG with Spring AI and PostgreSQL
+                        - How We Scaled a Spring AI Feature to 1M Requests
+                        - Event-Driven AI Workflows in Spring
+                        - What to Learn Next After Spring AI Basics
+                        """);
 
         mockMvc.perform(post("/api/projects/" + projectId + "/youtube-titles")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"brief\":\"Spring + AI livestream\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.category").value("YOUTUBE_TITLES"))
-                .andExpect(jsonPath("$.variants.length()").value(1));
+                .andExpect(jsonPath("$.variants.length()").value(15))
+                .andExpect(jsonPath("$.variants[0].recommended").value(true))
+                .andExpect(jsonPath("$.variants[0].content").value("Spring AI in 2026: What Actually Works"));
     }
 
     @Test

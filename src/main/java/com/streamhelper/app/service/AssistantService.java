@@ -16,9 +16,12 @@ import com.streamhelper.app.transcription.TranscriptionService;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -88,12 +91,13 @@ public class AssistantService {
     }
 
     public VariantResult generateYouTubeTitles(String projectId, String brief) {
-        return generateVariants(
-                projectId,
-                GenerationCategory.YOUTUBE_TITLES,
-                brief,
-                List.of("editor-pick"),
-                """
+        String effective = instructionComposer.compose(projectId, GenerationCategory.YOUTUBE_TITLES);
+        String userPrompt = """
+                Category: %s
+                Input:
+                %s
+
+                Task:
                 Suggest exactly 15 YouTube titles for the same video.
                 Every title must use a clearly different angle so the set spans very different areas.
                 Include a spread such as: contrarian take, practical tutorial, beginner framing, advanced deep dive,
@@ -104,7 +108,14 @@ public class AssistantService {
                 - mark exactly one strongest choice as: ⭐ RECOMMENDED: <title>
                 - all other 14 lines as: - <title>
                 - do not add explanations or extra lines
-                """);
+                """
+                .formatted(GenerationCategory.YOUTUBE_TITLES.name(), brief == null ? "" : brief);
+        String content = aiClient.generateText(effective, userPrompt).trim();
+        content = validationService.normalize(GenerationCategory.YOUTUBE_TITLES, content);
+        List<ValidationIssue> issues = validationService.validate(GenerationCategory.YOUTUBE_TITLES, content);
+
+        List<ArtifactVersion> artifacts = saveYouTubeTitleOptions(projectId, content);
+        return new VariantResult(GenerationCategory.YOUTUBE_TITLES, effective, artifacts, issues);
     }
 
     public VariantResult generateLinkedInPosts(String projectId, String brief) {
@@ -465,4 +476,87 @@ public class AssistantService {
         }
         return sourceStrategy + "-refined";
     }
+
+    private List<ArtifactVersion> saveYouTubeTitleOptions(String projectId, String rawTitles) {
+        List<TitleOption> options = extractYouTubeTitleOptions(rawTitles);
+        if (options.isEmpty()) {
+            return List.of(storageService.saveArtifact(
+                    projectId,
+                    GenerationCategory.YOUTUBE_TITLES,
+                    "option-01",
+                    rawTitles,
+                    true,
+                    false));
+        }
+        List<ArtifactVersion> artifacts = new ArrayList<>();
+        for (int index = 0; index < options.size(); index++) {
+            TitleOption option = options.get(index);
+            artifacts.add(storageService.saveArtifact(
+                    projectId,
+                    GenerationCategory.YOUTUBE_TITLES,
+                    "option-%02d".formatted(index + 1),
+                    option.title(),
+                    option.recommended(),
+                    false));
+        }
+        return artifacts;
+    }
+
+    private List<TitleOption> extractYouTubeTitleOptions(String rawTitles) {
+        if (rawTitles == null || rawTitles.isBlank()) {
+            return List.of();
+        }
+        List<TitleOption> parsed = new ArrayList<>();
+        Set<String> dedupe = new HashSet<>();
+        for (String line : rawTitles.split("\\R")) {
+            if (line == null) {
+                continue;
+            }
+            String trimmed = line.trim();
+            if (trimmed.isBlank()) {
+                continue;
+            }
+            boolean recommended = false;
+            if (trimmed.startsWith("⭐ RECOMMENDED:")) {
+                recommended = true;
+                trimmed = trimmed.substring("⭐ RECOMMENDED:".length()).trim();
+            } else if (trimmed.toUpperCase(Locale.ROOT).startsWith("RECOMMENDED:")) {
+                recommended = true;
+                trimmed = trimmed.substring("RECOMMENDED:".length()).trim();
+            } else if (trimmed.startsWith("-")) {
+                trimmed = trimmed.substring(1).trim();
+            } else if (trimmed.startsWith("•")) {
+                trimmed = trimmed.substring(1).trim();
+            } else {
+                trimmed = trimmed.replaceFirst("^\\d+[.)]\\s*", "").trim();
+            }
+            if (trimmed.isBlank()) {
+                continue;
+            }
+            String key = trimmed.toLowerCase(Locale.ROOT);
+            if (dedupe.add(key)) {
+                parsed.add(new TitleOption(trimmed, recommended));
+            }
+        }
+        if (parsed.isEmpty()) {
+            return parsed;
+        }
+        List<TitleOption> normalized = new ArrayList<>();
+        boolean hasRecommended = false;
+        for (TitleOption option : parsed) {
+            if (option.recommended() && !hasRecommended) {
+                normalized.add(option);
+                hasRecommended = true;
+            } else {
+                normalized.add(new TitleOption(option.title(), false));
+            }
+        }
+        if (!hasRecommended) {
+            TitleOption first = normalized.getFirst();
+            normalized.set(0, new TitleOption(first.title(), true));
+        }
+        return normalized;
+    }
+
+    private record TitleOption(String title, boolean recommended) {}
 }

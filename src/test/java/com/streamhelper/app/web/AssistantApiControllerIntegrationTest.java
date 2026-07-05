@@ -143,14 +143,13 @@ class AssistantApiControllerIntegrationTest {
     }
 
     @Test
-    void rejectsBlankBriefForGenerationEndpoints() throws Exception {
+    void acceptsBlankBriefForGenerationEndpoints() throws Exception {
         String projectId = createProject("Validation API");
 
         mockMvc.perform(post("/api/projects/" + projectId + "/topic-ideas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"brief\":\"   \"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+                .andExpect(status().isOk());
     }
 
     @Test

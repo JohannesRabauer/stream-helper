@@ -720,7 +720,7 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
     border-top: 1px solid var(--border);
     padding-top: 0.8rem;
 }
-
+ 
 .asset-versions summary {
     cursor: pointer;
     color: var(--muted);
@@ -729,9 +729,99 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
     padding: 0.35rem 0;
     transition: color var(--transition);
 }
-
+ 
 .asset-versions summary:hover {
     color: var(--text);
+}
+
+/* ── Asset guidance (optional per-asset guidance) ── */
+.asset-guidance {
+    display: grid;
+    gap: 0.6rem;
+    margin-bottom: 0.4rem;
+}
+
+.asset-guidance summary {
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.35rem;
+    margin: -0.35rem;
+    transition: color var(--transition);
+    user-select: none;
+}
+
+.asset-guidance summary:hover {
+    color: #5dfdff;
+}
+
+.asset-guidance[open] summary {
+    color: #a5f3fc;
+    margin-bottom: 0.4rem;
+}
+
+.guidance-content {
+    display: grid;
+    gap: 0.7rem;
+    padding: 0.8rem;
+    border: 1px solid rgba(6, 182, 212, 0.22);
+    background: rgba(6, 182, 212, 0.06);
+    border-radius: var(--radius-sm);
+    animation: fadeInUp 0.25s ease both;
+}
+
+.guidance-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.guidance-chip {
+    background: rgba(6, 182, 212, 0.12);
+    color: #67e8f9;
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    font-size: 0.82rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+}
+
+.guidance-chip:hover {
+    background: rgba(6, 182, 212, 0.22);
+    border-color: rgba(6, 182, 212, 0.6);
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.15);
+    transform: translateY(-1px);
+}
+
+.guidance-chip:active {
+    transform: scale(0.96);
+}
+
+.guidance-textarea {
+    font-family: inherit;
+    font-size: 0.9rem;
+    width: 100%;
+    min-height: 70px;
+    padding: 0.7rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(6, 182, 212, 0.25);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    resize: vertical;
+}
+
+.guidance-textarea::placeholder {
+    color: rgba(148, 163, 184, 0.45);
+}
+
+.guidance-textarea:focus {
+    border-color: rgba(6, 182, 212, 0.6);
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
 }
 
 .version-timeline {

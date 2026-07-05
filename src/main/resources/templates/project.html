@@ -92,18 +92,6 @@
             <h2>1 · Plan</h2>
         </div>
 
-        <div class="workflow-guide">
-            <strong>Suggested flow</strong>
-            <ol>
-                <li>Write the stream brief and boundaries.</li>
-                <li>Collect topic options and guest angles.</li>
-                <li>Mark the strongest draft as final before moving on.</li>
-            </ol>
-        </div>
-
-        <label for="draft-pre-stream">Working brief</label>
-        <textarea id="draft-pre-stream" rows="8" data-draft-key="pre-stream" placeholder="Describe the stream goal, audience, format, constraints, and what a good episode should achieve."></textarea>
-        <div class="autosave-hint">Autosaved to the project and reused in this stage.</div>
 
         <div class="stage-flow">
             <!-- Topic ideas block -->
@@ -115,6 +103,19 @@
                     </div>
                     <div class="asset-status-chip">empty</div>
                 </div>
+                <details class="asset-guidance" data-category="TOPIC_IDEA">
+                    <summary>＋ Add guidance</summary>
+                    <div class="guidance-content">
+                        <div class="guidance-chips">
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'More technical')">More technical</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Punchier')">Punchier</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Include keyword…')">Include keyword…</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Shorter')">Shorter</button>
+                        </div>
+                        <textarea class="guidance-textarea" placeholder="e.g. lean more technical, include Spring Boot, avoid clickbait" rows="3"></textarea>
+                        <div class="autosave-hint">Autosaved to project</div>
+                    </div>
+                </details>
                 <div id="asset-current-TOPIC_IDEA" class="asset-current"></div>
                 <div class="asset-actions">
                     <button type="button" class="primary-button" onclick="runStageBriefAction('pre-stream', 'topic-ideas', this)">Generate topic ideas</button>
@@ -145,6 +146,19 @@
                     </div>
                     <div class="asset-status-chip">empty</div>
                 </div>
+                <details class="asset-guidance" data-category="GUEST_IDEA">
+                    <summary>＋ Add guidance</summary>
+                    <div class="guidance-content">
+                        <div class="guidance-chips">
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Similar background')">Similar background</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Different perspective')">Different perspective</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Industry expert')">Industry expert</button>
+                            <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'First-time guest')">First-time guest</button>
+                        </div>
+                        <textarea class="guidance-textarea" placeholder="e.g. similar background, different perspective, industry expert" rows="3"></textarea>
+                        <div class="autosave-hint">Autosaved to project</div>
+                    </div>
+                </details>
                 <div id="asset-current-GUEST_IDEA" class="asset-current"></div>
                 <div class="asset-actions">
                     <button type="button" class="primary-button" onclick="runStageBriefAction('pre-stream', 'guest-ideas', this)">Find guest ideas</button>

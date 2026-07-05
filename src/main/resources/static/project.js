@@ -75,6 +75,17 @@ const categoryToArea = {
   SUMMARY: "post-stream"
 };
 
+const guidanceConfig = {
+  TOPIC_IDEA: {
+    placeholder: "e.g. lean more technical, include Spring Boot, avoid clickbait",
+    chips: ["More technical", "Punchier", "Include keyword…", "Shorter"]
+  },
+  GUEST_IDEA: {
+    placeholder: "e.g. similar background, different perspective, industry expert",
+    chips: ["Similar background", "Different perspective", "Industry expert", "First-time guest"]
+  }
+};
+
 const latestResultsByArea = {};
 let projectConfig = JSON.parse(JSON.stringify(initialProjectConfig || {}));
 let globalConfig = JSON.parse(JSON.stringify(initialGlobalConfig || {}));
@@ -282,15 +293,15 @@ function updateJourneyRail() {
 
 async function runStageBriefAction(areaKey, endpoint, button) {
   await withButtonLoading(button, async () => {
-    const input = getDraftValue(areaKey);
-    if (!input) {
-      showStatus("Please add a working brief first.", "warning");
-      return;
-    }
+    const block = button.closest('.asset-block');
+    const category = block?.dataset.category;
+    const guidanceTextarea = block?.querySelector('.asset-guidance .guidance-textarea');
+    const guidance = guidanceTextarea?.value?.trim() || "";
+    
     const data = await apiJson(`/api/projects/${projectId}/${endpoint}`, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({brief: input})
+      body: JSON.stringify({brief: guidance})
     });
     renderResult(data);
     await reloadAreaHistory(areaKey);
@@ -1459,6 +1470,35 @@ async function setProjectNotesMode(mode) {
   previewButton.classList.toggle("active", preview);
 }
 
+function loadGuidanceForCategory(category) {
+  if (!projectConfig.workspaceDrafts) {
+    return "";
+  }
+  return projectConfig.workspaceDrafts[`guidance:${category}`] || "";
+}
+
+function saveGuidanceForCategory(category, text) {
+  if (!projectConfig.workspaceDrafts) {
+    projectConfig.workspaceDrafts = {};
+  }
+  projectConfig.workspaceDrafts[`guidance:${category}`] = text;
+  scheduleProjectConfigSave();
+}
+
+function appendGuidanceChip(buttonElement, chipText) {
+  const textarea = buttonElement.closest('.guidance-content')?.querySelector('.guidance-textarea');
+  if (!textarea) return;
+  
+  const currentText = textarea.value.trim();
+  const newText = currentText 
+    ? currentText + ", " + chipText 
+    : chipText;
+  
+  textarea.value = newText;
+  textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  textarea.focus();
+}
+
 function bindAutosaveInputs() {
   document.querySelectorAll("[data-draft-key]").forEach((textarea) => {
     const draftKey = textarea.dataset.draftKey;
@@ -1543,6 +1583,17 @@ function bindAutosaveInputs() {
       applyAreaInstruction(projectConfig.directives.categoryInstructions, areaKey, textarea.value);
       scheduleProjectConfigSave();
     });
+  });
+
+  // Bind guidance textareas for asset blocks
+  document.querySelectorAll('.asset-guidance .guidance-textarea').forEach((textarea) => {
+    const category = textarea.closest('.asset-guidance')?.dataset.category;
+    if (category) {
+      textarea.value = loadGuidanceForCategory(category);
+      textarea.addEventListener("input", () => {
+        saveGuidanceForCategory(category, textarea.value);
+      });
+    }
   });
 }
 

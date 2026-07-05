@@ -573,6 +573,86 @@ function renderAssetBlockResult(data) {
   });
 }
 
+function buildVersionTree(artifacts) {
+  if (!Array.isArray(artifacts) || artifacts.length === 0) {
+    return [];
+  }
+
+  const byId = new Map();
+  const roots = [];
+  const machineVersions = new Set(["-normalized", "-edited", "-refined"]);
+
+  artifacts.forEach((artifact) => {
+    byId.set(artifact.id, { ...artifact, children: [] });
+  });
+
+  artifacts.forEach((artifact) => {
+    const isMachineVersion = machineVersions.some((suffix) => artifact.id?.endsWith(suffix));
+    if (isMachineVersion && artifact.parentArtifactId) {
+      const parent = byId.get(artifact.parentArtifactId);
+      if (parent) {
+        parent.children.push(byId.get(artifact.id));
+      }
+    } else if (!artifact.parentArtifactId || !byId.has(artifact.parentArtifactId)) {
+      roots.push(byId.get(artifact.id));
+    }
+  });
+
+  roots.sort((a, b) => Date.parse(b.createdAt || "") - Date.parse(a.createdAt || ""));
+  roots.forEach((root) => {
+    root.children.sort((a, b) => Date.parse(a.createdAt || "") - Date.parse(b.createdAt || ""));
+  });
+
+  return roots;
+}
+
+function renderVersionRow(artifact, isNested, level, category) {
+  const row = document.createElement("div");
+  const isMachineVersion = artifact.id?.endsWith("-normalized") || artifact.id?.endsWith("-edited") || artifact.id?.endsWith("-refined");
+  
+  let badgeText = artifact.strategy || "version";
+  if (isMachineVersion) {
+    const suffix = artifact.id?.split("-").pop();
+    badgeText = suffix === "normalized" ? "auto-trimmed" : suffix;
+  }
+  
+  row.className = isNested ? "version-row version-row-nested" : "version-row";
+  if (isNested) {
+    row.style.marginLeft = `${level * 1.2}em`;
+  }
+  
+  row.innerHTML = `
+    <div class="version-chip">v${artifact.id?.slice(-3) || "?"}</div>
+    <div class="version-badge">${escapeHtml(badgeText)}</div>
+    <div class="version-preview">${escapeHtml(previewContent(artifact.content || "", category, 80))}</div>
+    <div class="inline-actions version-actions">
+      <button type="button" class="secondary-button version-copy-button">Copy</button>
+      <button type="button" class="secondary-button version-make-current-button" data-artifact-id="${artifact.id}" data-category="${category}">Make current</button>
+    </div>
+  `;
+  
+  const copyButton = row.querySelector(".version-copy-button");
+  copyButton?.addEventListener("click", () => {
+    copyToClipboard(artifact.content || "");
+  });
+  
+  const makeCurrent = row.querySelector(".version-make-current-button");
+  makeCurrent?.addEventListener("click", async () => {
+    await makeVersionCurrent(category, artifact.id);
+  });
+  
+  return row;
+}
+
+async function makeVersionCurrent(category, artifactId) {
+  try {
+    await finalizeArtifact(category, artifactId);
+    await reloadAreaHistory(categoryToArea[category]);
+  } catch (error) {
+    console.error("Error making version current:", error);
+  }
+}
+
 function renderAssetBlockVersions(category, artifacts) {
   const block = document.querySelector(`.asset-block[data-category="${category}"]`);
   if (!block) return;
@@ -591,27 +671,18 @@ function renderAssetBlockVersions(category, artifacts) {
     return;
   }
   
-  const threadTurnsById = buildRefinementTurnsByThread(artifacts);
+  const versionTree = buildVersionTree(artifacts);
   
-  artifacts.forEach((artifact) => {
-    const row = document.createElement("div");
-    row.className = "version-row";
-    const threadTurns = resolveRefinementTurnsForArtifact(threadTurnsById, artifact);
-    row.innerHTML = `
-      <div class="version-chip">v${artifact.id?.slice(-3) || "?"} · ${artifact.strategy || "version"}</div>
-      <div class="muted version-timestamp">${escapeHtml(formatTimestamp(artifact.createdAt))}</div>
-      <div class="version-preview">${escapeHtml(previewContent(artifact.content || "", category, 80))}</div>
-      <div class="inline-actions version-actions">
-        <button type="button" class="secondary-button version-copy-button">Copy</button>
-      </div>
-    `;
+  versionTree.forEach((root) => {
+    const rootRow = renderVersionRow(root, false, 0, category);
+    timelineContainer.appendChild(rootRow);
     
-    const copyButton = row.querySelector(".version-copy-button");
-    copyButton?.addEventListener("click", () => {
-      copyToClipboard(artifact.content || "");
-    });
-    
-    timelineContainer.appendChild(row);
+    if (root.children && root.children.length > 0) {
+      root.children.forEach((child) => {
+        const childRow = renderVersionRow(child, true, 1, category);
+        timelineContainer.appendChild(childRow);
+      });
+    }
   });
 }
 

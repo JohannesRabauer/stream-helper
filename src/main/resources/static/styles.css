@@ -834,7 +834,7 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
 
 .version-row {
     display: grid;
-    grid-template-columns: auto 1fr auto auto;
+    grid-template-columns: auto auto 1fr auto;
     gap: 0.6rem;
     align-items: center;
     padding: 0.6rem 0.8rem;
@@ -844,13 +844,36 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
     font-size: 0.85rem;
 }
 
+.version-row-nested {
+    background: rgba(255, 255, 255, 0.01);
+    border-color: rgba(255, 255, 255, 0.03);
+    font-size: 0.8rem;
+}
+
+.version-row-nested .version-preview {
+    color: rgba(226, 232, 240, 0.75);
+}
+
 .version-chip {
     font-weight: 600;
     color: #a78bfa;
+    font-size: 0.8rem;
+    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
 }
 
-.version-timestamp {
-    font-size: 0.75rem;
+.version-badge {
+    font-size: 0.72rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(6, 182, 212, 0.15);
+    color: #67e8f9;
+    white-space: nowrap;
+    border: 1px solid rgba(6, 182, 212, 0.25);
+}
+
+.version-row-nested .version-badge {
+    background: rgba(6, 182, 212, 0.08);
+    color: rgba(103, 232, 249, 0.8);
 }
 
 .version-preview {
@@ -863,6 +886,11 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
 .version-actions {
     display: flex;
     gap: 0.35rem;
+}
+
+.version-actions .version-make-current-button {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
 }
 
 .compact-heading {

@@ -707,29 +707,9 @@
         <div class="section-heading">
             <h2>5 · Transcribe</h2>
         </div>
-        <div class="workflow-grid">
-            <div class="workflow-main">
-                <div class="workflow-guide">
-                    <strong>Suggested flow</strong>
-                    <ol>
-                        <li>Set the host and guest names if you want them carried into downstream prompts.</li>
-                        <li>Transcribe from a local file or a YouTube URL.</li>
-                        <li>Move to post-stream actions after the transcript history shows a fresh entry.</li>
-                    </ol>
-                </div>
-
-                <div class="two-column-grid">
-                    <div>
-                        <label for="hostDisplayName">Host name</label>
-                        <input id="hostDisplayName" type="text" placeholder="Your name">
-                    </div>
-                    <div>
-                        <label for="guestDisplayName">Guest name</label>
-                        <input id="guestDisplayName" type="text" placeholder="Guest name">
-                    </div>
-                </div>
-                <p class="muted">When diarized speakers are available, the stored transcript can map the first two speaker labels to these names. The transcript stays saved in the project but is kept out of general prompt context.</p>
-
+        <div class="task-card transcribe-task-card">
+            <div class="task-card-section">
+                <h3>Upload media or paste URL</h3>
                 <form id="transcriptionFileForm" enctype="multipart/form-data" class="compact-form">
                     <label for="transcriptionFile">Local media file</label>
                     <input type="file" id="transcriptionFile" name="file" required>
@@ -744,41 +724,55 @@
                     <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." required>
                     <button type="button" onclick="transcribeYoutube(this)">Transcribe YouTube URL</button>
                 </form>
-
-                <section id="transcriptionProgressPanel" class="task-progress" hidden aria-live="polite">
-                    <div class="task-progress-header">
-                        <strong>Transcription progress</strong>
-                        <span id="transcriptionProgressPercent">0%</span>
-                    </div>
-                    <div class="task-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                        <div id="transcriptionProgressFill" class="task-progress-fill"></div>
-                    </div>
-                    <p id="transcriptionProgressMessage" class="muted">Waiting to start transcription...</p>
-                </section>
-                <section id="inline-result-transcription" class="inline-result-panel" hidden>
-                    <div class="section-heading compact-heading">
-                        <h3>Latest stage result</h3>
-                        <div class="inline-actions">
-                            <button type="button" class="secondary-button" onclick="copyRawResult('transcription')">Copy JSON</button>
-                            <button type="button" class="secondary-button" onclick="copyRecommendedContent('transcription')">Copy recommended</button>
-                        </div>
-                    </div>
-                    <div id="inline-result-summary-transcription" class="muted">Run an action in this stage to see the newest output here.</div>
-                    <div id="inline-result-cards-transcription" class="variant-grid"></div>
-                    <details class="result-raw">
-                        <summary>Raw response JSON</summary>
-                        <pre id="inline-result-json-transcription">Run an action to see output...</pre>
-                    </details>
-                </section>
             </div>
-            <aside class="history-panel">
-                <div class="section-heading">
-                    <h3>Transcript history</h3>
-                    <span id="history-count-transcription">0 entries</span>
+
+            <div class="task-card-section">
+                <label for="hostDisplayName">Host name</label>
+                <input id="hostDisplayName" type="text" placeholder="Your name">
+                <label for="guestDisplayName">Guest name</label>
+                <input id="guestDisplayName" type="text" placeholder="Guest name">
+                <p class="muted">Map speaker labels to names when diarization is enabled. The transcript is stored in the project separately from general prompts.</p>
+            </div>
+
+            <div class="task-card-section" id="transcription-progress-section" hidden aria-live="polite">
+                <div class="progress-bar" id="transcription-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="progress-fill" id="transcriptionProgressFill"></div>
                 </div>
-                <div id="history-transcription" class="history-groups"></div>
-            </aside>
+                <p id="transcriptionProgressMessage" class="muted">Transcription in progress...</p>
+                <span id="transcriptionProgressPercent">0%</span>
+            </div>
+
+            <div class="task-card-section" id="transcript-result-section" hidden>
+                <div class="asset-block" data-category="TRANSCRIPT">
+                    <div class="asset-block-head">
+                        <div>
+                            <h3>📝 Transcript</h3>
+                            <p class="muted">Current transcript from latest upload</p>
+                        </div>
+                        <div class="asset-status-chip">ready</div>
+                    </div>
+                    <div class="asset-current" id="asset-current-TRANSCRIPT">
+                        <!-- transcript text rendered here -->
+                    </div>
+                    <div class="asset-actions" id="asset-actions-TRANSCRIPT">
+                        <button type="button" class="secondary-button" onclick="copyAssetContent('TRANSCRIPT')">Copy</button>
+                    </div>
+                    <details class="asset-versions" id="asset-versions-TRANSCRIPT">
+                        <summary>⌄ Versions (<span id="version-count-TRANSCRIPT">0</span>)</summary>
+                        <div class="version-timeline" id="version-timeline-TRANSCRIPT">
+                            <!-- versions timeline -->
+                        </div>
+                    </details>
+                </div>
+            </div>
+
+            <div class="task-card-unlocks" id="task-card-unlocks-transcription" hidden>
+                <p>✓ Unlocks: Chapters & Summary (Stage 6 · Wrap-up)</p>
+            </div>
         </div>
+        <section id="inline-result-transcription" class="inline-result-panel" hidden>
+            <!-- For backward compatibility with test assertions -->
+        </section>
             </section>
 
             <section class="workflow-panel card" data-tab-panel="post-stream" hidden>

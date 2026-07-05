@@ -734,6 +734,116 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
     color: var(--text);
 }
 
+/* ── Task card layout (special case: Transcription) ── */
+.task-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.16);
+    padding: 1.2rem;
+    display: grid;
+    gap: 1.2rem;
+}
+
+.task-card-section {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.task-card-section h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.task-card-section label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-top: 0.5rem;
+}
+
+.task-card-section input[type="text"],
+.task-card-section input[type="url"],
+.task-card-section input[type="file"] {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: border-color var(--transition);
+}
+
+.task-card-section input[type="text"]:focus,
+.task-card-section input[type="url"]:focus,
+.task-card-section input[type="file"]:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.task-card-section .muted {
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+}
+
+.task-card-section form {
+    display: grid;
+    gap: 0.6rem;
+}
+
+.task-card-section form button {
+    padding: 0.7rem 1rem;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.task-card-section form button:hover {
+    background: var(--primary-end);
+    transform: translateY(-1px);
+    box-shadow: var(--glow);
+}
+
+/* Progress bar styling */
+.progress-bar {
+    height: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--primary));
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 999px;
+}
+
+/* Unlocks message */
+.task-card-unlocks {
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius-sm);
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: var(--success);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.task-card-unlocks p {
+    margin: 0;
+}
+
 /* ── Pipeline steps (sequential flow visualization) ── */
 .pipeline-step {
     position: relative;

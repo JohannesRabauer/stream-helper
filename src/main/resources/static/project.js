@@ -472,6 +472,7 @@ async function runTranscriptionAction(initialMessage, requestFn) {
   if (responseData) {
     renderResult(responseData);
     await reloadAreaHistory("transcription");
+    await renderTranscriptInTaskCard();
     showTranscriptionProgressState({
       active: false,
       failed: false,
@@ -1405,24 +1406,114 @@ async function refreshTranscriptionProgressSnapshot() {
 }
 
 function showTranscriptionProgressState(snapshot) {
-  const panel = document.getElementById("transcriptionProgressPanel");
+  const progressSection = document.getElementById("transcription-progress-section");
   const percentNode = document.getElementById("transcriptionProgressPercent");
   const fill = document.getElementById("transcriptionProgressFill");
   const messageNode = document.getElementById("transcriptionProgressMessage");
-  const track = panel?.querySelector(".task-progress-track");
-  if (!panel || !percentNode || !fill || !messageNode || !track) {
+  const progressBar = document.getElementById("transcription-progress");
+  
+  if (!progressSection || !percentNode || !fill || !messageNode || !progressBar) {
     return;
   }
+  
   const percent = clampPercent(snapshot?.percent ?? 0);
   const message = snapshot?.message || "Transcription in progress...";
-  panel.hidden = false;
-  panel.classList.toggle("running", Boolean(snapshot?.active));
-  panel.classList.toggle("complete", !snapshot?.active && !snapshot?.failed && percent >= 100);
-  panel.classList.toggle("error", Boolean(snapshot?.failed));
+  
+  if (snapshot?.active) {
+    progressSection.hidden = false;
+  } else if (!snapshot?.active && !snapshot?.failed && percent >= 100) {
+    // Completed successfully - show result section
+    progressSection.hidden = true;
+    document.getElementById("transcript-result-section").hidden = false;
+    document.getElementById("task-card-unlocks-transcription").hidden = false;
+  } else if (snapshot?.failed) {
+    // Failed
+    progressSection.hidden = true;
+  } else {
+    progressSection.hidden = true;
+  }
+  
   percentNode.textContent = `${percent}%`;
   fill.style.width = `${percent}%`;
   messageNode.textContent = message;
-  track.setAttribute("aria-valuenow", String(percent));
+  progressBar.setAttribute("aria-valuenow", String(percent));
+}
+
+async function renderTranscriptInTaskCard() {
+  try {
+    const artifacts = await apiJsonQuiet(`/api/projects/${projectId}/artifacts/TRANSCRIPT`, {method: "GET"});
+    if (!Array.isArray(artifacts) || artifacts.length === 0) {
+      return;
+    }
+    
+    const latest = artifacts[0];
+    const currentContainer = document.getElementById("asset-current-TRANSCRIPT");
+    const versionCount = document.getElementById("version-count-TRANSCRIPT");
+    const versionTimeline = document.getElementById("version-timeline-TRANSCRIPT");
+    
+    if (!currentContainer) {
+      return;
+    }
+    
+    // Render current transcript
+    const previewText = previewContent(latest.content, "TRANSCRIPT", 700);
+    currentContainer.innerHTML = `<pre>${escapeHtml(previewText)}</pre>`;
+    
+    // Render versions
+    if (versionCount && versionTimeline) {
+      versionCount.textContent = String(artifacts.length);
+      versionTimeline.innerHTML = "";
+      
+      artifacts.forEach((artifact, index) => {
+        const entry = document.createElement("div");
+        entry.className = "version-entry";
+        const timestamp = formatTimestamp(artifact.createdAt);
+        entry.innerHTML = `
+          <div class="version-entry-time">${escapeHtml(timestamp)}</div>
+          <button type="button" class="version-entry-button" onclick="viewTranscriptVersion('${artifact.id}')">View</button>
+        `;
+        versionTimeline.appendChild(entry);
+      });
+    }
+    
+    // Show result section if there's content
+    if (latest.content) {
+      document.getElementById("transcript-result-section").hidden = false;
+      document.getElementById("task-card-unlocks-transcription").hidden = false;
+    }
+  } catch (error) {
+    console.error("Failed to load transcript asset:", error);
+  }
+}
+
+function viewTranscriptVersion(artifactId) {
+  // For now, just copy it - in future could show modal
+  apiJson(`/api/projects/${projectId}/artifacts/TRANSCRIPT/${artifactId}`, {method: "GET"})
+    .then(artifact => {
+      const currentContainer = document.getElementById("asset-current-TRANSCRIPT");
+      if (currentContainer) {
+        const previewText = previewContent(artifact.content, "TRANSCRIPT", 700);
+        currentContainer.innerHTML = `<pre>${escapeHtml(previewText)}</pre>`;
+        showStatus("Viewing version from " + formatTimestamp(artifact.createdAt), "info");
+      }
+    })
+    .catch(error => showStatus("Failed to load version", "error"));
+}
+
+function copyAssetContent(category) {
+  const container = document.getElementById(`asset-current-${category}`);
+  if (!container) {
+    showStatus(`No content to copy for ${category}`, "warning");
+    return;
+  }
+  const text = container.textContent || container.innerText;
+  if (!text) {
+    showStatus(`No content to copy for ${category}`, "warning");
+    return;
+  }
+  navigator.clipboard.writeText(text)
+    .then(() => showStatus(`Copied ${formatCategoryLabel(category)} to clipboard`, "success"))
+    .catch(() => showStatus("Failed to copy to clipboard", "error"));
 }
 
 function readCurrentTranscriptionPercent() {
@@ -1934,5 +2025,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   await Promise.all(Object.keys(workflowAreas).map((areaKey) => reloadAreaHistory(areaKey)));
   updateJourneyRail();
   await initializeTranscriptionProgress();
+  await renderTranscriptInTaskCard();
   initializeImageProviderCheck();
 });

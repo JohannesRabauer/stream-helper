@@ -91,49 +91,94 @@
         <div class="section-heading">
             <h2>1 · Plan</h2>
         </div>
-        <div class="workflow-grid">
-            <div class="workflow-main">
-                <div class="workflow-guide">
-                    <strong>Suggested flow</strong>
-                    <ol>
-                        <li>Write the stream brief and boundaries.</li>
-                        <li>Collect topic options and guest angles.</li>
-                        <li>Mark the strongest draft as final before moving on.</li>
-                    </ol>
-                </div>
 
-                <label for="draft-pre-stream">Working brief</label>
-                <textarea id="draft-pre-stream" rows="8" data-draft-key="pre-stream" placeholder="Describe the stream goal, audience, format, constraints, and what a good episode should achieve."></textarea>
-                <div class="autosave-hint">Autosaved to the project and reused in this stage.</div>
+        <div class="workflow-guide">
+            <strong>Suggested flow</strong>
+            <ol>
+                <li>Write the stream brief and boundaries.</li>
+                <li>Collect topic options and guest angles.</li>
+                <li>Mark the strongest draft as final before moving on.</li>
+            </ol>
+        </div>
 
-                <div class="button-grid">
-                    <button type="button" onclick="runStageBriefAction('pre-stream', 'topic-ideas', this)">Generate topic ideas</button>
-                    <button type="button" onclick="runStageBriefAction('pre-stream', 'guest-ideas', this)">Find guest ideas</button>
-                </div>
-                <section id="inline-result-pre-stream" class="inline-result-panel" hidden>
-                    <div class="section-heading compact-heading">
-                        <h3>Latest stage result</h3>
-                        <div class="inline-actions">
-                            <button type="button" class="secondary-button" onclick="copyRawResult('pre-stream')">Copy JSON</button>
-                            <button type="button" class="secondary-button" onclick="copyRecommendedContent('pre-stream')">Copy recommended</button>
-                        </div>
+        <label for="draft-pre-stream">Working brief</label>
+        <textarea id="draft-pre-stream" rows="8" data-draft-key="pre-stream" placeholder="Describe the stream goal, audience, format, constraints, and what a good episode should achieve."></textarea>
+        <div class="autosave-hint">Autosaved to the project and reused in this stage.</div>
+
+        <div class="stage-flow">
+            <!-- Topic ideas block -->
+            <article class="asset-block" data-category="TOPIC_IDEA" data-state="empty">
+                <div class="asset-block-head">
+                    <div>
+                        <h3>Topic ideas</h3>
+                        <p class="muted">Generate 5-7 compelling stream topics from your brief.</p>
                     </div>
-                    <div id="inline-result-summary-pre-stream" class="muted">Run an action in this stage to see the newest output here.</div>
-                    <div id="inline-result-cards-pre-stream" class="variant-grid"></div>
+                    <div class="asset-status-chip">empty</div>
+                </div>
+                <div class="asset-actions">
+                    <button type="button" class="primary-button" onclick="runStageBriefAction('pre-stream', 'topic-ideas', this)">Generate topic ideas</button>
+                </div>
+                <section id="inline-result-TOPIC_IDEA" class="inline-result-panel" hidden>
+                    <div id="inline-result-cards-TOPIC_IDEA" class="variant-grid"></div>
                     <details class="result-raw">
                         <summary>Raw response JSON</summary>
-                        <pre id="inline-result-json-pre-stream">Run an action to see output...</pre>
+                        <pre id="inline-result-json-TOPIC_IDEA">Run an action to see output...</pre>
                     </details>
                 </section>
-            </div>
-            <aside class="history-panel">
-                <div class="section-heading">
-                    <h3>Stage history</h3>
-                    <span id="history-count-pre-stream">0 entries</span>
+                <details class="asset-versions">
+                    <summary id="versions-summary-TOPIC_IDEA">Versions (0)</summary>
+                    <div id="asset-versions-TOPIC_IDEA" class="version-timeline"></div>
+                </details>
+            </article>
+
+            <!-- Guest ideas block -->
+            <article class="asset-block" data-category="GUEST_IDEA" data-state="empty">
+                <div class="asset-block-head">
+                    <div>
+                        <h3>Guest ideas</h3>
+                        <p class="muted">Generate guest suggestions or co-hosting options.</p>
+                    </div>
+                    <div class="asset-status-chip">empty</div>
                 </div>
-                <div id="history-pre-stream" class="history-groups"></div>
-            </aside>
+                <div class="asset-actions">
+                    <button type="button" class="primary-button" onclick="runStageBriefAction('pre-stream', 'guest-ideas', this)">Find guest ideas</button>
+                </div>
+                <section id="inline-result-GUEST_IDEA" class="inline-result-panel" hidden>
+                    <div id="inline-result-cards-GUEST_IDEA" class="variant-grid"></div>
+                    <details class="result-raw">
+                        <summary>Raw response JSON</summary>
+                        <pre id="inline-result-json-GUEST_IDEA">Run an action to see output...</pre>
+                    </details>
+                </section>
+                <details class="asset-versions">
+                    <summary id="versions-summary-GUEST_IDEA">Versions (0)</summary>
+                    <div id="asset-versions-GUEST_IDEA" class="version-timeline"></div>
+                </details>
+            </article>
         </div>
+
+        <section id="inline-result-pre-stream" class="inline-result-panel" hidden>
+            <div class="section-heading compact-heading">
+                <h3>Latest stage result</h3>
+                <div class="inline-actions">
+                    <button type="button" class="secondary-button" onclick="copyRawResult('pre-stream')">Copy JSON</button>
+                    <button type="button" class="secondary-button" onclick="copyRecommendedContent('pre-stream')">Copy recommended</button>
+                </div>
+            </div>
+            <div id="inline-result-summary-pre-stream" class="muted">Run an action in this stage to see the newest output here.</div>
+            <div id="inline-result-cards-pre-stream" class="variant-grid"></div>
+            <details class="result-raw">
+                <summary>Raw response JSON</summary>
+                <pre id="inline-result-json-pre-stream">Run an action to see output...</pre>
+            </details>
+        </section>
+        <aside class="history-panel" hidden>
+            <div class="section-heading">
+                <h3>Stage history</h3>
+                <span id="history-count-pre-stream">0 entries</span>
+            </div>
+            <div id="history-pre-stream" class="history-groups"></div>
+        </aside>
             </section>
 
             <section class="workflow-panel card" data-tab-panel="description" hidden>

@@ -462,10 +462,133 @@ function renderResult(data) {
   const areaKey = categoryToArea[data.category];
   if (areaKey) {
     latestResultsByArea[areaKey] = data;
-    renderInlineResult(areaKey, data);
+    
+    if (areaKey === "pre-stream") {
+      renderAssetBlockResult(data);
+    } else {
+      renderInlineResult(areaKey, data);
+    }
     reloadAreaHistory(areaKey).catch(console.error);
   }
   showStatus("Saved a new version.", "success");
+}
+
+function renderAssetBlockResult(data) {
+  const category = data.category;
+  const block = document.querySelector(`.asset-block[data-category="${category}"]`);
+  if (!block) return;
+  
+  const panel = block.querySelector(`#inline-result-${category}`);
+  const cards = block.querySelector(`#inline-result-cards-${category}`);
+  const rawBox = block.querySelector(`#inline-result-json-${category}`);
+  
+  if (!panel || !cards || !rawBox) return;
+  
+  panel.hidden = false;
+  rawBox.textContent = JSON.stringify(data, null, 2);
+  cards.innerHTML = "";
+  
+  if (!data.variants || !Array.isArray(data.variants)) {
+    return;
+  }
+  
+  const threadTurnsById = buildRefinementTurnsByThread(data.variants);
+  
+  data.variants.forEach((variant, index) => {
+    const card = document.createElement("article");
+    card.className = "variant-card";
+    card.style.animationDelay = `${index * 0.07}s`;
+    const editable = isEditableArtifactCategory(data.category);
+    const threadTurns = resolveRefinementTurnsForArtifact(threadTurnsById, variant);
+    card.innerHTML = `
+      <div class="variant-card-header">
+        <div>
+          <h4>${escapeHtml(variant.strategy || "variant")}</h4>
+          <div class="muted artifact-timestamp">Saved ${escapeHtml(formatTimestamp(variant.createdAt))}</div>
+        </div>
+        <div class="inline-actions artifact-badges">
+          ${renderArtifactBadges(variant)}
+        </div>
+      </div>
+      ${editable
+        ? `<textarea class="artifact-editor" rows="10" aria-label="Editable ${escapeHtml(formatCategoryLabel(data.category))} text"></textarea>
+           <div class="artifact-save-state muted">Autosaves as a new version when you pause typing.</div>`
+        : `<pre>${escapeHtml(previewContent(variant.content || "", data.category, 2400))}</pre>`}
+      <div class="inline-actions artifact-actions">
+        <button type="button" class="secondary-button artifact-copy-button">Copy content</button>
+        <button type="button" class="secondary-button artifact-final-button">Mark final</button>
+      </div>
+      ${renderRefinePanel(data.category, threadTurns)}
+    `;
+    const copyButton = card.querySelector(".artifact-copy-button");
+    const finalButton = card.querySelector(".artifact-final-button");
+    const textarea = card.querySelector(".artifact-editor");
+    if (textarea) {
+      setupArtifactEditor({
+        textarea,
+        artifact: variant,
+        category: data.category,
+        areaKey: categoryToArea[data.category],
+        timestampNode: card.querySelector(".artifact-timestamp"),
+        badgesNode: card.querySelector(".artifact-badges"),
+        saveStateNode: card.querySelector(".artifact-save-state"),
+        source: "result"
+      });
+    }
+    copyButton?.addEventListener("click", () => copyToClipboard(textarea ? textarea.value : (variant.content || "")));
+    finalButton?.addEventListener("click", async () => {
+      await finalizeArtifact(data.category, variant.id);
+    });
+    bindRefinementControls({
+      container: card,
+      artifact: variant,
+      category: data.category,
+      areaKey: categoryToArea[data.category]
+    });
+    cards.appendChild(card);
+  });
+}
+
+function renderAssetBlockVersions(category, artifacts) {
+  const block = document.querySelector(`.asset-block[data-category="${category}"]`);
+  if (!block) return;
+  
+  const summaryNode = block.querySelector(`#versions-summary-${category}`);
+  const timelineContainer = block.querySelector(`#asset-versions-${category}`);
+  
+  if (!summaryNode || !timelineContainer) return;
+  
+  const count = Array.isArray(artifacts) ? artifacts.length : 0;
+  summaryNode.textContent = `Versions (${count})`;
+  timelineContainer.innerHTML = "";
+  
+  if (count === 0) {
+    timelineContainer.innerHTML = `<p class="muted">No versions yet.</p>`;
+    return;
+  }
+  
+  const threadTurnsById = buildRefinementTurnsByThread(artifacts);
+  
+  artifacts.forEach((artifact) => {
+    const row = document.createElement("div");
+    row.className = "version-row";
+    const threadTurns = resolveRefinementTurnsForArtifact(threadTurnsById, artifact);
+    row.innerHTML = `
+      <div class="version-chip">v${artifact.id?.slice(-3) || "?"} · ${artifact.strategy || "version"}</div>
+      <div class="muted version-timestamp">${escapeHtml(formatTimestamp(artifact.createdAt))}</div>
+      <div class="version-preview">${escapeHtml(previewContent(artifact.content || "", category, 80))}</div>
+      <div class="inline-actions version-actions">
+        <button type="button" class="secondary-button version-copy-button">Copy</button>
+      </div>
+    `;
+    
+    const copyButton = row.querySelector(".version-copy-button");
+    copyButton?.addEventListener("click", () => {
+      copyToClipboard(artifact.content || "");
+    });
+    
+    timelineContainer.appendChild(row);
+  });
 }
 
 function renderInlineResult(areaKey, data) {
@@ -583,6 +706,14 @@ function updateAreaCompletionState(areaKey, categoryResults) {
 }
 
 function renderAreaHistory(areaKey, categoryResults) {
+  if (areaKey === "pre-stream") {
+    categoryResults.forEach(({category, artifacts}) => {
+      renderAssetBlockVersions(category, artifacts || []);
+    });
+    updateAreaCompletionState(areaKey, categoryResults);
+    return;
+  }
+  
   const area = workflowAreas[areaKey];
   const container = document.getElementById(area.historyContainerId);
   const countNode = document.getElementById(area.historyCountId);

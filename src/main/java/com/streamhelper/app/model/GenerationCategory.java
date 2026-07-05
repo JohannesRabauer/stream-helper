@@ -13,5 +13,6 @@ public enum GenerationCategory {
     CHAPTERS,
     SUMMARY,
     THUMBNAIL_PROMPT,
-    THUMBNAIL_ASSET
+    THUMBNAIL_ASSET,
+    THUMBNAIL_IDEA
 }

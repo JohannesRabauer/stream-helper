@@ -5,6 +5,7 @@ import com.streamhelper.app.ai.AiClientException;
 import com.streamhelper.app.model.ArtifactVersion;
 import com.streamhelper.app.model.GenerationCategory;
 import com.streamhelper.app.model.ProjectConfig;
+import com.streamhelper.app.model.ProjectMetadata;
 import com.streamhelper.app.model.TranscriptEntry;
 import com.streamhelper.app.model.ValidationIssue;
 import com.streamhelper.app.model.VariantResult;
@@ -297,6 +298,89 @@ public class AssistantService {
                 composition, foreground subject, background style, text overlay guidance, color cues.
                 Keep title words concise and high impact.
                 """);
+    }
+
+    public VariantResult generateThumbnailIdeas(String projectId, String brief) {
+        ProjectConfig config = storageService.readProjectConfig(projectId);
+        ProjectMetadata metadata = storageService.getProject(projectId);
+
+        String hostName = trimToNull(config.getHostDisplayName());
+        String guestName = trimToNull(config.getGuestDisplayName());
+        boolean hasGuest = guestName != null;
+
+        String hostLabel = hostName != null ? hostName : "the host";
+        String guestLabel = hasGuest ? guestName : "none";
+        String subjectRule = hasGuest
+                ? "the host (%s) and the guest (%s) must both be clearly visible".formatted(hostLabel, guestName)
+                : "the host (%s) must be clearly visible".formatted(hostLabel);
+        String guestPlaceholderNote = hasGuest
+                ? "\n- Use the literal placeholder {GUEST_NAME} in any text overlay that names the guest (e.g. \"Java AI with {GUEST_NAME}\")."
+                : "";
+
+        String effective = instructionComposer.compose(projectId, GenerationCategory.THUMBNAIL_IDEA);
+        String userPrompt = """
+                Project title: %s
+                Host: %s
+                Guest: %s
+                Additional thumbnail brief: %s
+
+                Task:
+                Generate exactly 10 very different YouTube thumbnail concept ideas for this session.
+
+                Rules:
+                - Aspect ratio: 16:9 (1280×720 px) — optimised for YouTube.
+                - %s.
+                - Every idea MUST include a short, punchy text overlay that incorporates a simplified version of the project title.%s
+                - Each idea must be clearly distinct in: visual style, emotional tone, color palette, and composition.
+                - Vary across styles such as: bold graphic / minimalist / cinematic / meme-style / split-screen / reaction / dark dramatic / bright energetic / text-heavy / icon/emoji-driven.
+
+                Output format (strict — no extra lines between fields):
+                IDEA 01: <short memorable idea name>
+                Composition: <subjects' pose, framing, layout>
+                Background: <color, scene, or graphic style>
+                Color palette: <2–4 dominant colors>
+                Text overlay: <exact overlay text, using {GUEST_NAME} placeholder if guest is present>
+                Mood: <one adjective>
+
+                IDEA 02: …
+                (repeat for all 10 ideas)
+                """
+                .formatted(
+                        metadata.name(),
+                        hostLabel,
+                        guestLabel,
+                        brief == null || brief.isBlank() ? "none" : brief,
+                        subjectRule,
+                        guestPlaceholderNote);
+
+        String content = aiClient.generateText(effective, userPrompt).trim();
+        List<ArtifactVersion> artifacts = saveThumbnailIdeas(projectId, content);
+        return new VariantResult(GenerationCategory.THUMBNAIL_IDEA, effective, artifacts, List.of());
+    }
+
+    private List<ArtifactVersion> saveThumbnailIdeas(String projectId, String rawIdeas) {
+        String[] parts = rawIdeas.split("(?=IDEA \\d+:)");
+        List<ArtifactVersion> artifacts = new ArrayList<>();
+        int index = 0;
+        for (String part : parts) {
+            String trimmed = part.trim();
+            if (trimmed.isBlank()) {
+                continue;
+            }
+            artifacts.add(storageService.saveArtifact(
+                    projectId,
+                    GenerationCategory.THUMBNAIL_IDEA,
+                    "idea-%02d".formatted(index + 1),
+                    trimmed,
+                    index == 0,
+                    false));
+            index++;
+        }
+        if (artifacts.isEmpty()) {
+            artifacts.add(storageService.saveArtifact(
+                    projectId, GenerationCategory.THUMBNAIL_IDEA, "ideas", rawIdeas, true, false));
+        }
+        return artifacts;
     }
 
     public VariantResult createThumbnail(String projectId, String selectedPrompt, boolean builtIn) {

@@ -110,6 +110,11 @@ public class AssistantApiController {
         return assistantService.generateThumbnailPrompts(projectId, request.brief());
     }
 
+    @PostMapping("/thumbnail-ideas")
+    public Object thumbnailIdeas(@PathVariable String projectId, @Valid @RequestBody GenerationRequest request) {
+        return assistantService.generateThumbnailIdeas(projectId, request.brief());
+    }
+
     @PostMapping("/thumbnails/create")
     public Object createThumbnail(@PathVariable String projectId, @Valid @RequestBody ThumbnailCreateRequest request) {
         return assistantService.createThumbnail(projectId, request.prompt(), request.builtIn());

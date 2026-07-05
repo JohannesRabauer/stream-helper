@@ -178,6 +178,7 @@
 
                 <div class="button-grid">
                     <button type="button" onclick="runStageBriefAction('thumbnail', 'thumbnail-prompts', this)">Generate thumbnail prompts</button>
+                    <button type="button" onclick="runStageBriefAction('thumbnail', 'thumbnail-ideas', this)">Generate 10 thumbnail ideas</button>
                     <button type="button" onclick="createThumbnailFromStage('thumbnail', false, this)">Create external prompt package</button>
                     <button type="button" onclick="createThumbnailFromStage('thumbnail', true, this)">Generate thumbnail image</button>
                 </div>
@@ -403,6 +404,7 @@
                 <option>SUMMARY</option>
                 <option>THUMBNAIL_PROMPT</option>
                 <option>THUMBNAIL_ASSET</option>
+                <option>THUMBNAIL_IDEA</option>
             </select>
             <button type="button" onclick="loadEffectivePrompt(this)">Load debug preview</button>
         </div>

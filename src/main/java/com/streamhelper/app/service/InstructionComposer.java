@@ -146,7 +146,7 @@ public class InstructionComposer {
                     GenerationCategory.YOUTUBE_TITLES,
                     GenerationCategory.YOUTUBE_DESCRIPTION,
                     GenerationCategory.YOUTUBE_TAGS);
-            case THUMBNAIL_PROMPT, THUMBNAIL_ASSET -> EnumSet.of(
+            case THUMBNAIL_PROMPT, THUMBNAIL_ASSET, THUMBNAIL_IDEA -> EnumSet.of(
                     GenerationCategory.TOPIC_IDEA,
                     GenerationCategory.GUEST_IDEA,
                     GenerationCategory.YOUTUBE_TITLES,
@@ -211,6 +211,7 @@ public class InstructionComposer {
             case SUMMARY -> "Summary";
             case THUMBNAIL_PROMPT -> "Thumbnail prompts";
             case THUMBNAIL_ASSET -> "Thumbnail assets";
+            case THUMBNAIL_IDEA -> "Thumbnail ideas";
         };
     }
 }

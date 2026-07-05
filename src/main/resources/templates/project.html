@@ -181,28 +181,6 @@
             </article>
         </div>
 
-        <section id="inline-result-pre-stream" class="inline-result-panel" hidden>
-            <div class="section-heading compact-heading">
-                <h3>Latest stage result</h3>
-                <div class="inline-actions">
-                    <button type="button" class="secondary-button" onclick="copyRawResult('pre-stream')">Copy JSON</button>
-                    <button type="button" class="secondary-button" onclick="copyRecommendedContent('pre-stream')">Copy recommended</button>
-                </div>
-            </div>
-            <div id="inline-result-summary-pre-stream" class="muted">Run an action in this stage to see the newest output here.</div>
-            <div id="inline-result-cards-pre-stream" class="variant-grid"></div>
-            <details class="result-raw">
-                <summary>Raw response JSON</summary>
-                <pre id="inline-result-json-pre-stream">Run an action to see output...</pre>
-            </details>
-        </section>
-        <aside class="history-panel" hidden>
-            <div class="section-heading">
-                <h3>Stage history</h3>
-                <span id="history-count-pre-stream">0 entries</span>
-            </div>
-            <div id="history-pre-stream" class="history-groups"></div>
-        </aside>
             </section>
 
             <section class="workflow-panel card" data-tab-panel="description" hidden>
@@ -341,28 +319,6 @@
             </article>
         </div>
 
-        <section id="inline-result-description" class="inline-result-panel" hidden>
-            <div class="section-heading compact-heading">
-                <h3>Latest stage result</h3>
-                <div class="inline-actions">
-                    <button type="button" class="secondary-button" onclick="copyRawResult('description')">Copy JSON</button>
-                    <button type="button" class="secondary-button" onclick="copyRecommendedContent('description')">Copy recommended</button>
-                </div>
-            </div>
-            <div id="inline-result-summary-description" class="muted">Run an action in this stage to see the newest output here.</div>
-            <div id="inline-result-cards-description" class="variant-grid"></div>
-            <details class="result-raw">
-                <summary>Raw response JSON</summary>
-                <pre id="inline-result-json-description">Run an action to see output...</pre>
-            </details>
-        </section>
-        <aside class="history-panel" hidden>
-            <div class="section-heading">
-                <h3>Stage history</h3>
-                <span id="history-count-description">0 entries</span>
-            </div>
-            <div id="history-description" class="history-groups"></div>
-        </aside>
             </section>
 
             <section class="workflow-panel card" data-tab-panel="thumbnail" hidden>
@@ -370,38 +326,22 @@
             <h2>3 · Thumbnail</h2>
         </div>
 
-        <div class="workflow-main">
-            <div class="workflow-guide">
-                <strong>Suggested flow</strong>
-                <ol>
-                    <li>Use the final stream angle and description to shape the visual.</li>
-                    <li>Generate thumbnail ideas first, then turn the strongest one into prompts.</li>
-                    <li>Create either an external prompt package or the built-in image.</li>
-                </ol>
-            </div>
-
-            <label for="draft-thumbnail">Thumbnail brief</label>
-            <textarea id="draft-thumbnail" rows="8" data-draft-key="thumbnail" placeholder="Describe the thumbnail style, contrast, framing, emotions, and text-overlay preferences."></textarea>
-            <div class="autosave-hint">Autosaved and combined with the saved stream positioning for coherent thumbnails.</div>
-
-            <section id="inline-result-thumbnail" class="inline-result-panel" hidden>
-                <div class="section-heading compact-heading">
-                    <h3>Latest stage result</h3>
-                    <div class="inline-actions">
-                        <button type="button" class="secondary-button" onclick="copyRawResult('thumbnail')">Copy JSON</button>
-                        <button type="button" class="secondary-button" onclick="copyRecommendedContent('thumbnail')">Copy recommended</button>
-                    </div>
-                </div>
-                <div id="inline-result-summary-thumbnail" class="muted">Run an action in this stage to see the newest output here.</div>
-                <div id="inline-result-cards-thumbnail" class="variant-grid"></div>
-                <details class="result-raw">
-                    <summary>Raw response JSON</summary>
-                    <pre id="inline-result-json-thumbnail">Run an action to see output...</pre>
-                </details>
-            </section>
-        </div>
-
         <div class="stage-flow">
+            <article class="asset-block">
+                <div class="workflow-guide">
+                    <strong>Suggested flow</strong>
+                    <ol>
+                        <li>Use the final stream angle and description to shape the visual.</li>
+                        <li>Generate thumbnail ideas first, then turn the strongest one into prompts.</li>
+                        <li>Create either an external prompt package or the built-in image.</li>
+                    </ol>
+                </div>
+
+                <label for="draft-thumbnail">Thumbnail brief</label>
+                <textarea id="draft-thumbnail" rows="8" data-draft-key="thumbnail" placeholder="Describe the thumbnail style, contrast, framing, emotions, and text-overlay preferences."></textarea>
+                <div class="autosave-hint">Autosaved and combined with the saved stream positioning for coherent thumbnails.</div>
+            </article>
+
             <!-- Thumbnail Ideas step 1 -->
             <div class="pipeline-step" data-step="1">
                 <div class="pipeline-step-number">1</div>
@@ -679,28 +619,6 @@
             </article>
         </div>
 
-        <section id="inline-result-social-announcements" class="inline-result-panel" hidden>
-            <div class="section-heading compact-heading">
-                <h3>Latest stage result</h3>
-                <div class="inline-actions">
-                    <button type="button" class="secondary-button" onclick="copyRawResult('social-announcements')">Copy JSON</button>
-                    <button type="button" class="secondary-button" onclick="copyRecommendedContent('social-announcements')">Copy recommended</button>
-                </div>
-            </div>
-            <div id="inline-result-summary-social-announcements" class="muted">Run an action in this stage to see the newest output here.</div>
-            <div id="inline-result-cards-social-announcements" class="variant-grid"></div>
-            <details class="result-raw">
-                <summary>Raw response JSON</summary>
-                <pre id="inline-result-json-social-announcements">Run an action to see output...</pre>
-            </details>
-        </section>
-        <aside class="history-panel" hidden>
-            <div class="section-heading">
-                <h3>Stage history</h3>
-                <span id="history-count-social-announcements">0 entries</span>
-            </div>
-            <div id="history-social-announcements" class="history-groups"></div>
-        </aside>
             </section>
 
             <section class="workflow-panel card" data-tab-panel="transcription" hidden>
@@ -868,28 +786,6 @@
             </article>
         </div>
 
-        <section id="inline-result-post-stream" class="inline-result-panel" hidden>
-            <div class="section-heading compact-heading">
-                <h3>Latest stage result</h3>
-                <div class="inline-actions">
-                    <button type="button" class="secondary-button" onclick="copyRawResult('post-stream')">Copy JSON</button>
-                    <button type="button" class="secondary-button" onclick="copyRecommendedContent('post-stream')">Copy recommended</button>
-                </div>
-            </div>
-            <div id="inline-result-summary-post-stream" class="muted">Run an action in this stage to see the newest output here.</div>
-            <div id="inline-result-cards-post-stream" class="variant-grid"></div>
-            <details class="result-raw">
-                <summary>Raw response JSON</summary>
-                <pre id="inline-result-json-post-stream">Run an action to see output...</pre>
-            </details>
-        </section>
-        <aside class="history-panel" hidden>
-            <div class="section-heading">
-                <h3>Stage history</h3>
-                <span id="history-count-post-stream">0 entries</span>
-            </div>
-            <div id="history-post-stream" class="history-groups"></div>
-        </aside>
             </section>
 
             <details class="card debug-card">
@@ -985,7 +881,7 @@
             <button type="button" class="secondary-button" onclick="toggleLlmDefinitionsDrawer(false)">Hide</button>
         </div>
         <p class="muted">Put reusable rules here, like “Never use '-'”. Global rules apply everywhere, project rules apply in this project, and each stage definition applies to every action inside that specific stage.</p>
-        <div class="workflow-main">
+        <div class="settings-stack">
             <label for="globalInstructionInput">Global definitions</label>
             <textarea id="globalInstructionInput" rows="5" placeholder="Rules for all projects and all areas."></textarea>
             <div class="autosave-hint">Autosaved across every project.</div>

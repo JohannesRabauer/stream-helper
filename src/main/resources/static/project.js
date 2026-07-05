@@ -2,41 +2,29 @@ const workflowAreas = {
   "pre-stream": {
     draftKey: "pre-stream",
     draftInputId: "draft-pre-stream",
-    historyContainerId: "history-pre-stream",
-    historyCountId: "history-count-pre-stream",
     categories: ["TOPIC_IDEA", "GUEST_IDEA"]
   },
   description: {
     draftKey: "description",
     draftInputId: "draft-description",
-    historyContainerId: "history-description",
-    historyCountId: "history-count-description",
     categories: ["YOUTUBE_TITLES", "YOUTUBE_DESCRIPTION", "YOUTUBE_TAGS"]
   },
   thumbnail: {
     draftKey: "thumbnail",
     draftInputId: "draft-thumbnail",
-    historyContainerId: "history-thumbnail",
-    historyCountId: "history-count-thumbnail",
     categories: ["THUMBNAIL_IDEAS", "THUMBNAIL_PROMPTS", "THUMBNAILS"]
   },
   "social-announcements": {
     draftKey: "social-announcements",
     draftInputId: "draft-social-announcements",
-    historyContainerId: "history-social-announcements",
-    historyCountId: "history-count-social-announcements",
     categories: ["LINKEDIN_POST", "SOCIAL_POST", "HASHTAGS"]
   },
   transcription: {
-    historyContainerId: "history-transcription",
-    historyCountId: "history-count-transcription",
     categories: ["TRANSCRIPT"]
   },
   "post-stream": {
     draftKey: "post-stream",
     draftInputId: "draft-post-stream",
-    historyContainerId: "history-post-stream",
-    historyCountId: "history-count-post-stream",
     categories: ["CHAPTERS", "SUMMARY"]
   }
 };
@@ -130,7 +118,6 @@ const guidanceConfig = {
   }
 };
 
-const latestResultsByArea = {};
 let projectConfig = JSON.parse(JSON.stringify(initialProjectConfig || {}));
 let globalConfig = JSON.parse(JSON.stringify(initialGlobalConfig || {}));
 let projectNotes = {
@@ -598,12 +585,8 @@ async function apiJsonQuiet(url, options) {
 function renderResult(data) {
   const areaKey = categoryToArea[data.category];
   if (areaKey) {
-    latestResultsByArea[areaKey] = data;
-    
-    if (areaKey === "pre-stream") {
+    if (areaKey !== "transcription") {
       renderAssetBlockResult(data);
-    } else {
-      renderInlineResult(areaKey, data);
     }
     reloadAreaHistory(areaKey).catch(console.error);
   }
@@ -620,7 +603,7 @@ function renderAssetBlockResult(data) {
   const rawBox = block.querySelector(`#inline-result-json-${category}`);
   const currentPickContainer = block.querySelector(`#asset-current-${category}`);
   
-  if (!panel || !cards || !rawBox) return;
+  if (!panel || !cards || !rawBox || !currentPickContainer) return;
   
   panel.hidden = false;
   rawBox.textContent = JSON.stringify(data, null, 2);
@@ -812,95 +795,6 @@ function renderAssetBlockVersions(category, artifacts) {
   });
 }
 
-function renderInlineResult(areaKey, data) {
-  const panel = document.getElementById(`inline-result-${areaKey}`);
-  const summary = document.getElementById(`inline-result-summary-${areaKey}`);
-  const cards = document.getElementById(`inline-result-cards-${areaKey}`);
-  const rawBox = document.getElementById(`inline-result-json-${areaKey}`);
-  if (!panel || !summary || !cards || !rawBox) {
-    return;
-  }
-  panel.hidden = false;
-  rawBox.textContent = JSON.stringify(data, null, 2);
-  cards.innerHTML = "";
-
-  if (!data.variants || !Array.isArray(data.variants)) {
-    summary.textContent = "No variant payload returned.";
-    return;
-  }
-
-  summary.textContent = `${data.variants.length} saved version(s) for ${formatCategoryLabel(data.category || "result")}.`;
-
-  const threadTurnsById = buildRefinementTurnsByThread(data.variants);
-  if (Array.isArray(data.validationIssues) && data.validationIssues.length > 0) {
-    const issueWrap = document.createElement("div");
-    issueWrap.className = "validation-issues";
-    issueWrap.innerHTML = `<strong>Validation checks:</strong>`;
-    const list = document.createElement("ul");
-    data.validationIssues.forEach((issue) => {
-      const item = document.createElement("li");
-      item.textContent = `${issue.code}: ${issue.message}`;
-      list.appendChild(item);
-    });
-    issueWrap.appendChild(list);
-    cards.appendChild(issueWrap);
-  }
-
-  data.variants.forEach((variant, index) => {
-    const card = document.createElement("article");
-    card.className = "variant-card";
-    card.style.animationDelay = `${index * 0.07}s`;
-    const editable = isEditableArtifactCategory(data.category);
-    const threadTurns = resolveRefinementTurnsForArtifact(threadTurnsById, variant);
-    card.innerHTML = `
-      <div class="variant-card-header">
-        <div>
-          <h4>${escapeHtml(variant.strategy || "variant")}</h4>
-          <div class="muted artifact-timestamp">Saved ${escapeHtml(formatTimestamp(variant.createdAt))}</div>
-        </div>
-        <div class="inline-actions artifact-badges">
-          ${renderArtifactBadges(variant)}
-        </div>
-      </div>
-      ${editable
-        ? `<textarea class="artifact-editor" rows="10" aria-label="Editable ${escapeHtml(formatCategoryLabel(data.category))} text"></textarea>
-           <div class="artifact-save-state muted">Autosaves as a new version when you pause typing.</div>`
-        : `<pre>${escapeHtml(previewContent(variant.content || "", data.category, 2400))}</pre>`}
-      <div class="inline-actions artifact-actions">
-        <button type="button" class="secondary-button artifact-copy-button">Copy content</button>
-        <button type="button" class="secondary-button artifact-final-button">Mark final</button>
-      </div>
-      ${renderRefinePanel(data.category, threadTurns)}
-    `;
-    const copyButton = card.querySelector(".artifact-copy-button");
-    const finalButton = card.querySelector(".artifact-final-button");
-    const textarea = card.querySelector(".artifact-editor");
-    if (textarea) {
-      setupArtifactEditor({
-        textarea,
-        artifact: variant,
-        category: data.category,
-        areaKey: categoryToArea[data.category],
-        timestampNode: card.querySelector(".artifact-timestamp"),
-        badgesNode: card.querySelector(".artifact-badges"),
-        saveStateNode: card.querySelector(".artifact-save-state"),
-        source: "result"
-      });
-    }
-    copyButton?.addEventListener("click", () => copyToClipboard(textarea ? textarea.value : (variant.content || "")));
-    finalButton?.addEventListener("click", async () => {
-      await finalizeArtifact(data.category, variant.id);
-    });
-    bindRefinementControls({
-      container: card,
-      artifact: variant,
-      category: data.category,
-      areaKey
-    });
-    cards.appendChild(card);
-  });
-}
-
 async function reloadAreaHistory(areaKey) {
   const area = workflowAreas[areaKey];
   if (!area) {
@@ -927,140 +821,10 @@ function updateAreaCompletionState(areaKey, categoryResults) {
 }
 
 function renderAreaHistory(areaKey, categoryResults) {
-  if (areaKey === "pre-stream") {
-    categoryResults.forEach(({category, artifacts}) => {
-      renderAssetBlockVersions(category, artifacts || []);
-    });
-    updateAreaCompletionState(areaKey, categoryResults);
-    return;
-  }
-  
-  const area = workflowAreas[areaKey];
-  const container = document.getElementById(area.historyContainerId);
-  const countNode = document.getElementById(area.historyCountId);
-  container.innerHTML = "";
-
-  const totalEntries = categoryResults.reduce((sum, result) => sum + (Array.isArray(result.artifacts) ? result.artifacts.length : 0), 0);
-  countNode.textContent = `${totalEntries} entr${totalEntries === 1 ? "y" : "ies"}`;
-
-  if (totalEntries === 0) {
-    container.innerHTML = `<p class="muted">No saved history for this stage yet.</p>`;
-    return;
-  }
-
-  const latestEntryId = resolveLatestHistoryEntryId(categoryResults);
-
   categoryResults.forEach(({category, artifacts}) => {
-    const group = document.createElement("section");
-    group.className = "history-group";
-    const threadTurnsById = buildRefinementTurnsByThread(artifacts || []);
-
-    const header = document.createElement("div");
-    header.className = "section-heading history-group-heading";
-    header.innerHTML = `
-      <h3>${escapeHtml(formatCategoryLabel(category))}</h3>
-      <span>${Array.isArray(artifacts) ? artifacts.length : 0} version(s)</span>
-    `;
-    group.appendChild(header);
-
-    const list = document.createElement("div");
-    list.className = "artifact-list";
-
-    if (!Array.isArray(artifacts) || artifacts.length === 0) {
-      list.innerHTML = `<p class="muted">Nothing saved yet.</p>`;
-    } else {
-      artifacts.forEach((artifact, index) => {
-        const item = document.createElement("article");
-        item.className = "artifact-item";
-        item.style.animationDelay = `${index * 0.05}s`;
-        const editable = isEditableArtifactCategory(category);
-        const expanded = artifact.id === latestEntryId;
-        item.innerHTML = `
-          <details class="artifact-item-details" ${expanded ? "open" : ""}>
-            <summary class="artifact-item-summary">
-              <div>
-                <strong>${escapeHtml(artifact.strategy || "version")}</strong>
-                <div class="muted artifact-timestamp">Saved ${escapeHtml(formatTimestamp(artifact.createdAt))}</div>
-              </div>
-              <div class="inline-actions artifact-badges">
-                ${renderArtifactBadges(artifact)}
-              </div>
-            </summary>
-            <div class="artifact-item-body">
-              <div class="artifact-copy">
-                ${editable
-                  ? `<textarea class="artifact-editor artifact-editor-history" rows="7" aria-label="Editable ${escapeHtml(formatCategoryLabel(category))} history text"></textarea>
-                     <div class="artifact-save-state muted">Autosaves as a new version when you pause typing.</div>`
-                  : `<pre>${escapeHtml(previewContent(artifact.content || "", category, 1100))}</pre>`}
-              </div>
-              <div class="inline-actions artifact-actions">
-                <button type="button" class="secondary-button artifact-copy-button">Copy</button>
-                <button type="button" class="secondary-button artifact-final-button">Mark final</button>
-              </div>
-              ${renderRefinePanel(category, resolveRefinementTurnsForArtifact(threadTurnsById, artifact))}
-            </div>
-          </details>
-        `;
-        const copyButton = item.querySelector(".artifact-copy-button");
-        const finalButton = item.querySelector(".artifact-final-button");
-        const textarea = item.querySelector(".artifact-editor");
-        if (textarea) {
-         setupArtifactEditor({
-            textarea,
-            artifact,
-            category,
-            areaKey,
-            timestampNode: item.querySelector(".artifact-timestamp"),
-            badgesNode: item.querySelector(".artifact-badges"),
-            saveStateNode: item.querySelector(".artifact-save-state"),
-            source: "history"
-          });
-        }
-        copyButton.addEventListener("click", () => copyToClipboard(textarea ? textarea.value : (artifact.content || "")));
-        finalButton.addEventListener("click", async () => {
-          await finalizeArtifact(category, artifact.id);
-        });
-        bindRefinementControls({
-          container: item,
-          artifact,
-          category,
-          areaKey
-        });
-        list.appendChild(item);
-      });
-    }
-
-    group.appendChild(list);
-    container.appendChild(group);
+    renderAssetBlockVersions(category, artifacts || []);
   });
-}
-
-function resolveLatestHistoryEntryId(categoryResults) {
-  let latestId = null;
-  let latestTimestamp = Number.NEGATIVE_INFINITY;
-
-  categoryResults.forEach(({artifacts}) => {
-    if (!Array.isArray(artifacts)) {
-      return;
-    }
-    artifacts.forEach((artifact) => {
-      if (!artifact?.id) {
-        return;
-      }
-      const parsedTimestamp = Date.parse(artifact.createdAt || "");
-      if (latestId === null) {
-        latestId = artifact.id;
-        latestTimestamp = Number.isFinite(parsedTimestamp) ? parsedTimestamp : Number.NEGATIVE_INFINITY;
-        return;
-      }
-      if (Number.isFinite(parsedTimestamp) && parsedTimestamp > latestTimestamp) {
-        latestId = artifact.id;
-        latestTimestamp = parsedTimestamp;
-      }
-    });
-  });
-
-  return latestId;
+  updateAreaCompletionState(areaKey, categoryResults);
 }
 
 function setupArtifactEditor({textarea, artifact, category, areaKey, timestampNode, badgesNode, saveStateNode, source}) {
@@ -1131,8 +895,6 @@ async function saveArtifactEdit({textarea, artifact, category, areaKey, timestam
     }
     if (source === "result" && areaKey) {
       reloadAreaHistory(areaKey).catch(console.error);
-    } else if (source === "history") {
-      bumpHistoryCount(areaKey);
     }
   } catch (error) {
     if (saveStateNode) {
@@ -1261,42 +1023,6 @@ function bindRefinementControls({container, artifact, category, areaKey}) {
       }
     });
   });
-}
-
-function bumpHistoryCount(areaKey) {
-  if (!areaKey) {
-    return;
-  }
-  const node = document.getElementById(workflowAreas[areaKey]?.historyCountId || "");
-  if (!node) {
-    return;
-  }
-  const match = node.textContent.match(/^(\d+)/);
-  const current = match ? Number.parseInt(match[1], 10) : 0;
-  node.textContent = `${current + 1} entr${current + 1 === 1 ? "y" : "ies"}`;
-}
-
-function copyRawResult(areaKey) {
-  const result = latestResultsByArea[areaKey];
-  if (!result) {
-    showStatus("No result available yet.", "warning");
-    return;
-  }
-  copyToClipboard(JSON.stringify(result, null, 2));
-}
-
-function copyRecommendedContent(areaKey) {
-  const result = latestResultsByArea[areaKey];
-  if (!result || !Array.isArray(result.variants)) {
-    showStatus("No result available yet.", "warning");
-    return;
-  }
-  const recommended = result.variants.find((variant) => variant.recommended) || result.variants[0];
-  if (!recommended) {
-    showStatus("No generated content available.", "warning");
-    return;
-  }
-  copyToClipboard(recommended.content || "");
 }
 
 async function copyToClipboard(text) {

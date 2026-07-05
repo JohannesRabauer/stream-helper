@@ -539,20 +539,9 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
     animation: fadeInUp 0.35s ease both;
 }
 
-.workflow-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 1.25rem;
-}
-
-.workflow-main {
+.settings-stack {
     display: grid;
     gap: 0.8rem;
-}
-
-.history-panel {
-    border-left: 1px solid var(--border);
-    padding-left: 1.25rem;
 }
 
 .workflow-guide {
@@ -1050,26 +1039,6 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
     margin-top: 0.25rem;
 }
 
-.history-groups {
-    display: grid;
-    gap: 1rem;
-}
-
-.history-group {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0.9rem;
-    background: rgba(0, 0, 0, 0.16);
-}
-
-.history-group-heading {
-    margin-bottom: 0.75rem;
-}
-
-.history-group-heading h3 {
-    margin: 0;
-}
-
 /* ── Project header ── */
 .project-header {
     display: flex;
@@ -1300,76 +1269,6 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
     color: #c4b5fd;
 }
 
-/* ── Artifact list / item ── */
-.artifact-list {
-    display: grid;
-    gap: 0.55rem;
-}
-
-.artifact-item {
-    border: none;
-    padding: 0;
-    background: transparent;
-    min-width: 0;
-}
-
-.artifact-item-details {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0.75rem 0.95rem;
-    background: rgba(0, 0, 0, 0.15);
-    transition: border-color var(--transition), box-shadow var(--transition);
-}
-
-.artifact-item-details[open] {
-    border-color: rgba(139, 92, 246, 0.35);
-    box-shadow: 0 0 14px rgba(124, 58, 237, 0.1);
-}
-
-.artifact-item-summary {
-    list-style: none;
-    cursor: pointer;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.7rem;
-}
-
-.artifact-item-summary::-webkit-details-marker {
-    display: none;
-}
-
-.artifact-item-summary strong {
-    color: #c4b5fd;
-}
-
-.artifact-item-summary::before {
-    content: '▸';
-    font-size: 0.85rem;
-    color: var(--muted);
-    margin-right: 0.35rem;
-    margin-top: 0.15rem;
-}
-
-.artifact-item-details[open] .artifact-item-summary::before {
-    content: '▾';
-}
-
-.artifact-item-body {
-    display: grid;
-    gap: 0.8rem;
-    padding-top: 0.7rem;
-}
-
-.artifact-copy {
-    min-width: 0;
-}
-
-.artifact-copy pre {
-    margin-top: 0.65rem;
-    max-height: 220px;
-}
-
 .artifact-actions {
     justify-content: flex-start;
 }
@@ -1385,10 +1284,6 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
     word-break: break-word;
     margin-top: 0.65rem;
     line-height: 1.55;
-}
-
-.artifact-editor-history {
-    min-height: 150px;
 }
 
 .artifact-save-state {
@@ -1675,16 +1570,8 @@ code {
         grid-template-columns: 1fr;
     }
 
-    .workflow-grid,
     .two-column-grid {
         grid-template-columns: 1fr;
-    }
-
-    .history-panel {
-        border-left: none;
-        border-top: 1px solid var(--border);
-        padding-left: 0;
-        padding-top: 1rem;
     }
 
     .create-project-form {
@@ -1804,10 +1691,8 @@ body.calm-ui a:hover {
 
 body.calm-ui .card,
 body.calm-ui .project-tile,
-body.calm-ui .history-group,
 body.calm-ui .inline-result-panel,
 body.calm-ui .variant-card,
-body.calm-ui .artifact-item-details,
 body.calm-ui .markdown-preview,
 body.calm-ui .task-progress {
     background: #ffffff;

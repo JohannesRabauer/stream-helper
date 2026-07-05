@@ -70,27 +70,43 @@ class PageControllerIntegrationTest {
     }
 
     @Test
-    void projectPageContainsInlineResultSectionsForEveryStage() throws Exception {
+    void projectPageContainsInlineResultSectionsForAssetBlocks() throws Exception {
         var project = storageService.createProject("Inline Results Project");
 
         mockMvc.perform(get("/projects/" + project.id()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-TOPIC_IDEA")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-GUEST_IDEA")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-pre-stream")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-YOUTUBE_TITLES")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-YOUTUBE_DESCRIPTION")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-YOUTUBE_TAGS")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-description")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-thumbnail")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-THUMBNAIL_IDEAS")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-THUMBNAIL_PROMPTS")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-THUMBNAILS")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-LINKEDIN_POST")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-SOCIAL_POST")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-HASHTAGS")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-social-announcements")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-transcription")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-CHAPTERS")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-SUMMARY")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-post-stream")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("inline-result-SUMMARY")));
+    }
+
+    @Test
+    void projectPageDoesNotContainLegacyStageHistoryMarkup() throws Exception {
+        var project = storageService.createProject("No Legacy History Markup Project");
+
+        mockMvc.perform(get("/projects/" + project.id()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Stage history"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Latest stage result"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Copy JSON"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Copy recommended"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("history-count-"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("inline-result-pre-stream"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("inline-result-description"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("inline-result-thumbnail"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("inline-result-social-announcements"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("inline-result-post-stream"))));
     }
 
     @Test

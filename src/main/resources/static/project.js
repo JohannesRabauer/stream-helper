@@ -427,7 +427,7 @@ function renderInlineResult(areaKey, data) {
     card.className = "variant-card";
     card.style.animationDelay = `${index * 0.07}s`;
     const editable = isEditableArtifactCategory(data.category);
-    const threadTurns = threadTurnsById.get(variant.threadId || variant.id) || [];
+    const threadTurns = resolveRefinementTurnsForArtifact(threadTurnsById, variant);
     card.innerHTML = `
       <div class="variant-card-header">
         <div>
@@ -554,7 +554,7 @@ function renderAreaHistory(areaKey, categoryResults) {
                 <button type="button" class="secondary-button artifact-copy-button">Copy</button>
                 <button type="button" class="secondary-button artifact-final-button">Mark final</button>
               </div>
-              ${renderRefinePanel(category, threadTurnsById.get(artifact.threadId || artifact.id) || [])}
+              ${renderRefinePanel(category, resolveRefinementTurnsForArtifact(threadTurnsById, artifact))}
             </div>
           </details>
         `;
@@ -755,6 +755,18 @@ function buildRefinementTurnsByThread(artifacts) {
   const turnsByThread = new Map();
   if (!Array.isArray(artifacts)) {
     return turnsByThread;
+  }
+
+  function resolveRefinementTurnsForArtifact(turnsByThread, artifact) {
+    const turns = turnsByThread.get(artifact?.threadId || artifact?.id) || [];
+    const artifactTimestamp = Date.parse(artifact?.createdAt || "");
+    if (!Number.isFinite(artifactTimestamp)) {
+      return turns;
+    }
+    return turns.filter((turn) => {
+      const turnTimestamp = Date.parse(turn.createdAt || "");
+      return !Number.isFinite(turnTimestamp) || turnTimestamp <= artifactTimestamp;
+    });
   }
   artifacts.forEach((artifact) => {
     const threadId = artifact?.threadId || artifact?.id;

@@ -142,6 +142,108 @@ class AssistantApiControllerIntegrationTest {
                 .andExpect(jsonPath("$.stage").value("idle"));
     }
 
+    @Test
+    void rejectsBlankBriefForGenerationEndpoints() throws Exception {
+        String projectId = createProject("Validation API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/topic-ideas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void rejectsBlankRefinementPrompt() throws Exception {
+        String projectId = createProject("Refine Validation API");
+        String generateResponse = mockMvc.perform(post("/api/projects/" + projectId + "/youtube-description")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Test\"}"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String artifactId = generateResponse.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/artifacts/YOUTUBE_DESCRIPTION/" + artifactId + "/refine")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"prompt\":\"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void returnsEffectivePromptPreview() throws Exception {
+        String projectId = createProject("Prompt Preview API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/effective-prompt/YOUTUBE_DESCRIPTION"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("YOUTUBE_DESCRIPTION"))
+                .andExpect(jsonPath("$.effectivePrompt").isString());
+    }
+
+    @Test
+    void generatesThumbnailPromptVariants() throws Exception {
+        String projectId = createProject("Thumbnail Prompts API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/thumbnail-prompts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Bold contrast and clean composition\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("THUMBNAIL_PROMPT"))
+                .andExpect(jsonPath("$.variants.length()").value(3));
+    }
+
+    @Test
+    void createsExternalThumbnailPromptPackage() throws Exception {
+        String projectId = createProject("Thumbnail External API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/thumbnails/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"prompt\":\"Use high contrast red and blue\",\"builtIn\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("THUMBNAIL_ASSET"))
+                .andExpect(jsonPath("$.variants.length()").value(1))
+                .andExpect(jsonPath("$.variants[0].strategy").value("external-prompt-package"));
+    }
+
+    @Test
+    void createsBuiltInThumbnailAssetMarker() throws Exception {
+        String projectId = createProject("Thumbnail Builtin API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/thumbnails/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"prompt\":\"Studio portrait lighting\",\"builtIn\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("THUMBNAIL_ASSET"))
+                .andExpect(jsonPath("$.variants.length()").value(1))
+                .andExpect(jsonPath("$.variants[0].strategy").value("built-in-image"));
+    }
+
+    @Test
+    void returnsBadRequestForPostStreamWithoutStoredTranscript() throws Exception {
+        String projectId = createProject("Missing Transcript API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/summary")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("REQUEST_FAILED"));
+    }
+
+    @Test
+    void generatesYouTubeTagsVariant() throws Exception {
+        String projectId = createProject("YouTube Tags API");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/youtube-tags")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brief\":\"Spring AI, coding, architecture\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("YOUTUBE_TAGS"))
+                .andExpect(jsonPath("$.variants.length()").value(1))
+                .andExpect(jsonPath("$.variants[0].content").isString());
+    }
+
     private String createProject(String name) throws Exception {
         String response = mockMvc.perform(post("/api/projects")
                         .contentType(MediaType.APPLICATION_JSON)

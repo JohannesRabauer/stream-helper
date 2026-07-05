@@ -1159,8 +1159,7 @@ code {
 }
 
 .result-raw summary::before { content: '▶'; font-size: 0.7em; transition: transform var(--transition); }
-details[open] .result-raw summary::before,
-.result-raw details[open] summary::before { transform: rotate(90deg); }
+.result-raw[open] > summary::before { transform: rotate(90deg); }
 .result-raw summary:hover { color: var(--text); background: rgba(255,255,255,0.04); }
 
 .debug-card summary {

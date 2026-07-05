@@ -14,7 +14,6 @@ import com.streamhelper.app.transcription.TranscriptionProgressService;
 import com.streamhelper.app.transcription.TranscriptionProgressSnapshot;
 import com.streamhelper.app.transcription.TranscriptionService;
 import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;

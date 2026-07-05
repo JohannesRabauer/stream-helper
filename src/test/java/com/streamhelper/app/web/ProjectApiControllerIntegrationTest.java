@@ -136,6 +136,101 @@ class ProjectApiControllerIntegrationTest {
                 .andExpect(jsonPath("$.finalVersion").value(true));
     }
 
+    @Test
+    void canRenameProjectViaApi() throws Exception {
+        String projectId = createProject("Rename Source");
+
+        mockMvc.perform(put("/api/projects/" + projectId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Renamed Project\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(projectId))
+                .andExpect(jsonPath("$.name").value("Renamed Project"));
+    }
+
+    @Test
+    void deletingProjectMakesItUnavailable() throws Exception {
+        String projectId = createProject("Delete Project");
+
+        mockMvc.perform(delete("/api/projects/" + projectId))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/projects/" + projectId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+    }
+
+    @Test
+    void canPersistAndReadProjectConfigFields() throws Exception {
+        String projectId = createProject("Config Project");
+
+        mockMvc.perform(put("/api/projects/" + projectId + "/config")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                """
+                                {
+                                  "defaultLanguage":"de",
+                                  "hostDisplayName":"Johannes",
+                                  "guestDisplayName":"Ada",
+                                  "currentWorkflowStage":"description",
+                                  "workspaceDrafts":{"description":"Draft text"},
+                                  "directives":{"projectInstruction":"Always concise","categoryInstructions":{"YOUTUBE_DESCRIPTION":"Use bullet points"}},
+                                  "brandProfile":{"preferredColors":["purple"],"requiredWords":["stream"],"bannedWords":["hype"],"thumbnailMaxWords":3}
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.defaultLanguage").value("de"))
+                .andExpect(jsonPath("$.hostDisplayName").value("Johannes"))
+                .andExpect(jsonPath("$.guestDisplayName").value("Ada"))
+                .andExpect(jsonPath("$.currentWorkflowStage").value("description"));
+
+        mockMvc.perform(get("/api/projects/" + projectId + "/config"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.defaultLanguage").value("de"))
+                .andExpect(jsonPath("$.workspaceDrafts.description").value("Draft text"))
+                .andExpect(jsonPath("$.directives.projectInstruction").value("Always concise"))
+                .andExpect(jsonPath("$.directives.categoryInstructions.YOUTUBE_DESCRIPTION").value("Use bullet points"));
+    }
+
+    @Test
+    void listsSavedArtifactsByCategory() throws Exception {
+        String projectId = createProject("Artifact List Project");
+        storageService.saveArtifact(projectId, GenerationCategory.SUMMARY, "first", "First version", false, false);
+        storageService.saveArtifact(projectId, GenerationCategory.SUMMARY, "second", "Second version", true, false);
+
+        mockMvc.perform(get("/api/projects/" + projectId + "/artifacts/SUMMARY"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].content").value("Second version"));
+    }
+
+    @Test
+    void canDeleteNoteAndThenReadReturnsNotFound() throws Exception {
+        String projectId = createProject("Delete Note Project");
+        mockMvc.perform(post("/api/projects/" + projectId + "/notes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"noteId\":\"temp-note\",\"markdown\":\"Draft\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(delete("/api/projects/" + projectId + "/notes/temp-note"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/projects/" + projectId + "/notes/temp-note"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+    }
+
+    private String createProject(String name) throws Exception {
+        String response = mockMvc.perform(post("/api/projects")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"" + name + "\"}"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return response.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
+    }
+
     private static Path createTempDir() {
         try {
             return Files.createTempDirectory("stream-helper-project-api-test-");

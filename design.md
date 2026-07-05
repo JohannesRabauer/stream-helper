@@ -291,3 +291,240 @@ Each phase is shippable on its own and keeps the app fully working.
 3. **Episode Kit:** worth building now, or is Export ZIP enough for you today?
 4. **Brand fields UI:** do you actually use preferred colors / required-banned words
    enough to warrant a dedicated editor, or keep it minimal?
+
+---
+
+# Part B — Workflow area redesign (the stage workspace)
+
+Status: design only. Implementation will be done separately by a cheaper model.
+This section is written to be executed without further clarification.
+
+Phase 1 (journey rail + lighter theme) is already shipped. This part redesigns the
+**inside of each stage** — the `.workflow-grid` (left `.workflow-main` with brief +
+button row + inline result, right `.history-panel` with stacked "Stage history").
+
+## B1. What's wrong today
+
+1. **The brief is a blank gate.** Each stage opens with a large empty "Working brief"
+   textarea and *then* a row of buttons. There's no default text, no examples, and no
+   hint about what to write or which button needs what. The user must invent input
+   before anything happens.
+2. **Buttons lack context.** Several buttons (e.g. "Generate topic ideas", "Find guest
+   ideas") all read from the *same* brief. It's unclear whether they need different
+   input, and they sit visually detached below the textarea.
+3. **History is a stacking wall.** The right column lists every category, and inside
+   each, every version as a big collapsible card. After a few generations + inline
+   edits (`-edited`) + refinements (`-refined`) + normalizations (`-normalized`), it
+   becomes a tall pile of near-identical entries with no notion of "which one is
+   current." Finding anything means scrolling and expanding.
+4. **Duplication.** The newest result renders twice — once as variant cards in the
+   left inline panel, and again inside the right history. Two places, overlapping info.
+5. **Frequent vs rare are inverted.** Raw JSON and the "Latest stage result / Copy
+   JSON" controls are always visible, while the thing you do constantly (see the
+   current pick, tweak it, regenerate) has no privileged position.
+
+## B2. The core reframe: a stage is a stack of **asset blocks**
+
+Drop the left/main + right/history split. Model each stage as a single vertical
+column of **asset blocks**, one per generation category the stage owns:
+
+| Stage | Asset blocks (categories) |
+|-------|---------------------------|
+| 1 · Plan | Topic ideas, Guest ideas |
+| 2 · Title & description | Titles (picker), Description, Tags |
+| 3 · Thumbnail | Ideas → Prompts → Image (pipeline) |
+| 4 · Announce | LinkedIn post, Social posts, Hashtags |
+| 5 · Transcribe | Transcript (task card, special) |
+| 6 · Wrap-up | Chapters, Summary |
+
+An **asset block** is the unit the user actually thinks in ("I want a title", "I want
+tags"). Each block owns its own generate button, its own optional guidance, its own
+current pick, and its own compact history. This kills the shared-brief confusion and
+the monolithic history wall in one move.
+
+```
+Stage header:  "2 · Title & description"   [status: In progress]
+One-liner:     "Create the YouTube title, description, and tags."
+────────────────────────────────────────────────────────────────
+�¦ Titles                                        [● Final chosen]
+  ┌ current pick ───────────────────────────────────────────────┐
+  │  Building a Modern Spring App With AI Pair Programmers        │
+  └──────────────────────────────────────────────────────────────┘
+  [Copy]  [Regenerate]  [Refine ▾]         ⌄ 14 more options
+  ＋ Add guidance                            ⌄ Versions (3)
+────────────────────────────────────────────────────────────────
+▩ Description                                   [empty]
+  Writes the full YouTube description.   [ Generate description ]
+  ＋ Add guidance
+────────────────────────────────────────────────────────────────
+▩ Tags                                          [empty]
+  Produces SEO tags (≤500 chars).        [ Generate tags ]
+  ＋ Add guidance
+```
+
+## B3. Asset block — the three states
+
+Every block is one of three states, and it should visually collapse when it has less
+to show, so a fresh stage is calm and short.
+
+**1. Empty (compact, one line tall).**
+- A small icon + asset name + a one-sentence "what this produces."
+- A single **primary Generate button** — works with *no* input, using project
+  context, notes, and prior finals. This is the #1 fix: generation is one click.
+- A quiet `＋ Add guidance` link (see B4). No textarea shown until asked for.
+
+**2. Has a current pick (the default working state).**
+- Shows the **current pick** front and center. "Current pick" = the final version if
+  one exists, else the recommended version, else the latest. Editable inline for
+  editable categories (reuse existing `setupArtifactEditor`, autosave → `-edited`).
+- A tight action row of the **frequent** actions, in priority order:
+  `Copy` · `Regenerate` · `Refine ▾` · `Set as final` (hidden once already final).
+- Right-aligned quiet disclosures: `⌄ Versions (N)` and, for multi-option categories,
+  `⌄ N more options`.
+- `＋ Add guidance` remains available to steer the next Regenerate.
+
+**3. History / versions (collapsed by default, opened per block).**
+- Opening `Versions (N)` reveals a **compact timeline**, not big cards:
+  each row = a small version chip (`v3 · edited · 2m ago`), a single-line preview, and
+  row actions `Make current` · `Copy` · `Duplicate to edit`.
+- Rows are dense (≈2 lines each) and scroll inside a capped-height area so the block
+  never dominates the page.
+- See B5 for how derived versions are grouped.
+
+## B4. Guidance: optional, contextual, one-tap
+
+Replace the mandatory blank brief with **optional per-asset guidance**:
+
+- Hidden behind `＋ Add guidance` on each block. Collapsed by default.
+- When expanded: a small textarea with a **useful placeholder that shows a concrete
+  example** for that asset (e.g. Titles → "e.g. lean more technical, include the word
+  'Spring Boot', avoid clickbait").
+- Above the textarea, a row of **one-tap suggestion chips** that prefill/append
+  guidance, tuned per category. Examples:
+  - Titles: `More technical` · `Punchier` · `Include keyword…` · `Shorter`
+  - Description: `Add timestamps note` · `More SEO` · `Friendlier tone`
+  - Hashtags: `Fewer, broader` · `Niche/technical`
+  - Thumbnail ideas: `High contrast` · `Show a face` · `Big bold text`
+- Guidance is remembered per asset in `projectConfig.workspaceDrafts` using
+  **per-category keys** (e.g. `guidance:YOUTUBE_TITLES`) instead of one shared stage
+  draft, so title guidance and tag guidance don't collide. Autosave path unchanged.
+- Generate/Regenerate POST to the **same existing endpoints** with `{brief: guidance}`
+  (empty string allowed). No backend change.
+
+Result: the common path is a single click; the guided path is easy but never blocks.
+
+## B5. History redesign — make versions legible
+
+The stacking problem is solved by four rules:
+
+1. **One current pick is always surfaced; the rest are "versions" behind a toggle.**
+2. **Thread grouping.** Group a refine/edit chain under its origin using the existing
+   `threadId` / `parentArtifactId`. A refined lineage reads as an indented mini-thread
+   (`v1 → v2 refined → v3 edited`), not three unrelated top-level entries. The existing
+   `buildRefinementTurnsByThread` logic is the seed for this.
+3. **De-emphasize machine versions.** `-normalized` (e.g. social 280-char trim, tag
+   ≤500 trim) should not appear as its own headline row; fold it into its parent with a
+   small note ("auto-trimmed to fit"). Reuse the current normalization metadata.
+4. **Compact, capped, filterable.** Timeline rows are one preview line; the list is
+   height-capped with internal scroll; when a stage/block has multiple categories the
+   block already scopes them, so no cross-category noise. A tiny segmented control
+   `Current · All versions` toggles depth.
+
+Deleting/pruning old versions is a **rare** action → hide it in a per-row overflow
+`⋯` menu, not a primary button. (If no delete endpoint exists, omit; do not invent
+backend.)
+
+## B6. Frequency-based prominence (explicit ranking)
+
+- **Tier 1 — always visible, biggest targets:** Generate / Regenerate, see current
+  pick, Copy current, inline Edit current.
+- **Tier 2 — one quiet click:** Refine, Set as final, open Versions, pick among "more
+  options", Add guidance.
+- **Tier 3 — tucked away (disclosure or `⋯`):** Raw response JSON, LLM context/effective
+  prompt debug, per-version delete, "Copy JSON". The global `LLM context debug` card
+  stays collapsed at the very bottom (as today). Remove the always-on "Copy JSON" /
+  "Copy recommended" header buttons from each stage — copy lives on the current pick and
+  per version instead.
+
+## B7. Special-case blocks
+
+- **Titles (options picker).** The one AI call returns 15 parsed options with exactly
+  one recommended. Present the recommended as the current pick; put the other 14 under
+  `⌄ 14 more options`, each a one-line row with a `Use this` button (→ finalize that
+  option). This is a frequent, high-value interaction and deserves first-class UI.
+- **Thumbnail (pipeline).** Ideas → Prompts → Image is sequential. Render the three
+  blocks as a light numbered pipeline so the order is obvious. The built-in image
+  button must only appear when the provider supports images (OpenAI); otherwise show a
+  short inline note ("Image generation needs OpenAI mode") instead of a dead button.
+  Keep the existing ordering guarantee (ideas action appears before prompts action) so
+  `thumbnailStagePlacesIdeaGenerationBeforePromptGeneration` still holds.
+- **Transcribe (task card).** Not a "generate" block. Keep the upload / YouTube-URL
+  forms, host/guest names, and the progress bar, but reflow into one focused card:
+  inputs first, live progress, then the resulting transcript shown as a single current
+  asset with `⌄ Versions (N)` collapsed. Emphasize the "unlocks chapters & summary"
+  relationship. Progress polling code stays as-is.
+
+## B8. Layout & class notes for the implementer
+
+- Replace `.workflow-grid` (two columns) with `.stage-flow` (single column, `gap`).
+  Delete the separate `.history-panel` aside; history now lives inside each block.
+- New building blocks (suggested class names):
+  `.asset-block`, `.asset-block[data-state="empty|active"]`,
+  `.asset-block-head` (icon + name + status chip),
+  `.asset-current` (current pick + inline editor),
+  `.asset-actions` (Tier-1/2 buttons),
+  `.asset-guidance` (collapsed textarea + `.guidance-chips`),
+  `.asset-options` (the "N more options" list),
+  `.asset-versions` (`<details>` wrapping `.version-timeline` of `.version-row`).
+- Keep using existing helpers: `renderInlineResult` becomes `renderAssetBlock`,
+  `renderAreaHistory` becomes the per-block `renderVersions`, `setupArtifactEditor`,
+  `finalizeArtifact`, `bindRefinementControls`, `reloadAreaHistory` all stay but are
+  re-targeted to per-block containers. The `areaCompletionState` / journey-rail logic
+  from Phase 1 keeps working unchanged (still keyed by area, driven by
+  `hasArtifacts` / `hasFinal`).
+- Preserve the calm light theme tokens from Phase 1. Status chips reuse the
+  `Not started / In progress / Ready` colors.
+
+## B9. Endpoints — all unchanged
+
+Generate/Regenerate → existing `topic-ideas`, `guest-ideas`, `youtube-titles`,
+`youtube-description`, `youtube-tags`, `linkedin-post`, `social-posts`, `hashtags`,
+`chapters`, `summary`, `thumbnail-ideas`, `thumbnail-prompts`, `thumbnails/create`.
+Edit → `PUT …/artifacts/{cat}/{id}`. Refine → `POST …/artifacts/{cat}/{id}/refine`.
+Set as final / Use this / Make current → `POST …/artifacts/{cat}/{id}/finalize`.
+Versions list → `GET …/artifacts/{cat}`. No new backend work required for this part.
+
+## B10. Test impact (must be updated alongside implementation)
+
+`PageControllerIntegrationTest` asserts markup/JS strings that this redesign changes.
+The implementer must update these to match new markup, keeping intent:
+- `inline-result-{area}` ids → will become per-block ids; update the "contains inline
+  result section for every stage" test to the new per-stage container ids.
+- Strings `Latest stage result`, `Copy JSON`, `Copy recommended`, `Stage history`,
+  `Suggest title` → will change; update assertions to the new labels
+  (e.g. `Generate titles`, `Current pick`, `Versions`).
+- Keep satisfying: `Refinement chat` + `/refine` still present; `Export ZIP`;
+  `data-tab="…"` values; `data-tab-panel="pre-stream"` not `hidden`; the thumbnail
+  ideas-before-prompts ordering; the module-level JS function assertions
+  (`startTranscriptionProgressMonitor`, `resolveRefinementTurnsForArtifact`,
+  `initializeTranscriptionProgress`, `stopTranscriptionProgressPolling`,
+  `createTimestampFormatter`) — keep those functions at module scope.
+- `.result-raw[open] > summary::before` selector must remain in `styles.css` (the raw
+  JSON disclosure survives inside the Tier-3 area).
+
+## B11. Suggested build order (small, shippable steps)
+
+1. **Block scaffold:** convert one stage (Plan) from grid → `.stage-flow` with two
+   `.asset-block`s in empty/active states. Prove the pattern, update tests.
+2. **Current pick + Tier-1 actions:** current-pick rendering, inline edit, Copy,
+   Regenerate wired to existing endpoints.
+3. **Optional guidance + chips:** per-asset guidance keys, suggestion chips.
+4. **Versions timeline:** collapsed `Versions (N)`, thread grouping, machine-version
+   folding, `Make current`.
+5. **Refine popover + Set as final** on the current pick.
+6. **Roll the pattern to Description (+ titles picker), Announce, Wrap-up.**
+7. **Thumbnail pipeline** presentation + provider-aware image button.
+8. **Transcribe task card** reflow (keep progress logic).
+9. Remove the old `.history-panel` / `.workflow-grid` CSS once every stage is migrated.
+
+Each step keeps the app working and is independently committable.

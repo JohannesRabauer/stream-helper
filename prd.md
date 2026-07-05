@@ -1,177 +1,151 @@
-# PRD: Live-Coding Session Assistant
+# PRD: Stream Helper (As-Built)
 
 ## 1. Product Overview
-Build a **Spring Boot + Thymeleaf** application that helps a live-coding creator plan, promote, and post-process streaming sessions using either:
+Stream Helper is a local-first Spring Boot + Thymeleaf application for live-coding creators. It supports planning, promotional asset generation, transcription, and post-stream wrap-up in project-scoped workspaces backed by plain files.
 
-1. **Local AI** (Ollama via Docker)
-2. **Cloud AI API** (for example OpenAI)
+The app runs in two provider modes:
+1. Ollama + local Whisper ASR
+2. OpenAI for text/image/transcription
 
-The product is **project-based**, **local-first**, and stores project data in open, portable files.
+## 2. Product Goals
+1. Keep stream prep and post-processing in one project workflow.
+2. Save all work as portable on-disk files, with no database dependency.
+3. Provide repeatable AI generation with instruction layering and reusable context.
+4. Preserve history with versioned artifacts and explicit final selection.
 
-## 2. Confirmed v1 Scope Decisions
-1. v1 is **planning + content generation + copy/export**, not direct publishing to social platforms.
-2. v1 is **single-user local**.
-3. v1 focuses on **content/planning assets** (no scheduling/reminders workflow).
-4. Guest recommendation in v1 uses **curated internal contact/project data**, not web scraping/discovery.
-5. Topic/guest ranking in v1 uses **notes/preferences/manual signals**, not external analytics integration.
+## 3. Target User and Context
+- Single user operating locally.
+- Typical flow: plan stream -> prepare title/description/thumbnail/social -> transcribe recording -> generate chapters and summary -> export project ZIP.
 
-## 3. Functional Requirements
+## 4. In-Scope Functionality (Current)
 
-### 3.1 Projects and workspace model
-- All assets are grouped under **Projects**.
-- A project can contain multiple sessions/episodes and generated outputs.
-- User can create, rename, delete, and browse projects.
+### 4.1 Project and Workspace Management
+- Create, list, rename, and delete projects.
+- Each project has:
+  - metadata (`project.json`)
+  - notes
+  - config
+  - generated outputs by category
+  - export folder
 
-### 3.2 Markdown notes
-- Project notes are Markdown files.
-- Notes support:
-  - **Edit view** (raw markdown)
-  - **Rendered view** (preview)
+### 4.2 Workflow UI
+Six stage tabs in one project cockpit:
+1. Pre-stream planning
+2. Description
+3. Thumbnail
+4. Social Media (Announcements)
+5. Transcription
+6. Post-stream wrap-up
 
-### 3.3 Local-first storage and schema
-- Project storage is file-based and is the source of truth (no hidden proprietary-only storage).
-- Define a **versioned on-disk schema** (`schemaVersion: 1`) from v1.
-- Canonical project structure includes at least:
-  - `/notes`
-  - `/sessions`
-  - `/outputs`
-  - `/transcripts`
-  - `/thumbnails`
-  - `/config`
-- Export supports:
-  - raw project folder copy
-  - one-click zip package including manifest
+Each stage has:
+- autosaved working draft (except transcription stage)
+- action buttons mapped to AI/transcription endpoints
+- inline latest result panel
+- stage-local history panel
 
-### 3.4 AI provider support
-- Configurable AI providers:
-  - Ollama endpoint + model
-  - OpenAI API key + model
-- Provider configurable by user/workspace.
+### 4.3 Notes and Definitions
+- Project notes drawer with Markdown edit + rendered preview.
+- Autosave for project notes.
+- LLM definitions drawer with:
+  - global definitions (cross-project)
+  - project definitions
+  - stage definitions (applied to all categories in that stage)
 
-### 3.5 Instruction layering and prompt composition
-- Prompt instructions exist at three scopes:
-  1. **Global**
-  2. **Project-specific**
-  3. **Category-specific** (YouTube description, summary, social posts, thumbnail prompt, etc.)
-- Precedence is **Category > Project > Global**.
-- App shows the composed/effective prompt preview for transparency.
+### 4.4 AI Output Generation
+Supported generation categories:
+- Topic ideas (3 variants)
+- Guest ideas (3 variants)
+- YouTube titles (15 distinct options, exactly one recommended)
+- YouTube descriptions (3 variants)
+- LinkedIn posts (3 variants)
+- Social posts (3 variants, normalized to <= 280 chars)
+- Hashtags (1 variant, normalized and deduplicated)
+- YouTube tags (1 variant, normalized to <= 500 chars)
+- Thumbnail ideas (target output: 10 idea blocks)
+- Thumbnail prompts (3 variants)
+- Chapters (1 variant from latest transcript)
+- Summary (1 variant from latest transcript)
 
-### 3.6 Brand profile constraints
-- Add structured brand profile settings (separate from free-text instructions), such as:
-  - preferred colors
-  - text style limits
-  - required/excluded words
-  - thumbnail title length guidance
-- Brand profile can be applied to social text and thumbnail generation flows.
+### 4.5 Thumbnail Creation
+Two paths:
+1. External prompt package (text artifact)
+2. Built-in image generation (OpenAI image API only)
 
-### 3.7 Topic and guest assistant
-- Generate ranked topic suggestions with rationale.
-- Suggest guests from curated internal sources with explicit fit reasoning.
+Built-in path stores:
+- binary PNG in outputs
+- artifact marker entry in thumbnail assets history
 
-### 3.8 Promotion content assistant
-- Generate:
-  - YouTube description
-  - LinkedIn post
-  - social micro-posts (tweet-size)
-  - hashtags
-  - YouTube tags as one comma-separated string, max 500 chars
-- For descriptions and social posts, generate **3 strategy variants + 1 recommended pick**.
-- Enforce platform-specific constraints at generation time (character limits, formatting rules, etc.).
+### 4.6 Artifact Versioning and Refinement
+- Every generation result is persisted as an artifact version.
+- User can:
+  - mark any artifact final
+  - edit supported categories inline (edit saves a new version)
+  - refine any artifact by prompt (thread lineage stored)
+- History and inline views show badges:
+  - recommended
+  - final
 
-### 3.9 Post-stream assistant
-- Accept video input from:
-  - local file upload
-  - YouTube URL
-- Transcription default is **local-first** with optional cloud fallback.
-- Use project default language, with optional auto-detect for transcript tasks.
-- Transcript includes timestamps and speaker labels when possible.
-- Generate YouTube chapters using enforceable defaults (ascending time, first chapter at 00:00, title formatting).
-- Generate a detailed summary of technical and discussion content.
+### 4.7 Transcription
+Input modes:
+1. local file upload (multipart)
+2. YouTube URL (yt-dlp download)
 
-### 3.10 Thumbnail assistant
-- Generate at least 3 thumbnail prompt variants and recommend one.
-- Support two creation paths:
-  - built-in image generation (configured provider)
-  - exportable prompt package for external design tools
-- Support iterative refinement and version history.
+Provider behavior:
+- `WHISPER_LOCAL`: calls Whisper webservice endpoint
+- `OPENAI`: calls `/v1/audio/transcriptions`
+- OpenAI mode chunks oversized audio using ffmpeg (segmenting) and merges offset timestamps
 
-### 3.11 Drafting, versioning, and finalization
-- Every generation is stored as a **versioned draft**.
-- User explicitly marks a version as **final/canonical**.
-- Default retention: keep all versions; optional manual archive/compress.
+Transcription output:
+- timestamped line format `[start - end] speaker: text`
+- stored as transcript artifact
+- optional host/guest relabeling of first two diarized speakers
 
-### 3.12 Quality validation
-- Before finalization/export, run automatic checks for:
-  - YouTube tags <= 500 characters
-  - duplicate hashtag detection
-  - chapter timestamp ordering/validity
-  - platform length/format constraints
-- Validation reports actionable fix hints.
+Progress tracking:
+- per-project progress snapshot endpoint
+- running/completed/failed state, percent, stage, message, timestamps
 
-### 3.13 One-command Docker Compose runtime
-- The full application stack must build and start with a single Docker Compose command.
-- Deployment must support two provider modes:
-  - **Ollama mode** (local AI): app + Ollama service
-  - **OpenAI mode** (API AI): app configured for OpenAI without requiring Ollama runtime
-- Provider selection must be configuration-driven (for example env variables or compose profiles), without code changes.
-- Startup flow must not require manual build/run steps outside Docker Compose.
+### 4.8 Export
+- Project ZIP export endpoint.
+- Includes `manifest.json` plus all project files except previous exports.
 
-## 4. Use Cases
+## 5. Prompt Composition and Context Rules (Current)
+- Instruction blocks included in composed prompt:
+  - global instruction
+  - project instruction
+  - project category instruction
+  - workflow notes + selected prior artifacts
+  - merged brand profile
+  - participants block
+  - precedence text
 
-| ID | Use Case | Outcome |
-|---|---|---|
-| UC-1 | Manage projects | Stream work is organized per project |
-| UC-2 | Write markdown notes | Edit and rendered preview are both available |
-| UC-3 | Generate topics | Ranked topic options with rationale |
-| UC-4 | Find guests | Curated guest recommendations with fit reasoning |
-| UC-5 | Generate platform descriptions | YouTube and LinkedIn copy variants plus recommendation |
-| UC-6 | Generate social micro-posts | 3 short variants + recommended pick |
-| UC-7 | Generate hashtags and YouTube tags | Valid, constraint-compliant outputs |
-| UC-8 | Transcribe stream content | Timestamped transcript with speaker labels where possible |
-| UC-9 | Create YouTube chapters | Constraint-compliant chapter list |
-| UC-10 | Produce detailed summary | Deep recap of technical and narrative content |
-| UC-11 | Generate thumbnail prompts | Multiple prompt variants + recommended option |
-| UC-12 | Create/refine thumbnail drafts | Built-in or external-tool flow with versioning |
-| UC-13 | Apply instruction and brand controls | Consistent, steerable output behavior |
-| UC-14 | Finalize and export project | Final artifacts can be copied/shared outside app |
+- Context category set is target-dependent and excludes transcript for most generation flows.
+- Chapters and summary require a stored transcript; they fail if none exists.
 
-## 5. Acceptance Criteria
+## 6. Validation and Normalization Rules (Current)
+- YouTube tags: comma list trimmed to <= 500 chars; empty and overflow checks.
+- Hashtags: adds `#` prefix and removes duplicates; duplicate detection in validation.
+- Social posts: checks `<= 280`.
+- Chapters:
+  - prepends `00:00 Introduction` if missing
+  - validates timestamp format and ascending order
+  - validates first chapter starts at `00:00`
 
-| ID | Acceptance Criteria |
-|---|---|
-| AC-1 | User can create, rename, and delete projects. |
-| AC-2 | All notes and generated outputs are linked to a project and session. |
-| AC-3 | Markdown notes support edit and rendered views. |
-| AC-4 | File-based storage is source of truth and uses a documented `schemaVersion` field. |
-| AC-5 | User can export project as raw folder and as zip+manifest package. |
-| AC-6 | User can configure Ollama and OpenAI providers and select model. |
-| AC-7 | Instruction precedence is Category > Project > Global and effective prompt preview is visible. |
-| AC-8 | Structured brand profile rules can be configured and applied to relevant generations. |
-| AC-9 | Topic generation returns ranked suggestions with rationale. |
-| AC-10 | Guest recommendations use curated internal data and include explicit fit explanations. |
-| AC-11 | YouTube and LinkedIn generation returns 3 variants and one recommended version. |
-| AC-12 | Social micro-post generation returns at least 3 variants and one recommended version. |
-| AC-13 | Platform constraints are enforced automatically in generated outputs. |
-| AC-14 | YouTube tags output is a comma-separated string with total length <= 500 characters. |
-| AC-15 | Post-stream input supports local file upload and YouTube URL. |
-| AC-16 | Transcription runs local-first with optional cloud fallback. |
-| AC-17 | Transcript includes timestamps and speaker diarization when available. |
-| AC-18 | Chapter generation enforces ascending timestamps and chapter formatting defaults. |
-| AC-19 | Detailed summary covers technical topics, key decisions, and outcomes. |
-| AC-20 | Thumbnail flow supports prompt generation, recommendation, creation path selection, and iterative refinement. |
-| AC-21 | All generations are stored as versioned drafts and user can mark a final version. |
-| AC-22 | System retains version history by default with manual archive/compress option. |
-| AC-23 | Automatic validation checks run before finalization/export and provide clear fix hints. |
-| AC-24 | Provider failures show actionable error messages and allow retry without losing input. |
-| AC-25 | v1 includes no direct social publishing and no scheduling/reminder automation. |
-| AC-26 | A single Docker Compose command builds and starts the full app in Ollama mode. |
-| AC-27 | A single Docker Compose command builds and starts the full app in OpenAI mode. |
-| AC-28 | AI provider mode can be switched via configuration (env/profile) without source code edits. |
+## 7. Non-Goals / Out of Scope (Current)
+- Direct publishing to social platforms.
+- Multi-user collaboration/authentication/permissions.
+- Scheduling/reminders/calendar automation.
+- Analytics integrations and external ranking systems.
 
-## 6. Non-Functional Requirements
-- Spring Boot + Thymeleaf server-rendered UI.
-- Local-first behavior for core project content.
-- Secure credential handling (no plain-text secret logging).
-- Async status indicators for long-running jobs (transcription, summarization, image generation).
-- Deterministic and reproducible output generation based on stored prompt inputs and instruction layers.
-- Container-first local deployment: compile/build/start via one Docker Compose command per provider mode.
+## 8. Acceptance Criteria (As-Built)
+1. User can create/open/rename/delete projects from UI and API.
+2. Workflow has six tabs with stage-local autosaved drafts and history.
+3. Project notes support edit + preview with autosave.
+4. LLM definitions support global/project/stage text instructions.
+5. AI generation endpoints persist versioned artifacts and return category-scoped results.
+6. YouTube title endpoint returns 15 options with one recommended.
+7. Social post outputs in returned variants are capped at 280 chars.
+8. Chapters and summary can be generated from latest stored transcript.
+9. Transcription supports local files and YouTube URLs with progress reporting.
+10. Finalization and refinement flows keep artifact lineage and final marker behavior.
+11. ZIP export returns downloadable archive with manifest.
+12. Deployment can run via Docker Compose in Ollama or OpenAI profile.

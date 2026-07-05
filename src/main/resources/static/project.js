@@ -437,6 +437,63 @@ async function finalizeArtifact(category, artifactId) {
   await reloadAreaHistory(categoryToArea[category]);
 }
 
+let currentRefineContext = {category: null, artifactId: null};
+
+function showRefinePopover(category, artifactId) {
+  currentRefineContext = {category, artifactId};
+  const popover = document.getElementById("refinePopover");
+  const overlay = document.getElementById("refinePopoverOverlay");
+  const input = document.getElementById("refinePopoverInput");
+  if (popover && overlay && input) {
+    input.value = "";
+    input.focus();
+    popover.hidden = false;
+    overlay.hidden = false;
+  }
+}
+
+function closeRefinePopover() {
+  const popover = document.getElementById("refinePopover");
+  const overlay = document.getElementById("refinePopoverOverlay");
+  if (popover && overlay) {
+    popover.hidden = true;
+    overlay.hidden = true;
+  }
+  currentRefineContext = {category: null, artifactId: null};
+}
+
+async function submitRefinement() {
+  const {category, artifactId} = currentRefineContext;
+  if (!category || !artifactId) {
+    return;
+  }
+  const input = document.getElementById("refinePopoverInput");
+  if (!input) {
+    return;
+  }
+  const prompt = input.value.trim();
+  if (!prompt) {
+    showStatus("Please enter a refinement prompt.", "warning");
+    return;
+  }
+  const button = document.getElementById("refinePopoverSubmit");
+  await withButtonLoading(button, async () => {
+    try {
+      const data = await apiJson(`/api/projects/${projectId}/artifacts/${category}/${artifactId}/refine`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({prompt})
+      });
+      showStatus("Refinement submitted. New version created.", "success");
+      renderResult(data);
+      await reloadAreaHistory(categoryToArea[category]);
+      closeRefinePopover();
+    } catch (e) {
+      console.error("Refinement failed:", e);
+    }
+  });
+}
+
 async function apiJson(url, options) {
   const response = await fetch(url, options);
   const text = await response.text();
@@ -1757,11 +1814,11 @@ function showTier1Actions(block, category, artifact) {
   
   if (refineBtn) {
     refineBtn.hidden = false;
-    // Stub for B11-5: no action yet
+    refineBtn.onclick = () => showRefinePopover(category, artifact.id);
   }
   
   if (finalBtn) {
-    finalBtn.hidden = !artifact || artifact.final !== true;
+    finalBtn.hidden = !artifact || artifact.final === true;
     if (!artifact?.final) {
       finalBtn.onclick = async () => {
         await finalizeArtifact(category, artifact.id);

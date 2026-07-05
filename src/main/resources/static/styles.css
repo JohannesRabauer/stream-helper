@@ -1950,3 +1950,110 @@ body.calm-ui .debug-card summary {
         justify-self: start;
     }
 }
+
+/* ── Refine Popover ── */
+.refine-popover-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+.refine-popover {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    animation: slideUp 0.3s ease forwards;
+}
+
+.refine-popover-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    padding: 32px;
+    width: 90vw;
+    max-width: 500px;
+}
+
+.refine-popover-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.refine-popover-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.refine-popover-textarea {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+    margin: 16px 0;
+}
+
+.refine-popover-textarea::placeholder {
+    color: var(--muted);
+}
+
+.refine-popover-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(124, 58, 237, 0.05);
+}
+
+.refine-popover-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -40%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+body.calm-ui .refine-popover-content {
+    background: #ffffff;
+    border-color: #dbe5f0;
+}
+
+body.calm-ui .refine-popover-textarea {
+    background: #f8fbff;
+    border-color: #dbe5f0;
+    color: #172230;
+}
+
+body.calm-ui .refine-popover-textarea::placeholder {
+    color: #5e6d82;
+}
+
+body.calm-ui .refine-popover-textarea:focus {
+    border-color: #2f6fb2;
+    background: #f0f6fc;
+}

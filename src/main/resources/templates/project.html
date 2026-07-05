@@ -513,6 +513,22 @@
     </section>
 </main>
 
+<div id="refinePopoverOverlay" class="refine-popover-overlay" hidden onclick="closeRefinePopover()"></div>
+<div id="refinePopover" class="refine-popover" hidden>
+    <div class="refine-popover-content">
+        <div class="refine-popover-header">
+            <h3>Suggest improvements</h3>
+            <button type="button" class="icon-button" onclick="closeRefinePopover()" aria-label="Close popover">✕</button>
+        </div>
+        <p class="muted">Describe how you'd like to refine this version. Be specific with your feedback.</p>
+        <textarea id="refinePopoverInput" class="refine-popover-textarea" rows="4" placeholder="e.g. make it punchier, add the keyword Spring Boot, use more actionable language"></textarea>
+        <div class="refine-popover-actions">
+            <button type="button" class="secondary-button" onclick="closeRefinePopover()">Cancel</button>
+            <button type="button" class="primary-button" id="refinePopoverSubmit" onclick="submitRefinement()">Refine</button>
+        </div>
+    </div>
+</div>
+
 <button
         id="projectNotesToggle"
         type="button"

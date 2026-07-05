@@ -734,6 +734,49 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
     color: var(--text);
 }
 
+/* ── Pipeline steps (sequential flow visualization) ── */
+.pipeline-step {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.2rem;
+}
+
+.pipeline-step::after {
+    content: '';
+    position: absolute;
+    left: 1.4rem;
+    top: 3rem;
+    bottom: -1.2rem;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--border), transparent);
+}
+
+.pipeline-step:last-child::after {
+    display: none;
+}
+
+.pipeline-step-number {
+    flex-shrink: 0;
+    width: 2.8rem;
+    height: 2.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    background: rgba(124, 58, 237, 0.08);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent);
+    position: relative;
+    z-index: 1;
+}
+
+.pipeline-step .asset-block {
+    grid-column: 2 / 3;
+}
+
 /* ── Asset guidance (optional per-asset guidance) ── */
 .asset-guidance {
     display: grid;

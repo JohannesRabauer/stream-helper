@@ -76,17 +76,17 @@ class InstructionComposerTest {
         storageService.saveArtifact(
                 project.id(), GenerationCategory.YOUTUBE_DESCRIPTION, "default", "Created YouTube description context", true, true);
         storageService.saveArtifact(
-                project.id(), GenerationCategory.THUMBNAIL_IDEA, "idea-01", "IDEA 01: Dramatic split-screen visual", true, false);
+                project.id(), GenerationCategory.THUMBNAIL_IDEAS, "idea-01", "IDEA 01: Dramatic split-screen visual", true, false);
         storageService.saveArtifact(
-                project.id(), GenerationCategory.THUMBNAIL_PROMPT, "high-contrast", "Legacy thumbnail prompt context", true, false);
+                project.id(), GenerationCategory.THUMBNAIL_PROMPTS, "high-contrast", "Legacy thumbnail prompt context", true, false);
 
         InstructionComposer composer = new InstructionComposer(storageService);
 
-        String ideasContext = composer.compose(project.id(), GenerationCategory.THUMBNAIL_IDEA);
+        String ideasContext = composer.compose(project.id(), GenerationCategory.THUMBNAIL_IDEAS);
         assertThat(ideasContext).contains("Created YouTube description context");
         assertThat(ideasContext).doesNotContain("Legacy thumbnail prompt context");
 
-        String promptContext = composer.compose(project.id(), GenerationCategory.THUMBNAIL_PROMPT);
+        String promptContext = composer.compose(project.id(), GenerationCategory.THUMBNAIL_PROMPTS);
         assertThat(promptContext).contains("Created YouTube description context");
         assertThat(promptContext).contains("IDEA 01: Dramatic split-screen visual");
         assertThat(promptContext).contains("Legacy thumbnail prompt context");

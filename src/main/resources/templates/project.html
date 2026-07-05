@@ -369,50 +369,177 @@
         <div class="section-heading">
             <h2>3 · Thumbnail</h2>
         </div>
-        <div class="workflow-grid">
-            <div class="workflow-main">
-                <div class="workflow-guide">
-                    <strong>Suggested flow</strong>
-                    <ol>
-                        <li>Use the final stream angle and description to shape the visual.</li>
-                        <li>Generate thumbnail ideas first, then turn the strongest one into prompts.</li>
-                        <li>Create either an external prompt package or the built-in image.</li>
-                    </ol>
-                </div>
 
-                <label for="draft-thumbnail">Thumbnail brief</label>
-                <textarea id="draft-thumbnail" rows="8" data-draft-key="thumbnail" placeholder="Describe the thumbnail style, contrast, framing, emotions, and text-overlay preferences."></textarea>
-                <div class="autosave-hint">Autosaved and combined with the saved stream positioning for coherent thumbnails.</div>
+        <div class="workflow-main">
+            <div class="workflow-guide">
+                <strong>Suggested flow</strong>
+                <ol>
+                    <li>Use the final stream angle and description to shape the visual.</li>
+                    <li>Generate thumbnail ideas first, then turn the strongest one into prompts.</li>
+                    <li>Create either an external prompt package or the built-in image.</li>
+                </ol>
+            </div>
 
-                <div class="button-grid">
-                    <button type="button" onclick="runStageBriefAction('thumbnail', 'thumbnail-ideas', this)">Generate 10 thumbnail ideas</button>
-                    <button type="button" onclick="runStageBriefAction('thumbnail', 'thumbnail-prompts', this)">Generate thumbnail prompts</button>
-                    <button type="button" onclick="createThumbnailFromStage('thumbnail', false, this)">Create external prompt package</button>
-                    <button type="button" onclick="createThumbnailFromStage('thumbnail', true, this)">Generate thumbnail image</button>
+            <label for="draft-thumbnail">Thumbnail brief</label>
+            <textarea id="draft-thumbnail" rows="8" data-draft-key="thumbnail" placeholder="Describe the thumbnail style, contrast, framing, emotions, and text-overlay preferences."></textarea>
+            <div class="autosave-hint">Autosaved and combined with the saved stream positioning for coherent thumbnails.</div>
+
+            <section id="inline-result-thumbnail" class="inline-result-panel" hidden>
+                <div class="section-heading compact-heading">
+                    <h3>Latest stage result</h3>
+                    <div class="inline-actions">
+                        <button type="button" class="secondary-button" onclick="copyRawResult('thumbnail')">Copy JSON</button>
+                        <button type="button" class="secondary-button" onclick="copyRecommendedContent('thumbnail')">Copy recommended</button>
+                    </div>
                 </div>
-                <section id="inline-result-thumbnail" class="inline-result-panel" hidden>
-                    <div class="section-heading compact-heading">
-                        <h3>Latest stage result</h3>
-                        <div class="inline-actions">
-                            <button type="button" class="secondary-button" onclick="copyRawResult('thumbnail')">Copy JSON</button>
-                            <button type="button" class="secondary-button" onclick="copyRecommendedContent('thumbnail')">Copy recommended</button>
+                <div id="inline-result-summary-thumbnail" class="muted">Run an action in this stage to see the newest output here.</div>
+                <div id="inline-result-cards-thumbnail" class="variant-grid"></div>
+                <details class="result-raw">
+                    <summary>Raw response JSON</summary>
+                    <pre id="inline-result-json-thumbnail">Run an action to see output...</pre>
+                </details>
+            </section>
+        </div>
+
+        <div class="stage-flow">
+            <!-- Thumbnail Ideas step 1 -->
+            <div class="pipeline-step" data-step="1">
+                <div class="pipeline-step-number">1</div>
+                <article class="asset-block" data-category="THUMBNAIL_IDEAS" data-state="empty">
+                    <div class="asset-block-head">
+                        <div>
+                            <h3>Ideas</h3>
+                            <p class="muted">Brainstorm visual concepts and visual styles for your thumbnail.</p>
+                        </div>
+                        <div class="asset-status-chip">empty</div>
+                    </div>
+                    <details class="asset-guidance" data-category="THUMBNAIL_IDEAS">
+                        <summary>＋ Add guidance</summary>
+                        <div class="guidance-content">
+                            <div class="guidance-chips">
+                                <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'High contrast')">High contrast</button>
+                                <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Show a face')">Show a face</button>
+                                <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Big bold text')">Big bold text</button>
+                                <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Minimalist')">Minimalist</button>
+                            </div>
+                            <textarea class="guidance-textarea" placeholder="e.g. high contrast, show a face, big bold text" rows="3"></textarea>
+                            <div class="autosave-hint">Autosaved to project</div>
+                        </div>
+                    </details>
+                    <div id="asset-current-THUMBNAIL_IDEAS" class="asset-current"></div>
+                    <div class="asset-actions">
+                        <button type="button" class="primary-button" onclick="runStageBriefAction('thumbnail', 'thumbnail-ideas', this)">Generate ideas</button>
+                        <button type="button" class="secondary-button asset-copy-button" hidden>Copy</button>
+                        <button type="button" class="secondary-button asset-regenerate-button" hidden>Regenerate</button>
+                        <button type="button" class="secondary-button asset-refine-button" hidden>Refine ▾</button>
+                        <button type="button" class="secondary-button asset-final-button" hidden>Set as final</button>
+                    </div>
+                    <section id="inline-result-THUMBNAIL_IDEAS" class="inline-result-panel" hidden>
+                        <div id="inline-result-cards-THUMBNAIL_IDEAS" class="variant-grid"></div>
+                        <details class="result-raw">
+                            <summary>Raw response JSON</summary>
+                            <pre id="inline-result-json-THUMBNAIL_IDEAS">Run an action to see output...</pre>
+                        </details>
+                    </section>
+                    <details class="asset-versions">
+                        <summary id="versions-summary-THUMBNAIL_IDEAS">Versions (0)</summary>
+                        <div id="asset-versions-THUMBNAIL_IDEAS" class="version-timeline"></div>
+                    </details>
+                </article>
+            </div>
+
+            <!-- Thumbnail Prompts step 2 -->
+            <div class="pipeline-step" data-step="2">
+                <div class="pipeline-step-number">2</div>
+                <article class="asset-block" data-category="THUMBNAIL_PROMPTS" data-state="empty">
+                    <div class="asset-block-head">
+                        <div>
+                            <h3>Prompts</h3>
+                            <p class="muted">Convert your best idea into detailed prompts for image generation tools.</p>
+                        </div>
+                        <div class="asset-status-chip">empty</div>
+                    </div>
+                    <details class="asset-guidance" data-category="THUMBNAIL_PROMPTS">
+                        <summary>＋ Add guidance</summary>
+                        <div class="guidance-content">
+                            <div class="guidance-chips">
+                                <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Professional')">Professional</button>
+                                <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Cinematic')">Cinematic</button>
+                                <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Bright colors')">Bright colors</button>
+                                <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Minimalist')">Minimalist</button>
+                            </div>
+                            <textarea class="guidance-textarea" placeholder="e.g. professional, cinematic lighting, bright colors" rows="3"></textarea>
+                            <div class="autosave-hint">Autosaved to project</div>
+                        </div>
+                    </details>
+                    <div id="asset-current-THUMBNAIL_PROMPTS" class="asset-current"></div>
+                    <div class="asset-actions">
+                        <button type="button" class="primary-button" onclick="runStageBriefAction('thumbnail', 'thumbnail-prompts', this)">Generate prompts</button>
+                        <button type="button" class="secondary-button asset-copy-button" hidden>Copy</button>
+                        <button type="button" class="secondary-button asset-regenerate-button" hidden>Regenerate</button>
+                        <button type="button" class="secondary-button asset-refine-button" hidden>Refine ▾</button>
+                        <button type="button" class="secondary-button asset-final-button" hidden>Set as final</button>
+                    </div>
+                    <section id="inline-result-THUMBNAIL_PROMPTS" class="inline-result-panel" hidden>
+                        <div id="inline-result-cards-THUMBNAIL_PROMPTS" class="variant-grid"></div>
+                        <details class="result-raw">
+                            <summary>Raw response JSON</summary>
+                            <pre id="inline-result-json-THUMBNAIL_PROMPTS">Run an action to see output...</pre>
+                        </details>
+                    </section>
+                    <details class="asset-versions">
+                        <summary id="versions-summary-THUMBNAIL_PROMPTS">Versions (0)</summary>
+                        <div id="asset-versions-THUMBNAIL_PROMPTS" class="version-timeline"></div>
+                    </details>
+                </article>
+            </div>
+
+            <!-- Thumbnail Images step 3 -->
+            <div class="pipeline-step" data-step="3">
+                <div class="pipeline-step-number">3</div>
+                <article class="asset-block" data-category="THUMBNAILS" data-state="empty">
+                    <div class="asset-block-head">
+                        <div>
+                            <h3>Image</h3>
+                            <p class="muted">Generate a finished thumbnail image using your prompts or external tools.</p>
+                        </div>
+                        <div class="asset-status-chip">empty</div>
+                    </div>
+                    <details class="asset-guidance" data-category="THUMBNAILS">
+                        <summary>＋ Add guidance</summary>
+                        <div class="guidance-content">
+                            <div class="guidance-chips">
+                                <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Add text')">Add text</button>
+                                <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Different style')">Different style</button>
+                                <button type="button" class="guidance-chip" onclick="appendGuidanceChip(this, 'Higher quality')">Higher quality</button>
+                            </div>
+                            <textarea class="guidance-textarea" placeholder="e.g. add text overlay, different style" rows="3"></textarea>
+                            <div class="autosave-hint">Autosaved to project</div>
+                        </div>
+                    </details>
+                    <div id="asset-current-THUMBNAILS" class="asset-current"></div>
+                    <div id="image-provider-check">
+                        <div class="asset-actions">
+                            <button type="button" class="primary-button" onclick="runStageBriefAction('thumbnail', 'thumbnails', this)">Generate image</button>
+                            <button type="button" class="secondary-button asset-copy-button" hidden>Copy</button>
+                            <button type="button" class="secondary-button asset-regenerate-button" hidden>Regenerate</button>
+                            <button type="button" class="secondary-button asset-refine-button" hidden>Refine ▾</button>
+                            <button type="button" class="secondary-button asset-final-button" hidden>Set as final</button>
                         </div>
                     </div>
-                    <div id="inline-result-summary-thumbnail" class="muted">Run an action in this stage to see the newest output here.</div>
-                    <div id="inline-result-cards-thumbnail" class="variant-grid"></div>
-                    <details class="result-raw">
-                        <summary>Raw response JSON</summary>
-                        <pre id="inline-result-json-thumbnail">Run an action to see output...</pre>
+                    <section id="inline-result-THUMBNAILS" class="inline-result-panel" hidden>
+                        <div id="inline-result-cards-THUMBNAILS" class="variant-grid"></div>
+                        <details class="result-raw">
+                            <summary>Raw response JSON</summary>
+                            <pre id="inline-result-json-THUMBNAILS">Run an action to see output...</pre>
+                        </details>
+                    </section>
+                    <details class="asset-versions">
+                        <summary id="versions-summary-THUMBNAILS">Versions (0)</summary>
+                        <div id="asset-versions-THUMBNAILS" class="version-timeline"></div>
                     </details>
-                </section>
+                </article>
             </div>
-            <aside class="history-panel">
-                <div class="section-heading">
-                    <h3>Stage history</h3>
-                    <span id="history-count-thumbnail">0 entries</span>
-                </div>
-                <div id="history-thumbnail" class="history-groups"></div>
-            </aside>
         </div>
             </section>
 
@@ -906,6 +1033,7 @@
     const initialGlobalConfig = /*[[${globalConfig}]]*/ {};
     const initialProjectNoteMarkdown = /*[[${projectNoteMarkdown}]]*/ '';
     const initialProjectNoteHtml = /*[[${projectNoteHtml}]]*/ '';
+    const imageProviderAvailable = /*[[${imageProviderAvailable}]]*/ false;
 </script>
 <script th:src="@{/project.js}"></script>
 </body>

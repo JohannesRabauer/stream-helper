@@ -56,7 +56,13 @@ public class PageController {
         model.addAttribute("globalConfig", storageService.readGlobalConfig());
         model.addAttribute("projectNoteMarkdown", projectNotes);
         model.addAttribute("projectNoteHtml", markdownService.render(projectNotes));
+        model.addAttribute("imageProviderAvailable", isImageProviderAvailable());
         return "project";
+    }
+
+    private boolean isImageProviderAvailable() {
+        String openaiKey = System.getenv("OPENAI_API_KEY");
+        return openaiKey != null && !openaiKey.isBlank();
     }
 
     @PostMapping("/projects/{projectId}/notes")

@@ -146,7 +146,7 @@ public class InstructionComposer {
                     GenerationCategory.YOUTUBE_TITLES,
                     GenerationCategory.YOUTUBE_DESCRIPTION,
                     GenerationCategory.YOUTUBE_TAGS);
-            case THUMBNAIL_IDEA -> EnumSet.of(
+            case THUMBNAIL_IDEAS -> EnumSet.of(
                     GenerationCategory.TOPIC_IDEA,
                     GenerationCategory.GUEST_IDEA,
                     GenerationCategory.YOUTUBE_TITLES,
@@ -155,7 +155,7 @@ public class InstructionComposer {
                     GenerationCategory.LINKEDIN_POST,
                     GenerationCategory.SOCIAL_POST,
                     GenerationCategory.HASHTAGS);
-            case THUMBNAIL_PROMPT -> EnumSet.of(
+            case THUMBNAIL_PROMPTS -> EnumSet.of(
                     GenerationCategory.TOPIC_IDEA,
                     GenerationCategory.GUEST_IDEA,
                     GenerationCategory.YOUTUBE_TITLES,
@@ -164,9 +164,9 @@ public class InstructionComposer {
                     GenerationCategory.LINKEDIN_POST,
                     GenerationCategory.SOCIAL_POST,
                     GenerationCategory.HASHTAGS,
-                    GenerationCategory.THUMBNAIL_IDEA,
-                    GenerationCategory.THUMBNAIL_PROMPT);
-            case THUMBNAIL_ASSET -> EnumSet.of(
+                    GenerationCategory.THUMBNAIL_IDEAS,
+                    GenerationCategory.THUMBNAIL_PROMPTS);
+            case THUMBNAILS -> EnumSet.of(
                     GenerationCategory.TOPIC_IDEA,
                     GenerationCategory.GUEST_IDEA,
                     GenerationCategory.YOUTUBE_TITLES,
@@ -175,8 +175,8 @@ public class InstructionComposer {
                     GenerationCategory.LINKEDIN_POST,
                     GenerationCategory.SOCIAL_POST,
                     GenerationCategory.HASHTAGS,
-                    GenerationCategory.THUMBNAIL_IDEA,
-                    GenerationCategory.THUMBNAIL_PROMPT);
+                    GenerationCategory.THUMBNAIL_IDEAS,
+                    GenerationCategory.THUMBNAIL_PROMPTS);
             case LINKEDIN_POST, SOCIAL_POST, HASHTAGS -> EnumSet.of(
                     GenerationCategory.TOPIC_IDEA,
                     GenerationCategory.GUEST_IDEA,
@@ -195,7 +195,7 @@ public class InstructionComposer {
                     GenerationCategory.SOCIAL_POST,
                     GenerationCategory.HASHTAGS,
                     GenerationCategory.YOUTUBE_TAGS,
-                    GenerationCategory.THUMBNAIL_PROMPT,
+                    GenerationCategory.THUMBNAIL_PROMPTS,
                     GenerationCategory.CHAPTERS,
                     GenerationCategory.SUMMARY);
             case TRANSCRIPT -> EnumSet.of(GenerationCategory.TOPIC_IDEA, GenerationCategory.GUEST_IDEA);
@@ -230,9 +230,9 @@ public class InstructionComposer {
             case TRANSCRIPT -> "Transcript";
             case CHAPTERS -> "Chapters";
             case SUMMARY -> "Summary";
-            case THUMBNAIL_PROMPT -> "Thumbnail prompts";
-            case THUMBNAIL_ASSET -> "Thumbnail assets";
-            case THUMBNAIL_IDEA -> "Thumbnail ideas";
+            case THUMBNAIL_PROMPTS -> "Thumbnail prompts";
+            case THUMBNAILS -> "Thumbnail images";
+            case THUMBNAIL_IDEAS -> "Thumbnail ideas";
         };
     }
 }

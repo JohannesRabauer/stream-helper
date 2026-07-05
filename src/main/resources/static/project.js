@@ -18,7 +18,7 @@ const workflowAreas = {
     draftInputId: "draft-thumbnail",
     historyContainerId: "history-thumbnail",
     historyCountId: "history-count-thumbnail",
-    categories: ["THUMBNAIL_IDEA", "THUMBNAIL_PROMPT", "THUMBNAIL_ASSET"]
+    categories: ["THUMBNAIL_IDEAS", "THUMBNAIL_PROMPTS", "THUMBNAILS"]
   },
   "social-announcements": {
     draftKey: "social-announcements",
@@ -53,9 +53,9 @@ const categoryLabels = {
   TRANSCRIPT: "Transcripts",
   CHAPTERS: "Chapters",
   SUMMARY: "Summaries",
-  THUMBNAIL_IDEA: "Thumbnail ideas",
-  THUMBNAIL_PROMPT: "Thumbnail prompts",
-  THUMBNAIL_ASSET: "Thumbnail assets"
+  THUMBNAIL_IDEAS: "Thumbnail ideas",
+  THUMBNAIL_PROMPTS: "Thumbnail prompts",
+  THUMBNAILS: "Thumbnail images"
 };
 
 const categoryToArea = {
@@ -64,9 +64,9 @@ const categoryToArea = {
   YOUTUBE_TITLES: "description",
   YOUTUBE_DESCRIPTION: "description",
   YOUTUBE_TAGS: "description",
-  THUMBNAIL_IDEA: "thumbnail",
-  THUMBNAIL_PROMPT: "thumbnail",
-  THUMBNAIL_ASSET: "thumbnail",
+  THUMBNAIL_IDEAS: "thumbnail",
+  THUMBNAIL_PROMPTS: "thumbnail",
+  THUMBNAILS: "thumbnail",
   LINKEDIN_POST: "social-announcements",
   SOCIAL_POST: "social-announcements",
   HASHTAGS: "social-announcements",
@@ -115,6 +115,18 @@ const guidanceConfig = {
   SUMMARY: {
     placeholder: "e.g. focus on key takeaways, shorter version, include timestamps",
     chips: ["Key takeaways", "Shorter", "More detailed", "Include timestamps"]
+  },
+  THUMBNAIL_IDEAS: {
+    placeholder: "e.g. high contrast, show a face, big bold text",
+    chips: ["High contrast", "Show a face", "Big bold text", "Minimalist"]
+  },
+  THUMBNAIL_PROMPTS: {
+    placeholder: "e.g. professional, cinematic lighting, bright colors",
+    chips: ["Professional", "Cinematic", "Bright colors", "Minimalist"]
+  },
+  THUMBNAILS: {
+    placeholder: "e.g. add text overlay, different style",
+    chips: ["Add text", "Different style", "Higher quality"]
   }
 };
 
@@ -140,8 +152,8 @@ const editableArtifactCategories = new Set([
   "YOUTUBE_TAGS",
   "CHAPTERS",
   "SUMMARY",
-  "THUMBNAIL_IDEA",
-  "THUMBNAIL_PROMPT"
+  "THUMBNAIL_IDEAS",
+  "THUMBNAIL_PROMPTS"
 ]);
 
 const spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
@@ -165,6 +177,30 @@ const journeyStatusLabels = {
   locked: "Locked"
 };
 const areaCompletionState = {};
+
+function checkImageProviderSupport() {
+  return typeof imageProviderAvailable !== 'undefined' && imageProviderAvailable === true;
+}
+
+function initializeImageProviderCheck() {
+  const providerCheckDiv = document.getElementById("image-provider-check");
+  if (!providerCheckDiv) return;
+
+  const hasImageSupport = checkImageProviderSupport();
+  const actionButtons = providerCheckDiv.querySelector(".asset-actions");
+  
+  if (!hasImageSupport) {
+    if (actionButtons) {
+      actionButtons.style.display = "none";
+    }
+    const note = document.createElement("div");
+    note.className = "muted";
+    note.style.padding = "0.5rem 0";
+    note.style.fontSize = "0.9em";
+    note.textContent = "Image generation requires OpenAI API configuration";
+    providerCheckDiv.appendChild(note);
+  }
+}
 
 document.addEventListener("click", (event) => {
   const button = event.target.closest("button");
@@ -1898,4 +1934,5 @@ window.addEventListener("DOMContentLoaded", async () => {
   await Promise.all(Object.keys(workflowAreas).map((areaKey) => reloadAreaHistory(areaKey)));
   updateJourneyRail();
   await initializeTranscriptionProgress();
+  initializeImageProviderCheck();
 });

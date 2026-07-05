@@ -189,7 +189,7 @@ class AssistantApiControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"brief\":\"Bold contrast and clean composition\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.category").value("THUMBNAIL_PROMPT"))
+                .andExpect(jsonPath("$.category").value("THUMBNAIL_PROMPTS"))
                 .andExpect(jsonPath("$.variants.length()").value(3));
     }
 
@@ -264,7 +264,7 @@ class AssistantApiControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"brief\":\"Focus on the final YouTube description angle\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.category").value("THUMBNAIL_IDEA"))
+                .andExpect(jsonPath("$.category").value("THUMBNAIL_IDEAS"))
                 .andExpect(jsonPath("$.variants.length()").value(10))
                 .andExpect(jsonPath("$.variants[0].strategy").value("idea-01"));
     }
@@ -277,7 +277,7 @@ class AssistantApiControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"prompt\":\"Use high contrast red and blue\",\"builtIn\":false}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.category").value("THUMBNAIL_ASSET"))
+               .andExpect(jsonPath("$.category").value("THUMBNAILS"))
                 .andExpect(jsonPath("$.variants.length()").value(1))
                 .andExpect(jsonPath("$.variants[0].strategy").value("external-prompt-package"));
     }
@@ -290,7 +290,7 @@ class AssistantApiControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"prompt\":\"Studio portrait lighting\",\"builtIn\":true}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.category").value("THUMBNAIL_ASSET"))
+               .andExpect(jsonPath("$.category").value("THUMBNAILS"))
                 .andExpect(jsonPath("$.variants.length()").value(1))
                 .andExpect(jsonPath("$.variants[0].strategy").value("built-in-image"));
     }

@@ -290,7 +290,7 @@ public class AssistantService {
     public VariantResult generateThumbnailPrompts(String projectId, String brief) {
         return generateVariants(
                 projectId,
-                GenerationCategory.THUMBNAIL_PROMPT,
+                GenerationCategory.THUMBNAIL_PROMPTS,
                 brief,
                 List.of("high-contrast", "clean-professional", "bold-hype"),
                 """
@@ -317,7 +317,7 @@ public class AssistantService {
                 ? "\n- Use the literal placeholder {GUEST_NAME} in any text overlay that names the guest (e.g. \"Java AI with {GUEST_NAME}\")."
                 : "";
 
-        String effective = instructionComposer.compose(projectId, GenerationCategory.THUMBNAIL_IDEA);
+        String effective = instructionComposer.compose(projectId, GenerationCategory.THUMBNAIL_IDEAS);
         String userPrompt = """
                 Project title: %s
                 Host: %s
@@ -355,7 +355,7 @@ public class AssistantService {
 
         String content = aiClient.generateText(effective, userPrompt).trim();
         List<ArtifactVersion> artifacts = saveThumbnailIdeas(projectId, content);
-        return new VariantResult(GenerationCategory.THUMBNAIL_IDEA, effective, artifacts, List.of());
+        return new VariantResult(GenerationCategory.THUMBNAIL_IDEAS, effective, artifacts, List.of());
     }
 
     private List<ArtifactVersion> saveThumbnailIdeas(String projectId, String rawIdeas) {
@@ -369,7 +369,7 @@ public class AssistantService {
             }
             artifacts.add(storageService.saveArtifact(
                     projectId,
-                    GenerationCategory.THUMBNAIL_IDEA,
+                    GenerationCategory.THUMBNAIL_IDEAS,
                     "idea-%02d".formatted(index + 1),
                     trimmed,
                     index == 0,
@@ -378,7 +378,7 @@ public class AssistantService {
         }
         if (artifacts.isEmpty()) {
             artifacts.add(storageService.saveArtifact(
-                    projectId, GenerationCategory.THUMBNAIL_IDEA, "ideas", rawIdeas, true, false));
+                    projectId, GenerationCategory.THUMBNAIL_IDEAS, "ideas", rawIdeas, true, false));
         }
         return artifacts;
     }
@@ -387,14 +387,14 @@ public class AssistantService {
         if (!builtIn) {
             ArtifactVersion artifact = storageService.saveArtifact(
                     projectId,
-                    GenerationCategory.THUMBNAIL_ASSET,
+                    GenerationCategory.THUMBNAILS,
                     "external-prompt-package",
                     selectedPrompt,
                     true,
                     false);
             return new VariantResult(
-                    GenerationCategory.THUMBNAIL_ASSET,
-                    instructionComposer.effectivePreview(projectId, GenerationCategory.THUMBNAIL_ASSET),
+                    GenerationCategory.THUMBNAILS,
+                    instructionComposer.effectivePreview(projectId, GenerationCategory.THUMBNAILS),
                     List.of(artifact),
                     List.of());
         }
@@ -402,17 +402,36 @@ public class AssistantService {
         byte[] png = aiClient.generateImagePng(selectedPrompt)
                 .orElseThrow(() -> new AiClientException("Built-in image generation is not available for current provider"));
         storageService.writeBinaryAsset(
-                projectId, GenerationCategory.THUMBNAIL_ASSET, "png", new ByteArrayInputStream(png));
+                projectId, GenerationCategory.THUMBNAILS, "png", new ByteArrayInputStream(png));
         ArtifactVersion artifact = storageService.saveArtifact(
                 projectId,
-                GenerationCategory.THUMBNAIL_ASSET,
+                GenerationCategory.THUMBNAILS,
                 "built-in-image",
                 "Generated PNG image stored in project outputs.",
                 true,
                 false);
         return new VariantResult(
-                GenerationCategory.THUMBNAIL_ASSET,
-                instructionComposer.effectivePreview(projectId, GenerationCategory.THUMBNAIL_ASSET),
+                GenerationCategory.THUMBNAILS,
+                instructionComposer.effectivePreview(projectId, GenerationCategory.THUMBNAILS),
+                List.of(artifact),
+                List.of());
+    }
+
+    public VariantResult generateThumbnail(String projectId, String brief) {
+        byte[] png = aiClient.generateImagePng(brief)
+                .orElseThrow(() -> new AiClientException("Image generation is not available for current provider"));
+        storageService.writeBinaryAsset(
+                projectId, GenerationCategory.THUMBNAILS, "png", new ByteArrayInputStream(png));
+        ArtifactVersion artifact = storageService.saveArtifact(
+                projectId,
+                GenerationCategory.THUMBNAILS,
+                "generated-image",
+                "Generated thumbnail image from prompt.",
+                true,
+                false);
+        return new VariantResult(
+                GenerationCategory.THUMBNAILS,
+                instructionComposer.effectivePreview(projectId, GenerationCategory.THUMBNAILS),
                 List.of(artifact),
                 List.of());
     }

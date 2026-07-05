@@ -106,10 +106,26 @@ let transcriptionProgressPollTimer = null;
 let transcriptionRequestInFlight = false;
 let transcriptionAwaitingActiveState = false;
 const timestampFormatter = createTimestampFormatter();
+const journeyOrder = ["pre-stream", "description", "thumbnail", "social-announcements", "transcription", "post-stream"];
+const journeyMeta = {
+  "pre-stream": {title: "Step 1 · Plan", nextHint: "Capture a clear stream brief, then generate topic and guest ideas."},
+  description: {title: "Step 2 · Title & description", nextHint: "Generate titles, description, and tags from your chosen angle."},
+  thumbnail: {title: "Step 3 · Thumbnail", nextHint: "Draft visual concepts, then turn the best one into prompts or assets."},
+  "social-announcements": {title: "Step 4 · Announce", nextHint: "Create your LinkedIn post, short social posts, and hashtags."},
+  transcription: {title: "Step 5 · Transcribe", nextHint: "Upload media or a YouTube URL to unlock chapters and summary."},
+  "post-stream": {title: "Step 6 · Wrap-up", nextHint: "Generate chapters and summary once a transcript is available."}
+};
+const journeyStatusLabels = {
+  "not-started": "Not started",
+  "in-progress": "In progress",
+  ready: "Ready",
+  locked: "Locked"
+};
+const areaCompletionState = {};
 
 document.addEventListener("click", (event) => {
   const button = event.target.closest("button");
-  if (!button || button.disabled) {
+  if (!button || button.disabled || document.body.classList.contains("calm-ui")) {
     return;
   }
   const ripple = document.createElement("span");
@@ -186,6 +202,14 @@ function cancelProjectRename() {
 }
 
 function selectWorkflowTab(areaKey, button) {
+  if (areaKey === "post-stream" && !hasTranscriptAvailable()) {
+    showStatus("Create a transcript in Step 5 before opening Wrap-up.", "warning");
+    const transcriptionButton = document.querySelector('.tab-button[data-tab="transcription"]');
+    if (transcriptionButton) {
+      selectWorkflowTab("transcription", transcriptionButton);
+    }
+    return;
+  }
   document.querySelectorAll("[data-tab-panel]").forEach((panel) => {
     panel.hidden = panel.dataset.tabPanel !== areaKey;
     panel.classList.toggle("active", panel.dataset.tabPanel === areaKey);
@@ -201,6 +225,59 @@ function selectWorkflowTab(areaKey, button) {
   }
   projectConfig.currentWorkflowStage = areaKey;
   scheduleProjectConfigSave();
+  updateJourneyRail();
+}
+
+function hasTranscriptAvailable() {
+  return Boolean(areaCompletionState.transcription?.hasArtifacts);
+}
+
+function getAreaJourneyState(areaKey) {
+  if (areaKey === "post-stream" && !hasTranscriptAvailable()) {
+    return "locked";
+  }
+  const completion = areaCompletionState[areaKey];
+  if (completion?.hasFinal) {
+    return "ready";
+  }
+  if (completion?.hasArtifacts || getDraftValue(areaKey)) {
+    return "in-progress";
+  }
+  return "not-started";
+}
+
+function resolveNextJourneyArea() {
+  for (const areaKey of journeyOrder) {
+    const state = getAreaJourneyState(areaKey);
+    if (state !== "ready" && state !== "locked") {
+      return areaKey;
+    }
+  }
+  return null;
+}
+
+function updateJourneyRail() {
+  document.querySelectorAll(".tab-button[data-tab]").forEach((tabButton) => {
+    const areaKey = tabButton.dataset.tab;
+    const state = getAreaJourneyState(areaKey);
+    tabButton.dataset.stepState = state;
+    tabButton.setAttribute("aria-disabled", state === "locked" ? "true" : "false");
+    const statusNode = tabButton.querySelector(".journey-step-status");
+    if (statusNode) {
+      statusNode.textContent = journeyStatusLabels[state] || journeyStatusLabels["not-started"];
+    }
+  });
+  const helperNode = document.getElementById("journeyNextStep");
+  if (!helperNode) {
+    return;
+  }
+  const nextArea = resolveNextJourneyArea();
+  if (!nextArea) {
+    helperNode.textContent = "Episode kit complete — review final picks and export your ZIP.";
+    return;
+  }
+  const nextMeta = journeyMeta[nextArea];
+  helperNode.textContent = nextMeta?.nextHint || "Pick a stage and continue.";
 }
 
 async function runStageBriefAction(areaKey, endpoint, button) {
@@ -492,6 +569,17 @@ async function reloadAreaHistory(areaKey) {
       }))
   );
   renderAreaHistory(areaKey, results);
+  updateAreaCompletionState(areaKey, results);
+}
+
+function updateAreaCompletionState(areaKey, categoryResults) {
+  const artifacts = (categoryResults || [])
+      .flatMap((result) => Array.isArray(result.artifacts) ? result.artifacts : []);
+  areaCompletionState[areaKey] = {
+    hasArtifacts: artifacts.length > 0,
+    hasFinal: artifacts.some((artifact) => Boolean(artifact?.finalVersion))
+  };
+  updateJourneyRail();
 }
 
 function renderAreaHistory(areaKey, categoryResults) {
@@ -1237,6 +1325,7 @@ function bindAutosaveInputs() {
       }
       projectConfig.workspaceDrafts[draftKey] = textarea.value;
       scheduleProjectConfigSave();
+      updateJourneyRail();
     });
   });
 
@@ -1356,10 +1445,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
   migrateLegacyPromotionState();
   bindAutosaveInputs();
+  updateJourneyRail();
   await setProjectNotesMode(projectNotesMode);
   const activeTab = projectConfig.currentWorkflowStage || "pre-stream";
   const activeButton = document.querySelector(`.tab-button[data-tab="${activeTab}"]`) || document.querySelector('.tab-button[data-tab="pre-stream"]');
   selectWorkflowTab(activeButton?.dataset.tab || "pre-stream", activeButton);
   await Promise.all(Object.keys(workflowAreas).map((areaKey) => reloadAreaHistory(areaKey)));
+  updateJourneyRail();
   await initializeTranscriptionProgress();
 });

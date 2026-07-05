@@ -6,7 +6,7 @@
     <title th:text="'Stream Helper — ' + ${project.name}">Project</title>
     <link rel="stylesheet" th:href="@{/styles.css}">
 </head>
-<body>
+<body class="calm-ui">
 <div class="bg-mesh"><div class="bg-orb3"></div></div>
 <main class="container">
     <header class="project-header card">
@@ -40,27 +40,56 @@
 
     <section id="statusBar" class="status-bar" hidden></section>
 
-    <section class="card">
-                <div class="section-heading">
-                    <h2>Workflow cockpit</h2>
-                    <div class="inline-actions">
-                        <span>Everything autosaves</span>
-                    </div>
-                </div>
-                <p class="muted">Work through the stream in stages. Drafts are saved immediately, generated outputs create a new version every time, and inline history stays with the stage where you need it.</p>
-                <div class="workflow-tabs" role="tablist" aria-label="Workflow stages">
-                    <button type="button" class="tab-button active" data-tab="pre-stream" aria-selected="true" aria-current="page" onclick="selectWorkflowTab('pre-stream', this)">Pre-stream planning</button>
-                    <button type="button" class="tab-button" data-tab="description" aria-selected="false" onclick="selectWorkflowTab('description', this)">Description</button>
-                    <button type="button" class="tab-button" data-tab="thumbnail" aria-selected="false" onclick="selectWorkflowTab('thumbnail', this)">Thumbnail</button>
-                    <button type="button" class="tab-button" data-tab="social-announcements" aria-selected="false" onclick="selectWorkflowTab('social-announcements', this)">Social Media</button>
-                    <button type="button" class="tab-button" data-tab="transcription" aria-selected="false" onclick="selectWorkflowTab('transcription', this)">Transcription</button>
-                    <button type="button" class="tab-button" data-tab="post-stream" aria-selected="false" onclick="selectWorkflowTab('post-stream', this)">Post-stream wrap-up</button>
-                </div>
-            </section>
+    <section class="workflow-studio card">
+        <div class="section-heading">
+            <h2>Project studio</h2>
+            <div class="inline-actions">
+                <span>Autosaves on every edit</span>
+            </div>
+        </div>
+        <p class="muted">Follow the guided journey from planning to wrap-up. Every stage keeps your latest output and full history in one place.</p>
+        <section class="journey-helper" aria-live="polite">
+            <p class="journey-helper-eyebrow">Next up</p>
+            <p id="journeyNextStep">Start with Step 1 · Plan.</p>
+        </section>
+        <div class="journey-layout">
+            <div class="workflow-tabs journey-rail" role="tablist" aria-label="Workflow stages">
+                <button type="button" class="tab-button active" data-tab="pre-stream" aria-selected="true" aria-current="page" onclick="selectWorkflowTab('pre-stream', this)">
+                    <span class="journey-step-index">1</span>
+                    <span class="journey-step-copy"><strong>Plan</strong><small>Topic and guest direction</small></span>
+                    <span class="journey-step-status" id="journey-status-pre-stream">Not started</span>
+                </button>
+                <button type="button" class="tab-button" data-tab="description" aria-selected="false" onclick="selectWorkflowTab('description', this)">
+                    <span class="journey-step-index">2</span>
+                    <span class="journey-step-copy"><strong>Title &amp; description</strong><small>YouTube metadata and tags</small></span>
+                    <span class="journey-step-status" id="journey-status-description">Not started</span>
+                </button>
+                <button type="button" class="tab-button" data-tab="thumbnail" aria-selected="false" onclick="selectWorkflowTab('thumbnail', this)">
+                    <span class="journey-step-index">3</span>
+                    <span class="journey-step-copy"><strong>Thumbnail</strong><small>Ideas, prompts, and assets</small></span>
+                    <span class="journey-step-status" id="journey-status-thumbnail">Not started</span>
+                </button>
+                <button type="button" class="tab-button" data-tab="social-announcements" aria-selected="false" onclick="selectWorkflowTab('social-announcements', this)">
+                    <span class="journey-step-index">4</span>
+                    <span class="journey-step-copy"><strong>Announce</strong><small>LinkedIn, social posts, hashtags</small></span>
+                    <span class="journey-step-status" id="journey-status-social-announcements">Not started</span>
+                </button>
+                <button type="button" class="tab-button" data-tab="transcription" aria-selected="false" onclick="selectWorkflowTab('transcription', this)">
+                    <span class="journey-step-index">5</span>
+                    <span class="journey-step-copy"><strong>Transcribe</strong><small>Upload media or YouTube URL</small></span>
+                    <span class="journey-step-status" id="journey-status-transcription">Not started</span>
+                </button>
+                <button type="button" class="tab-button" data-tab="post-stream" aria-selected="false" onclick="selectWorkflowTab('post-stream', this)">
+                    <span class="journey-step-index">6</span>
+                    <span class="journey-step-copy"><strong>Wrap-up</strong><small>Chapters and summary</small></span>
+                    <span class="journey-step-status" id="journey-status-post-stream">Locked</span>
+                </button>
+            </div>
+            <div class="journey-content">
 
             <section class="workflow-panel card active" data-tab-panel="pre-stream">
         <div class="section-heading">
-            <h2>Pre-stream planning</h2>
+            <h2>1 · Plan</h2>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -109,7 +138,7 @@
 
             <section class="workflow-panel card" data-tab-panel="description" hidden>
         <div class="section-heading">
-            <h2>Description</h2>
+            <h2>2 · Title &amp; description</h2>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -159,7 +188,7 @@
 
             <section class="workflow-panel card" data-tab-panel="thumbnail" hidden>
         <div class="section-heading">
-            <h2>Thumbnail</h2>
+            <h2>3 · Thumbnail</h2>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -210,7 +239,7 @@
 
             <section class="workflow-panel card" data-tab-panel="social-announcements" hidden>
         <div class="section-heading">
-            <h2>Social Media (Announcements)</h2>
+            <h2>4 · Announce</h2>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -260,7 +289,7 @@
 
             <section class="workflow-panel card" data-tab-panel="transcription" hidden>
         <div class="section-heading">
-            <h2>Transcription</h2>
+            <h2>5 · Transcribe</h2>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -338,7 +367,7 @@
 
             <section class="workflow-panel card" data-tab-panel="post-stream" hidden>
         <div class="section-heading">
-            <h2>Post-stream wrap-up</h2>
+            <h2>6 · Wrap-up</h2>
         </div>
         <div class="workflow-grid">
             <div class="workflow-main">
@@ -410,6 +439,9 @@
         </div>
         <pre id="effectivePromptBox">Choose a category to inspect the composed LLM context.</pre>
             </details>
+            </div>
+        </div>
+    </section>
 </main>
 
 <button

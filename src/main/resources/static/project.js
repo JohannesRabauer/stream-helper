@@ -481,15 +481,28 @@ function renderAssetBlockResult(data) {
   const panel = block.querySelector(`#inline-result-${category}`);
   const cards = block.querySelector(`#inline-result-cards-${category}`);
   const rawBox = block.querySelector(`#inline-result-json-${category}`);
+  const currentPickContainer = block.querySelector(`#asset-current-${category}`);
   
   if (!panel || !cards || !rawBox) return;
   
   panel.hidden = false;
   rawBox.textContent = JSON.stringify(data, null, 2);
   cards.innerHTML = "";
+  currentPickContainer.innerHTML = "";
   
   if (!data.variants || !Array.isArray(data.variants)) {
     return;
+  }
+  
+  // Find current pick: final > recommended > latest
+  const finalVariant = data.variants.find(v => v.final);
+  const recommendedVariant = data.variants.find(v => v.recommended);
+  const currentPick = finalVariant || recommendedVariant || data.variants[0];
+  
+  // Render current pick in asset-current container
+  if (currentPick) {
+    renderCurrentPickForBlock(currentPickContainer, currentPick, category);
+    showTier1Actions(block, category, currentPick);
   }
   
   const threadTurnsById = buildRefinementTurnsByThread(data.variants);
@@ -1566,6 +1579,96 @@ function migrateLegacyPromotionState() {
     projectConfig.currentWorkflowStage = "description";
     scheduleProjectConfigSave();
   }
+}
+
+function renderCurrentPickForBlock(container, artifact, category) {
+  const editable = isEditableArtifactCategory(category);
+  const content = artifact.content || "";
+  
+  if (editable) {
+    // For editable categories, render as editable textarea
+    const div = document.createElement("div");
+    div.className = "asset-current-content";
+    
+    const textarea = document.createElement("textarea");
+    textarea.className = "asset-current-editor";
+    textarea.value = content;
+    textarea.rows = 4;
+    
+    div.appendChild(textarea);
+    container.appendChild(div);
+    
+    // Wire up inline editor
+    setupArtifactEditor({
+      textarea,
+      artifact,
+      category,
+      areaKey: categoryToArea[category],
+      source: "current-pick"
+    });
+  } else {
+    // For non-editable, render as read-only pre
+    const div = document.createElement("div");
+    div.className = "asset-current-content";
+    div.innerHTML = `<pre>${escapeHtml(previewContent(content, category, 400))}</pre>`;
+    container.appendChild(div);
+  }
+}
+
+function showTier1Actions(block, category, artifact) {
+  const copyBtn = block.querySelector(".asset-copy-button");
+  const regenerateBtn = block.querySelector(".asset-regenerate-button");
+  const refineBtn = block.querySelector(".asset-refine-button");
+  const finalBtn = block.querySelector(".asset-final-button");
+  
+  if (copyBtn) {
+    copyBtn.hidden = false;
+    copyBtn.onclick = () => copyAssetContent(artifact);
+  }
+  
+  if (regenerateBtn) {
+    regenerateBtn.hidden = false;
+    const areaKey = categoryToArea[category];
+    const endpoint = getEndpointForCategory(category);
+    regenerateBtn.onclick = () => runStageBriefAction(areaKey, endpoint, regenerateBtn);
+  }
+  
+  if (refineBtn) {
+    refineBtn.hidden = false;
+    // Stub for B11-5: no action yet
+  }
+  
+  if (finalBtn) {
+    finalBtn.hidden = !artifact || artifact.final !== true;
+    if (!artifact?.final) {
+      finalBtn.onclick = async () => {
+        await finalizeArtifact(category, artifact.id);
+        finalBtn.hidden = true;
+      };
+    }
+  }
+}
+
+function copyAssetContent(artifact) {
+  copyToClipboard(artifact.content || "");
+}
+
+function getEndpointForCategory(category) {
+  const endpoints = {
+    TOPIC_IDEA: "topic-ideas",
+    GUEST_IDEA: "guest-ideas",
+    YOUTUBE_TITLES: "youtube-titles",
+    YOUTUBE_DESCRIPTION: "youtube-description",
+    YOUTUBE_TAGS: "youtube-tags",
+    THUMBNAIL_IDEA: "thumbnail-ideas",
+    THUMBNAIL_PROMPT: "thumbnail-prompts",
+    LINKEDIN_POST: "linkedin-posts",
+    SOCIAL_POST: "social-posts",
+    HASHTAGS: "hashtags",
+    CHAPTERS: "chapters",
+    SUMMARY: "summary"
+  };
+  return endpoints[category] || category.toLowerCase();
 }
 
 window.addEventListener("DOMContentLoaded", async () => {

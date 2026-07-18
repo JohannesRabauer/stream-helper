@@ -652,6 +652,16 @@
                 <p class="muted">Map speaker labels to names when diarization is enabled. The transcript is stored in the project separately from general prompts.</p>
             </div>
 
+            <div class="task-card-section">
+                <h3>Paste transcript manually</h3>
+                <label for="manualTranscriptInput">Transcript text</label>
+                <textarea id="manualTranscriptInput" rows="8" placeholder="Paste your existing transcript here to continue from a partially completed project."></textarea>
+                <div class="asset-actions">
+                    <button type="button" class="secondary-button" onclick="saveManualTranscript(this)">Save transcript</button>
+                </div>
+                <p class="muted">Use this when you already have a transcript and want to continue with chapters and summary.</p>
+            </div>
+
             <div class="task-card-section" id="transcription-progress-section" hidden aria-live="polite">
                 <div class="progress-bar" id="transcription-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                     <div class="progress-fill" id="transcriptionProgressFill"></div>

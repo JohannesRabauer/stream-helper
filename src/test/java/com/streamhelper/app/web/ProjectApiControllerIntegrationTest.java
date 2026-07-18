@@ -138,6 +138,24 @@ class ProjectApiControllerIntegrationTest {
     }
 
     @Test
+    void canSaveManualArtifactVersion() throws Exception {
+        String projectId = createProject("Manual Artifact API Project");
+
+        mockMvc.perform(post("/api/projects/" + projectId + "/artifacts/SUMMARY/manual")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":\"Imported summary from outside\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value("Imported summary from outside"))
+                .andExpect(jsonPath("$.strategy").value("manual-entry"))
+                .andExpect(jsonPath("$.finalVersion").value(true));
+
+        mockMvc.perform(get("/api/projects/" + projectId + "/artifacts/SUMMARY"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].strategy").value("manual-entry"));
+    }
+
+    @Test
     void canRenameProjectViaApi() throws Exception {
         String projectId = createProject("Rename Source");
 

@@ -35,4 +35,21 @@ class ProjectStorageServiceTest {
         assertThat(storage.getFinalArtifact(project.id(), GenerationCategory.SUMMARY).get().getId()).isEqualTo(draftB.getId());
         assertThat(storage.readProjectConfig(project.id()).getSchemaVersion()).isEqualTo("1");
     }
+
+    @Test
+    void savesManualArtifactAndMarksItFinal() {
+        StreamHelperProperties properties = new StreamHelperProperties();
+        properties.getStorage().setDataDir(tempDir);
+        ProjectStorageService storage = new ProjectStorageService(properties, new ObjectMapper().findAndRegisterModules());
+
+        var project = storage.createProject("Manual Artifact Project");
+        storage.saveArtifact(project.id(), GenerationCategory.SUMMARY, "ai-generated", "Generated summary", true, false);
+
+        var manual = storage.saveManualArtifact(project.id(), GenerationCategory.SUMMARY, "Manually pasted summary");
+
+        assertThat(manual.getStrategy()).isEqualTo("manual-entry");
+        assertThat(manual.isFinalVersion()).isTrue();
+        assertThat(storage.getFinalArtifact(project.id(), GenerationCategory.SUMMARY)).isPresent();
+        assertThat(storage.getFinalArtifact(project.id(), GenerationCategory.SUMMARY).get().getId()).isEqualTo(manual.getId());
+    }
 }

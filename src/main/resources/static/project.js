@@ -478,6 +478,29 @@ async function runTranscriptionAction(initialMessage, requestFn) {
   });
 }
 
+async function saveManualTranscript(button) {
+  const input = document.getElementById("manualTranscriptInput");
+  if (!input) {
+    return;
+  }
+  const content = input.value.trim();
+  if (!content) {
+    showStatus("Paste transcript text before saving.", "warning");
+    return;
+  }
+  await withButtonLoading(button, async () => {
+    await apiJson(`/api/projects/${projectId}/artifacts/TRANSCRIPT/manual`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({content})
+    });
+    input.value = "";
+    await reloadAreaHistory("transcription");
+    await renderTranscriptInTaskCard();
+    showStatus("Saved transcript manually.", "success");
+  });
+}
+
 async function loadEffectivePrompt(button) {
   await withButtonLoading(button, async () => {
     const category = document.getElementById("categorySelect").value;
@@ -823,8 +846,34 @@ function updateAreaCompletionState(areaKey, categoryResults) {
 function renderAreaHistory(areaKey, categoryResults) {
   categoryResults.forEach(({category, artifacts}) => {
     renderAssetBlockVersions(category, artifacts || []);
+    renderCurrentArtifact(category, artifacts || []);
   });
   updateAreaCompletionState(areaKey, categoryResults);
+}
+
+function renderCurrentArtifact(category, artifacts) {
+  if (category === "TRANSCRIPT") {
+    return;
+  }
+  const block = document.querySelector(`.asset-block[data-category="${category}"]`);
+  if (!block) {
+    return;
+  }
+  const currentPickContainer = block.querySelector(`#asset-current-${category}`);
+  if (!currentPickContainer) {
+    return;
+  }
+  currentPickContainer.innerHTML = "";
+  const normalizedArtifacts = Array.isArray(artifacts) ? artifacts : [];
+  if (normalizedArtifacts.length === 0) {
+    showTier1Actions(block, category, null);
+    return;
+  }
+  const finalVariant = normalizedArtifacts.find((artifact) => artifact?.finalVersion);
+  const recommendedVariant = normalizedArtifacts.find((artifact) => artifact?.recommended);
+  const currentPick = finalVariant || recommendedVariant || normalizedArtifacts[0];
+  renderCurrentPickForBlock(currentPickContainer, currentPick, category);
+  showTier1Actions(block, category, currentPick);
 }
 
 function setupArtifactEditor({textarea, artifact, category, areaKey, timestampNode, badgesNode, saveStateNode, source}) {
@@ -1227,19 +1276,23 @@ function viewTranscriptVersion(artifactId) {
 }
 
 function copyAssetContent(category) {
-  const container = document.getElementById(`asset-current-${category}`);
-  if (!container) {
-    showStatus(`No content to copy for ${category}`, "warning");
+  if (typeof category === "string") {
+    const container = document.getElementById(`asset-current-${category}`);
+    if (!container) {
+      showStatus(`No content to copy for ${category}`, "warning");
+      return;
+    }
+    const text = container.textContent || container.innerText;
+    if (!text) {
+      showStatus(`No content to copy for ${category}`, "warning");
+      return;
+    }
+    navigator.clipboard.writeText(text)
+      .then(() => showStatus(`Copied ${formatCategoryLabel(category)} to clipboard`, "success"))
+      .catch(() => showStatus("Failed to copy to clipboard", "error"));
     return;
   }
-  const text = container.textContent || container.innerText;
-  if (!text) {
-    showStatus(`No content to copy for ${category}`, "warning");
-    return;
-  }
-  navigator.clipboard.writeText(text)
-    .then(() => showStatus(`Copied ${formatCategoryLabel(category)} to clipboard`, "success"))
-    .catch(() => showStatus("Failed to copy to clipboard", "error"));
+  copyToClipboard(category?.content || "");
 }
 
 function readCurrentTranscriptionPercent() {
@@ -1607,6 +1660,55 @@ function bindAutosaveInputs() {
         saveGuidanceForCategory(category, textarea.value);
       });
     }
+
+    function initializeManualEntryControls() {
+      document.querySelectorAll(".asset-block[data-category]").forEach((block) => {
+        const category = block.dataset.category;
+        if (!category || category === "TRANSCRIPT") {
+          return;
+        }
+        const actions = block.querySelector(".asset-actions");
+        if (!actions || block.querySelector(".manual-entry")) {
+          return;
+        }
+        const areaKey = categoryToArea[category];
+        if (!areaKey) {
+          return;
+        }
+        const manualSection = document.createElement("div");
+        manualSection.className = "manual-entry";
+        manualSection.innerHTML = `
+          <label class="manual-entry-label" for="manual-entry-${category}">Add result manually</label>
+          <textarea id="manual-entry-${category}" rows="4" placeholder="Paste an existing result so you can continue from this step."></textarea>
+          <div class="asset-actions">
+            <button type="button" class="secondary-button">Save manual result</button>
+          </div>
+        `;
+        const saveButton = manualSection.querySelector("button");
+        const input = manualSection.querySelector("textarea");
+        saveButton?.addEventListener("click", async () => {
+          const content = input?.value?.trim() || "";
+          if (!content) {
+            showStatus(`Add text before saving ${formatCategoryLabel(category)}.`, "warning");
+            return;
+          }
+          await withButtonLoading(saveButton, async () => {
+            await apiJson(`/api/projects/${projectId}/artifacts/${category}/manual`, {
+              method: "POST",
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify({content})
+            });
+            input.value = "";
+            await reloadAreaHistory(areaKey);
+            if (category === "THUMBNAILS") {
+              initializeImageProviderCheck();
+            }
+            showStatus(`Saved manual ${formatCategoryLabel(category)} result.`, "success");
+          });
+        });
+        actions.insertAdjacentElement("afterend", manualSection);
+      });
+    }
   });
 }
 
@@ -1686,35 +1788,33 @@ function showTier1Actions(block, category, artifact) {
   const finalBtn = block.querySelector(".asset-final-button");
   
   if (copyBtn) {
-    copyBtn.hidden = false;
-    copyBtn.onclick = () => copyAssetContent(artifact);
+    copyBtn.hidden = !artifact;
+    copyBtn.onclick = artifact ? () => copyAssetContent(artifact) : null;
   }
   
   if (regenerateBtn) {
-    regenerateBtn.hidden = false;
+    regenerateBtn.hidden = !artifact;
     const areaKey = categoryToArea[category];
     const endpoint = getEndpointForCategory(category);
     regenerateBtn.onclick = () => runStageBriefAction(areaKey, endpoint, regenerateBtn);
   }
   
   if (refineBtn) {
-    refineBtn.hidden = false;
-    refineBtn.onclick = () => showRefinePopover(category, artifact.id);
+    refineBtn.hidden = !artifact;
+    refineBtn.onclick = artifact ? () => showRefinePopover(category, artifact.id) : null;
   }
   
   if (finalBtn) {
-    finalBtn.hidden = !artifact || artifact.final === true;
-    if (!artifact?.final) {
+    finalBtn.hidden = !artifact || artifact.finalVersion === true;
+    if (artifact && !artifact.finalVersion) {
       finalBtn.onclick = async () => {
         await finalizeArtifact(category, artifact.id);
         finalBtn.hidden = true;
       };
+    } else {
+      finalBtn.onclick = null;
     }
   }
-}
-
-function copyAssetContent(artifact) {
-  copyToClipboard(artifact.content || "");
 }
 
 function getEndpointForCategory(category) {
@@ -1742,6 +1842,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     projectConfig.workspaceDrafts = {};
   }
   migrateLegacyPromotionState();
+  initializeManualEntryControls();
   bindAutosaveInputs();
   updateJourneyRail();
   await setProjectNotesMode(projectNotesMode);

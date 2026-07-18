@@ -357,6 +357,17 @@ public class ProjectStorageService {
         return markFinal(projectId, category, saved.getId());
     }
 
+    public ArtifactVersion saveManualArtifact(String projectId, GenerationCategory category, String content) {
+        ArtifactVersion saved = saveArtifact(
+                projectId,
+                category,
+                "manual-entry",
+                content == null ? "" : content,
+                true,
+                false);
+        return markFinal(projectId, category, saved.getId());
+    }
+
     public ArtifactVersion markFinal(String projectId, GenerationCategory category, String artifactId) {
         ensureProjectExists(projectId);
         Path categoryDir = categoryDir(projectId, category);

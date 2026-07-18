@@ -651,6 +651,40 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
     min-width: 140px;
 }
 
+.manual-entry {
+    display: grid;
+    gap: 0.55rem;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.02);
+    padding: 0.75rem;
+}
+
+.manual-entry-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.manual-entry textarea {
+    width: 100%;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 0.65rem;
+    resize: vertical;
+    min-height: 96px;
+}
+
+.manual-entry textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
 .asset-current {
     border: 1px solid var(--border-accent);
     border-radius: var(--radius-sm);
@@ -755,7 +789,8 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
 
 .task-card-section input[type="text"],
 .task-card-section input[type="url"],
-.task-card-section input[type="file"] {
+.task-card-section input[type="file"],
+.task-card-section textarea {
     width: 100%;
     padding: 0.6rem 0.8rem;
     border: 1px solid var(--border);
@@ -769,7 +804,8 @@ button:not(.secondary-button):not(.chip-button):not(.toggle-group button):not(.t
 
 .task-card-section input[type="text"]:focus,
 .task-card-section input[type="url"]:focus,
-.task-card-section input[type="file"]:focus {
+.task-card-section input[type="file"]:focus,
+.task-card-section textarea:focus {
     outline: none;
     border-color: var(--accent);
 }

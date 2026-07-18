@@ -132,6 +132,14 @@ public class ProjectApiController {
         return storageService.saveArtifactEdit(projectId, category, artifactId, request.content());
     }
 
+    @PostMapping("/projects/{projectId}/artifacts/{category}/manual")
+    public Object saveManualArtifact(
+            @PathVariable String projectId,
+            @PathVariable GenerationCategory category,
+            @RequestBody ArtifactEditRequest request) {
+        return storageService.saveManualArtifact(projectId, category, request.content());
+    }
+
     @GetMapping("/projects/{projectId}/export")
     public ResponseEntity<Resource> exportProject(@PathVariable String projectId) throws IOException {
         var zip = exportService.exportProjectZip(projectId);

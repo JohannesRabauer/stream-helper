@@ -712,7 +712,7 @@ function buildVersionTree(artifacts) {
 
   const byId = new Map();
   const roots = [];
-  const machineVersions = new Set(["-normalized", "-edited", "-refined"]);
+  const machineVersions = ["-normalized", "-edited", "-refined"];
 
   artifacts.forEach((artifact) => {
     byId.set(artifact.id, { ...artifact, children: [] });
@@ -1660,55 +1660,55 @@ function bindAutosaveInputs() {
         saveGuidanceForCategory(category, textarea.value);
       });
     }
+  });
+}
 
-    function initializeManualEntryControls() {
-      document.querySelectorAll(".asset-block[data-category]").forEach((block) => {
-        const category = block.dataset.category;
-        if (!category || category === "TRANSCRIPT") {
-          return;
-        }
-        const actions = block.querySelector(".asset-actions");
-        if (!actions || block.querySelector(".manual-entry")) {
-          return;
-        }
-        const areaKey = categoryToArea[category];
-        if (!areaKey) {
-          return;
-        }
-        const manualSection = document.createElement("div");
-        manualSection.className = "manual-entry";
-        manualSection.innerHTML = `
-          <label class="manual-entry-label" for="manual-entry-${category}">Add result manually</label>
-          <textarea id="manual-entry-${category}" rows="4" placeholder="Paste an existing result so you can continue from this step."></textarea>
-          <div class="asset-actions">
-            <button type="button" class="secondary-button">Save manual result</button>
-          </div>
-        `;
-        const saveButton = manualSection.querySelector("button");
-        const input = manualSection.querySelector("textarea");
-        saveButton?.addEventListener("click", async () => {
-          const content = input?.value?.trim() || "";
-          if (!content) {
-            showStatus(`Add text before saving ${formatCategoryLabel(category)}.`, "warning");
-            return;
-          }
-          await withButtonLoading(saveButton, async () => {
-            await apiJson(`/api/projects/${projectId}/artifacts/${category}/manual`, {
-              method: "POST",
-              headers: {"Content-Type": "application/json"},
-              body: JSON.stringify({content})
-            });
-            input.value = "";
-            await reloadAreaHistory(areaKey);
-            if (category === "THUMBNAILS") {
-              initializeImageProviderCheck();
-            }
-            showStatus(`Saved manual ${formatCategoryLabel(category)} result.`, "success");
-          });
-        });
-        actions.insertAdjacentElement("afterend", manualSection);
-      });
+function initializeManualEntryControls() {
+  document.querySelectorAll(".asset-block[data-category]").forEach((block) => {
+    const category = block.dataset.category;
+    if (!category || category === "TRANSCRIPT") {
+      return;
     }
+    const actions = block.querySelector(".asset-actions");
+    if (!actions || block.querySelector(".manual-entry")) {
+      return;
+    }
+    const areaKey = categoryToArea[category];
+    if (!areaKey) {
+      return;
+    }
+    const manualSection = document.createElement("div");
+    manualSection.className = "manual-entry";
+    manualSection.innerHTML = `
+      <label class="manual-entry-label" for="manual-entry-${category}">Add result manually</label>
+      <textarea id="manual-entry-${category}" rows="4" placeholder="Paste an existing result so you can continue from this step."></textarea>
+      <div class="asset-actions">
+        <button type="button" class="secondary-button">Save manual result</button>
+      </div>
+    `;
+    const saveButton = manualSection.querySelector("button");
+    const input = manualSection.querySelector("textarea");
+    saveButton?.addEventListener("click", async () => {
+      const content = input?.value?.trim() || "";
+      if (!content) {
+        showStatus(`Add text before saving ${formatCategoryLabel(category)}.`, "warning");
+        return;
+      }
+      await withButtonLoading(saveButton, async () => {
+        await apiJson(`/api/projects/${projectId}/artifacts/${category}/manual`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({content})
+        });
+        input.value = "";
+        await reloadAreaHistory(areaKey);
+        if (category === "THUMBNAILS") {
+          initializeImageProviderCheck();
+        }
+        showStatus(`Saved manual ${formatCategoryLabel(category)} result.`, "success");
+      });
+    });
+    actions.insertAdjacentElement("afterend", manualSection);
   });
 }
 

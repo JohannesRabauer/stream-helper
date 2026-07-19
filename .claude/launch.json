@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "stream-helper",
+      "runtimeExecutable": ".\\mvnw.cmd",
+      "runtimeArgs": ["spring-boot:run", "-Dspring-boot.run.arguments=--server.port=8123"],
+      "port": 8123
+    }
+  ]
+}
